@@ -160,6 +160,7 @@ command_purge() {
   fi
   "$RUNTIME" ps --all --quiet --filter "label=$PROJECT_LABEL" | xargs -r "$RUNTIME" rm --force >/dev/null
   "$RUNTIME" images --quiet --filter "label=$PROJECT_LABEL" | sort -u | xargs -r "$RUNTIME" rmi --force >/dev/null
+  "$RUNTIME" images --quiet --filter "label=$CACHE_LABEL" | sort -u | xargs -r "$RUNTIME" rmi --force >/dev/null
   "$RUNTIME" volume ls --quiet --filter "label=$PROJECT_LABEL" | xargs -r "$RUNTIME" volume rm --force >/dev/null
   "$RUNTIME" volume ls --quiet --filter "label=$CACHE_LABEL" | xargs -r "$RUNTIME" volume rm --force >/dev/null
   rm -rf "$PROJECTS_DIR"

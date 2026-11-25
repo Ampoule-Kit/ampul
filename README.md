@@ -139,35 +139,37 @@ Their images and data live in a volume per project, so they survive `dev rebuild
 
 Each project's answers are saved in `~/.config/devenv/projects/<name>.env`. Change them with `dev config <name>`, or edit the file, then run `dev rebuild <name>`.
 
-### Bumping a version
+### Updating a pinned version
 
-[`image/versions`](image/versions) holds every pinned version and its checksums for arm64 and amd64. To bump a tool:
+[`image/versions`](image/versions) holds every pinned version and its sha256 checksums for arm64 and amd64. Change them with `repo-tools/update-version.sh`:
 
-1. Change its `_VERSION`.
-2. Replace both checksums with the new release's, from the source the tool publishes them in:
+```sh
+repo-tools/update-version.sh                  # list what is pinned
+repo-tools/update-version.sh neovim 0.12.7    # pin a tool to another version
+repo-tools/update-version.sh ubuntu 24.04     # re-pin the base image tag
+repo-tools/update-version.sh dotnet-11 11.0.100   # offer another .NET SDK in dev new
+```
 
-    | Tool | Checksum source |
-    | --- | --- |
-    | Neovim, lazygit, yazi, zellij, lsd, tree-sitter, Godot, docker compose | GitHub release asset digests: `curl -fsSL https://api.github.com/repos/<owner>/<repo>/releases/tags/<tag> \| jq -r '.assets[] \| "\(.name) \(.digest)"'` |
-    | Node.js | `https://nodejs.org/dist/v<version>/SHASUMS256.txt` |
-    | .NET SDK (sha512) | `https://builds.dotnet.microsoft.com/dotnet/release-metadata/<channel>/releases.json` |
-    | Java (Temurin) | `https://api.adoptium.net/v3/assets/release_name/eclipse/jdk-<version>?os=linux&image_type=jdk` |
-    | Claude Code | `https://downloads.claude.ai/claude-code-releases/<version>/manifest.json` |
-    | docker CLI | No published checksums: download both files from `https://download.docker.com/linux/static/stable/` and run `shasum -a 256` |
-    | Ubuntu image | The multi-architecture index digest: the `docker-content-digest` header of `https://registry-1.docker.io/v2/library/ubuntu/manifests/24.04` |
+Before it changes `image/versions`, it:
 
-3. Run `dev rebuild <name>`. A wrong checksum fails the build and names the file.
+1. downloads the release for both architectures and computes their checksums,
+2. compares them with the checksums GitHub publishes, for GitHub releases,
+3. runs the tool's install script in a container built from the pinned Ubuntu image (`--skip-install-test` skips this).
 
-To offer another .NET SDK, add its channel to `DOTNET_CHANNELS` in `image/versions` and add its `DOTNET_<channel>_VERSION` and both `DOTNET_<channel>_SHA512_*` lines. `dev new` then lists it.
-
-Downloads are cached by the container engine between builds, so rebuilding only downloads what changed.
+If any step fails, `image/versions` is left as it was. Apply a new version to a project with `dev rebuild <name>`.
 
 ### Adding a dependency
 
-1. Add its pins to `image/versions`.
-2. Add `image/tools/<tool>.sh`, following the existing scripts: `download_verified` downloads a file and checks it against its pinned hash, and `fresh_install_dir` and `link_into_path` put it under `/opt` and on the `PATH`.
-3. Install it in [`image/Containerfile`](image/Containerfile): always, or behind a `WITH_<TOOL>` build argument.
-4. For an optional dependency, ask for it in `prompt_dependencies` in [`cli/prompts.sh`](cli/prompts.sh), save it in `save_project` in [`cli/projects.sh`](cli/projects.sh) and pass it to the build in `build_image` in [`cli/containers.sh`](cli/containers.sh).
+`repo-tools/add-dependency.sh` adds a tool that `dev new` and `dev config` offer as a yes/no choice. It asks for:
+
+- a name and the label `dev new` shows,
+- how it installs: Ubuntu packages, or a release download (an archive or a single executable) with `{version}` and `{arch}` in its URL,
+- for an archive, which executables go on the `PATH`,
+- a command that proves it works, such as `rg --version`.
+
+It checks every answer: the packages exist in the pinned Ubuntu, both downloads exist and match GitHub's checksums, and the executables are in both archives. Then it installs the tool in a test container and runs the check command. Only when everything passes does it write `image/tools/<name>.sh` and add the tool to `image/versions`, `image/download-urls.sh`, `image/optional-dependencies` and `image/Containerfile`. Pin later versions of it with `repo-tools/update-version.sh <name> <version>`.
+
+Tools that need more than this, such as the .NET SDK channels or Godot's two builds, are written by hand in the same files: the download URL in `image/download-urls.sh`, the install script in `image/tools/`, a `WITH_<NAME>` block in `image/Containerfile`, and a line in `image/optional-dependencies` (`yes-no`, or a comma-separated list of choices).
 
 ## Layout
 
@@ -177,9 +179,10 @@ Downloads are cached by the container engine between builds, so rebuilding only 
 | `install.sh`, `uninstall.sh` | Link and unlink the `dev` command. |
 | `devenv.conf` | Container user and runtime. |
 | `cli/` | The `dev` command's modules, run on this machine: `engine.sh` (Podman or Docker), `projects.sh` (names and saved settings), `prompts.sh` (questions), `containers.sh` (image, container and setup), `project-code.sh` (cloning or copying the code) and `commands.sh` (one function per command). |
-| `image/` | What builds the image: `Containerfile`, `versions`, `install-helpers.sh` and one script per tool in `tools/`. |
+| `image/` | What builds the image: `Containerfile`, `versions` (pinned versions and checksums), `download-urls.sh` (where each pinned file is downloaded from), `optional-dependencies` (what `dev new` offers), `install-helpers.sh` and one install script per tool in `tools/`. |
 | `container/` | What runs inside a container: `entrypoint.sh` (ssh-agent, inner container engine and port forwarders) and `setup.sh` (dotfiles, Neovim, git and SSH). |
 | `dotfiles/` | Everything linked into the container's home folder. |
+| `repo-tools/` | Tools for maintaining this repo: `update-version.sh` and `add-dependency.sh`, with their shared `pinning.sh` and `install-test.sh`. |
 
 ## Troubleshooting
 

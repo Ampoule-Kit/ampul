@@ -26,22 +26,33 @@ to_project_name() {
   echo "$1" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9-]/-/g' -e 's/--*/-/g' -e 's/^-//' -e 's/-$//'
 }
 
+optional_dependencies() {
+  tail -n +2 "$DEVENV_DIR/image/optional-dependencies"
+}
+
+optional_dependency_settings() {
+  local setting choices label
+  while IFS='|' read -r setting choices label; do
+    echo "$setting"
+  done < <(optional_dependencies)
+}
+
 require_project_name() {
   [ -n "${1:-}" ] || die "Missing project name. See: dev ls"
 }
 
 clear_project_settings() {
+  local setting
   PROJECT_NAME=
   CODE_SOURCE=
   REPOSITORIES=
   COPY_FOLDER=
   COPY_GIT_FILES_ONLY=
   DOTNET_SDKS=
-  JAVA=
-  GODOT=
-  PYTHON=
-  CONTAINER_ENGINE=
   PORTS=
+  for setting in $(optional_dependency_settings); do
+    printf -v "$setting" '%s' ""
+  done
 }
 
 load_project() {
@@ -52,6 +63,7 @@ load_project() {
 }
 
 save_project() {
+  local setting
   mkdir -p "$PROJECTS_DIR"
   {
     printf 'PROJECT_NAME=%q\n' "$PROJECT_NAME"
@@ -60,10 +72,9 @@ save_project() {
     printf 'COPY_FOLDER=%q\n' "$COPY_FOLDER"
     printf 'COPY_GIT_FILES_ONLY=%q\n' "$COPY_GIT_FILES_ONLY"
     printf 'DOTNET_SDKS=%q\n' "$DOTNET_SDKS"
-    printf 'JAVA=%q\n' "$JAVA"
-    printf 'GODOT=%q\n' "$GODOT"
-    printf 'PYTHON=%q\n' "$PYTHON"
-    printf 'CONTAINER_ENGINE=%q\n' "$CONTAINER_ENGINE"
+    for setting in $(optional_dependency_settings); do
+      printf '%s=%q\n' "$setting" "${!setting}"
+    done
     printf 'PORTS=%q\n' "$PORTS"
   } >"$(project_settings_file "$PROJECT_NAME")"
 }

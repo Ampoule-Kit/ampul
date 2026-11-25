@@ -5,21 +5,17 @@ apt-get update
 apt-get install -y --no-install-recommends libfontconfig1
 rm -rf /var/lib/apt/lists/*
 
-release_url="https://github.com/godotengine/godot/releases/download/$GODOT_VERSION"
 dir=$(fresh_install_dir /opt/godot)
-
 case "${1:-}" in
   standard)
-    binary_name="Godot_v${GODOT_VERSION}_linux.$(pick_for_architecture arm64 x86_64)"
-    archive=$(download_verified "$release_url/$binary_name.zip" sha256 "$(pinned_hash GODOT_SHA256)")
-    unzip -q "$archive" -d "$dir"
-    link_into_path "$dir/$binary_name" godot
+    archive=$(download_pinned GODOT)
+    extract_archive "$archive" "$dir"
+    link_into_path "$dir/Godot_v${GODOT_VERSION}_linux.$(pick_for_architecture arm64 x86_64)" godot
     ;;
   dotnet)
-    arch=$(pick_for_architecture arm64 x86_64)
-    archive=$(download_verified "$release_url/Godot_v${GODOT_VERSION}_mono_linux_$arch.zip" sha256 "$(pinned_hash GODOT_DOTNET_SHA256)")
-    unzip -q "$archive" -d "$dir"
-    link_into_path "$dir/Godot_v${GODOT_VERSION}_mono_linux_$arch/Godot_v${GODOT_VERSION}_mono_linux.$arch" godot
+    archive=$(download_pinned GODOT_DOTNET)
+    extract_archive "$archive" "$dir"
+    link_into_path "$dir/Godot_v${GODOT_VERSION}_mono_linux.$(pick_for_architecture arm64 x86_64)" godot
     ;;
   *)
     echo "Usage: godot.sh standard|dotnet" >&2

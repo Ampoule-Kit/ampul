@@ -21,7 +21,7 @@ check_not_root() {
 }
 
 make_scripts_executable() {
-  chmod +x "$DEV_SCRIPT" "$DEVENV_DIR/install.sh" "$DEVENV_DIR/uninstall.sh" "$DEVENV_DIR"/container/*.sh "$DEVENV_DIR"/image/tools/*.sh
+  chmod +x "$DEV_SCRIPT" "$DEVENV_DIR/install.sh" "$DEVENV_DIR/uninstall.sh" "$DEVENV_DIR"/container/*.sh "$DEVENV_DIR"/image/tools/*.sh "$DEVENV_DIR"/repo-tools/update-version.sh "$DEVENV_DIR"/repo-tools/add-dependency.sh
 }
 
 link_command() {

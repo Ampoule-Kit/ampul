@@ -1,5 +1,5 @@
 ARG UBUNTU_IMAGE
-FROM ${UBUNTU_IMAGE}
+FROM ${UBUNTU_IMAGE} AS base
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
@@ -12,7 +12,10 @@ RUN apt-get update \
  && ln -s /usr/bin/fdfind /usr/local/bin/fd \
  && rm -rf /var/lib/apt/lists/*
 
+FROM base AS devenv
+
 COPY image/versions /opt/devenv/versions
+COPY image/download-urls.sh /opt/devenv/download-urls.sh
 COPY image/install-helpers.sh /opt/devenv/install-helpers.sh
 COPY image/tools/ /opt/devenv/tools/
 
@@ -31,18 +34,19 @@ RUN --mount=type=cache,target=/var/cache/devenv \
 
 ARG WITH_JAVA=
 RUN --mount=type=cache,target=/var/cache/devenv \
-    if [ -n "$WITH_JAVA" ]; then /opt/devenv/tools/java.sh; fi
+    if [ -n "$WITH_JAVA" ]; then /opt/devenv/tools/java.sh "$WITH_JAVA"; fi
 
 ARG WITH_GODOT=
 RUN --mount=type=cache,target=/var/cache/devenv \
     if [ -n "$WITH_GODOT" ]; then /opt/devenv/tools/godot.sh "$WITH_GODOT"; fi
 
 ARG WITH_PYTHON=
-RUN if [ -n "$WITH_PYTHON" ]; then /opt/devenv/tools/python.sh; fi
+RUN --mount=type=cache,target=/var/cache/devenv \
+    if [ -n "$WITH_PYTHON" ]; then /opt/devenv/tools/python.sh "$WITH_PYTHON"; fi
 
 ARG WITH_CONTAINER_ENGINE=
 RUN --mount=type=cache,target=/var/cache/devenv \
-    if [ -n "$WITH_CONTAINER_ENGINE" ]; then /opt/devenv/tools/container-engine.sh; fi
+    if [ -n "$WITH_CONTAINER_ENGINE" ]; then /opt/devenv/tools/container-engine.sh "$WITH_CONTAINER_ENGINE"; fi
 
 ARG USER_NAME=dev
 ARG USER_UID=1000

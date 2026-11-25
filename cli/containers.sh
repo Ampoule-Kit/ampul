@@ -24,23 +24,32 @@ create_volume_if_missing() {
   "$RUNTIME" volume inspect "$volume" >/dev/null 2>&1 || "$RUNTIME" volume create --label "$label" "$volume" >/dev/null
 }
 
+optional_dependency_build_args() {
+  local setting
+  for setting in $(optional_dependency_settings); do
+    printf '%s\n' --build-arg "WITH_$setting=${!setting}"
+  done
+}
+
 build_image() {
+  local args=(
+    build
+    --file "$DEVENV_DIR/image/Containerfile"
+    --tag "$(image_name "$PROJECT_NAME")"
+    --label "$PROJECT_LABEL=$PROJECT_NAME"
+    --build-arg "UBUNTU_IMAGE=$UBUNTU_IMAGE"
+    --build-arg "WITH_DOTNET=$DOTNET_SDKS"
+    --build-arg "USER_NAME=$CONTAINER_USER"
+    --build-arg "USER_UID=$(id -u)"
+    --build-arg "USER_GID=$(id -g)"
+  )
+  local arg
   [ "$(id -u)" -ne 0 ] || die "Run dev as your normal user, not root."
+  while IFS= read -r arg; do
+    args+=("$arg")
+  done < <(optional_dependency_build_args)
   echo "==> Building image $(image_name "$PROJECT_NAME")"
-  "$RUNTIME" build \
-    --file "$DEVENV_DIR/image/Containerfile" \
-    --tag "$(image_name "$PROJECT_NAME")" \
-    --label "$PROJECT_LABEL=$PROJECT_NAME" \
-    --build-arg UBUNTU_IMAGE="$UBUNTU_IMAGE" \
-    --build-arg WITH_DOTNET="$DOTNET_SDKS" \
-    --build-arg WITH_JAVA="$JAVA" \
-    --build-arg WITH_GODOT="$GODOT" \
-    --build-arg WITH_PYTHON="$PYTHON" \
-    --build-arg WITH_CONTAINER_ENGINE="$CONTAINER_ENGINE" \
-    --build-arg USER_NAME="$CONTAINER_USER" \
-    --build-arg USER_UID="$(id -u)" \
-    --build-arg USER_GID="$(id -g)" \
-    "$DEVENV_DIR"
+  "$RUNTIME" "${args[@]}" "$DEVENV_DIR"
 }
 
 host_config_mounts() {

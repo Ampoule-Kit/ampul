@@ -13,7 +13,6 @@ alias ls='lsd -Alh'
 alias gits='git status'
 alias lg='lazygit'
 alias y='yazi'
-alias gd-format='gdformat $(find . -name "*.gd" -not -path "./addons/*")'
 alias z='zellij attach -c DEV'
 
 export ASPNETCORE_ENVIRONMENT=Development

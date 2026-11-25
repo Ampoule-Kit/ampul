@@ -1,0 +1,5 @@
+SETTING|CHOICES|LABEL
+JAVA|yes-no|Java (Temurin)
+GODOT|standard,dotnet|Godot
+PYTHON|yes-no|Python (pip, venv, headers)
+CONTAINER_ENGINE|yes-no|Container engine inside the container (Podman, docker CLI, compose; runs privileged)

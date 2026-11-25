@@ -159,32 +159,60 @@ prompt_dotnet_sdks() {
   DOTNET_SDKS=${selected# }
 }
 
-prompt_godot() {
-  local answer
-  while true; do
-    answer=$(ask "  Godot $GODOT_VERSION: none, standard or dotnet" "${GODOT:-none}")
-    case "$answer" in
-      none) GODOT= && break ;;
-      standard | dotnet) GODOT=$answer && break ;;
-    esac
-    echo "  Answer none, standard or dotnet."
-  done
-  if [ "$GODOT" = dotnet ] && [ -z "$DOTNET_SDKS" ]; then
-    echo "  Note: Godot .NET needs a .NET SDK to build C# scripts, and none is selected."
+label_with_pinned_version() {
+  local version_variable="${1}_VERSION"
+  if [ -n "${!version_variable:-}" ]; then
+    echo "$2 ${!version_variable}"
+  else
+    echo "$2"
   fi
+}
+
+prompt_yes_no_dependency() {
+  local setting=$1 label=$2
+  if confirm "  $label" "$(yes_if_set "${!setting}")"; then
+    printf -v "$setting" '%s' yes
+  else
+    printf -v "$setting" '%s' ""
+  fi
+}
+
+prompt_choice_dependency() {
+  local setting=$1 choices=$2 label=$3 options answer
+  options="none $(echo "$choices" | tr ',' ' ')"
+  while true; do
+    answer=$(ask "  $label: ${options// /, }" "${!setting:-none}")
+    if [ "$answer" = none ]; then
+      printf -v "$setting" '%s' ""
+      return
+    fi
+    if list_contains "$options" "$answer"; then
+      printf -v "$setting" '%s' "$answer"
+      return
+    fi
+    echo "  Answer one of: $options."
+  done
+}
+
+prompt_optional_dependencies() {
+  local setting choices label
+  while IFS='|' read -r -u 3 setting choices label; do
+    label=$(label_with_pinned_version "$setting" "$label")
+    if [ "$choices" = yes-no ]; then
+      prompt_yes_no_dependency "$setting" "$label"
+    else
+      prompt_choice_dependency "$setting" "$choices" "$label"
+    fi
+  done 3< <(optional_dependencies)
 }
 
 prompt_dependencies() {
   echo
   echo "Dependencies (Neovim, Node, git, Claude Code and the CLI tools are always included):"
   prompt_dotnet_sdks
-  if confirm "  Java (Temurin $JAVA_VERSION)" "$(yes_if_set "$JAVA")"; then JAVA=yes; else JAVA=; fi
-  prompt_godot
-  if confirm "  Python (pip, venv, headers)" "$(yes_if_set "$PYTHON")"; then PYTHON=yes; else PYTHON=; fi
-  if confirm "  Container engine inside the container (Podman, docker CLI, compose; runs privileged)" "$(yes_if_set "$CONTAINER_ENGINE")"; then
-    CONTAINER_ENGINE=yes
-  else
-    CONTAINER_ENGINE=
+  prompt_optional_dependencies
+  if [ "${GODOT:-}" = dotnet ] && [ -z "$DOTNET_SDKS" ]; then
+    echo "  Note: Godot .NET needs a .NET SDK to build C# scripts, and none is selected."
   fi
 }
 
