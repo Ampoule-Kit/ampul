@@ -1,0 +1,726 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+resolve_script_dir() {
+  local source=$0 dir
+  while [ -L "$source" ]; do
+    dir=$(cd -P "$(dirname "$source")" && pwd)
+    source=$(readlink "$source")
+    case "$source" in /*) ;; *) source=$dir/$source ;; esac
+  done
+  cd -P "$(dirname "$source")" && pwd
+}
+
+DEVENV_DIR=$(resolve_script_dir)
+. "$DEVENV_DIR/devenv.conf"
+. "$DEVENV_DIR/versions"
+
+PROJECTS_DIR=${XDG_CONFIG_HOME:-$HOME/.config}/devenv/projects
+CONTAINER_HOME=/home/$CONTAINER_USER
+CONTAINER_PROJECT_DIR=$CONTAINER_HOME/Project
+CACHE_VOLUME=devenv-cache
+PROJECT_LABEL=devenv.project
+CACHE_LABEL=devenv.cache
+ENGINE_SOCKET=/run/podman/podman.sock
+PORT_FORWARD_BASE=61000
+PORT_FORWARD_MAX=65535
+
+die() {
+  printf 'Error: %s\n' "$*" >&2
+  exit 1
+}
+
+usage() {
+  cat <<EOF
+Usage: dev <command> [project]
+
+  new [name]         Set up a new project container (asks for the code, dependencies and ports)
+  enter <name>       Open a bash shell in the project's container
+  start <name>       Start a stopped project container
+  stop <name>        Stop a project container
+  rebuild <name>     Rebuild the image and recreate the container (fresh code and dotfiles)
+  setup <name>       Rerun the in-container setup (dotfiles, Neovim, git and SSH)
+  config <name>      Change a project's code source, dependencies or ports
+  rm <name>          Remove a project's container, image and settings
+  ls                 List projects and their status
+  purge [--yes]      Remove every devenv container, image, volume and project setting
+
+Project settings: $PROJECTS_DIR
+EOF
+}
+
+detect_runtime() {
+  if [ -n "${RUNTIME:-}" ]; then
+    command -v "$RUNTIME" >/dev/null || die "devenv.conf sets RUNTIME=$RUNTIME, but $RUNTIME is not installed."
+  elif command -v podman >/dev/null; then
+    RUNTIME=podman
+  elif command -v docker >/dev/null; then
+    RUNTIME=docker
+  else
+    die "Neither podman nor docker is installed."
+  fi
+}
+
+engine_reachable() {
+  "$RUNTIME" info >/dev/null 2>&1
+}
+
+print_engine_start_hint() {
+  echo "The $RUNTIME engine is not running. Start it with:" >&2
+  case "$RUNTIME/$(uname -s)" in
+    podman/Darwin) echo "  podman machine start" >&2 ;;
+    podman/*) echo "  podman info    (shows what is wrong)" >&2 ;;
+    docker/Darwin) echo "  your Docker app or VM (for example Docker Desktop, or: colima start)" >&2 ;;
+    docker/*) echo "  sudo systemctl start docker" >&2 ;;
+  esac
+}
+
+require_engine() {
+  detect_runtime
+  if ! engine_reachable; then
+    print_engine_start_hint
+    exit 1
+  fi
+}
+
+rootless_podman() {
+  [ "$RUNTIME" = podman ] && [ "$("$RUNTIME" info --format '{{.Host.Security.Rootless}}')" = true ]
+}
+
+container_name() {
+  echo "devenv-$1"
+}
+
+image_name() {
+  echo "devenv-$1"
+}
+
+engine_volume() {
+  echo "devenv-$1-engine"
+}
+
+project_file() {
+  echo "$PROJECTS_DIR/$1.env"
+}
+
+project_exists() {
+  [ -f "$(project_file "$1")" ]
+}
+
+container_status() {
+  "$RUNTIME" container inspect --format '{{.State.Status}}' "$(container_name "$1")" 2>/dev/null || echo "not created"
+}
+
+require_name() {
+  [ -n "${1:-}" ] || die "Missing project name. See: dev ls"
+}
+
+reset_project_settings() {
+  PROJECT_NAME=
+  SOURCE_TYPE=
+  REPOS=
+  SOURCE_DIR=
+  COPY_GIT_FILES_ONLY=
+  DOTNET=
+  JAVA=
+  GODOT=
+  PYTHON=
+  CONTAINER_ENGINE=
+  PORTS=
+}
+
+load_project() {
+  require_name "$1"
+  project_exists "$1" || die "No project named '$1'. See: dev ls"
+  reset_project_settings
+  . "$(project_file "$1")"
+}
+
+save_project() {
+  mkdir -p "$PROJECTS_DIR"
+  {
+    printf 'PROJECT_NAME=%q\n' "$PROJECT_NAME"
+    printf 'SOURCE_TYPE=%q\n' "$SOURCE_TYPE"
+    printf 'REPOS=%q\n' "$REPOS"
+    printf 'SOURCE_DIR=%q\n' "$SOURCE_DIR"
+    printf 'COPY_GIT_FILES_ONLY=%q\n' "$COPY_GIT_FILES_ONLY"
+    printf 'DOTNET=%q\n' "$DOTNET"
+    printf 'JAVA=%q\n' "$JAVA"
+    printf 'GODOT=%q\n' "$GODOT"
+    printf 'PYTHON=%q\n' "$PYTHON"
+    printf 'CONTAINER_ENGINE=%q\n' "$CONTAINER_ENGINE"
+    printf 'PORTS=%q\n' "$PORTS"
+  } >"$(project_file "$PROJECT_NAME")"
+}
+
+ask() {
+  local answer
+  read -r -p "$1 [$2]: " answer
+  echo "${answer:-$2}"
+}
+
+confirm() {
+  local default=$2 answer hint
+  if [ "$default" = y ]; then hint="Y/n"; else hint="y/N"; fi
+  while true; do
+    read -r -p "$1 [$hint]: " answer
+    case "$(echo "${answer:-$default}" | tr '[:upper:]' '[:lower:]')" in
+      y | yes) return 0 ;;
+      n | no) return 1 ;;
+    esac
+    echo "Answer y or n."
+  done
+}
+
+default_flag() {
+  if [ -n "$1" ]; then echo y; else echo n; fi
+}
+
+contains_word() {
+  case " $1 " in *" $2 "*) return 0 ;; *) return 1 ;; esac
+}
+
+sanitize_name() {
+  echo "$1" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9-]/-/g' -e 's/--*/-/g' -e 's/^-//' -e 's/-$//'
+}
+
+valid_name() {
+  [[ "$1" =~ ^[a-z0-9][a-z0-9-]*$ ]]
+}
+
+absolute_folder() {
+  local folder=$1
+  case "$folder" in "~") folder=$HOME ;; "~/"*) folder=$HOME/${folder#"~/"} ;; esac
+  [ -d "$folder" ] || return 1
+  (cd "$folder" && pwd -P)
+}
+
+repo_folder_name() {
+  local name=${1%/}
+  name=${name##*/}
+  name=${name##*:}
+  echo "${name%.git}"
+}
+
+git_repo_root() {
+  [ -d "$1/.git" ] && [ "$(git -C "$1" rev-parse --show-toplevel 2>/dev/null)" = "$1" ]
+}
+
+source_summary() {
+  case "$SOURCE_TYPE" in
+    repos)
+      local url names=""
+      for url in $REPOS; do names="$names $(repo_folder_name "$url")"; done
+      echo "repos:${names}"
+      ;;
+    copy) echo "copy of $SOURCE_DIR" ;;
+  esac
+}
+
+valid_ports() {
+  local port seen=" " count=0
+  for port in $1; do
+    [[ "$port" =~ ^[0-9]+$ ]] && [ "$port" -ge 1 ] && [ "$port" -le 65535 ] || {
+      echo "'$port' is not a port number (1-65535)." >&2
+      return 1
+    }
+    case "$seen" in *" $port "*)
+      echo "Port $port is listed twice." >&2
+      return 1
+      ;;
+    esac
+    seen="$seen$port "
+    count=$((count + 1))
+  done
+  [ $((PORT_FORWARD_BASE + count - 1)) -le $PORT_FORWARD_MAX ] || {
+    echo "Too many ports." >&2
+    return 1
+  }
+}
+
+prompt_sources() {
+  local choice default=1
+  [ "$SOURCE_TYPE" = copy ] && default=2
+  echo "Where does the code in ~/Project come from? It is fetched fresh on every new and rebuild."
+  echo "  1) Clone one or more git repositories, side by side"
+  echo "  2) Copy a folder from this machine (a copy, not linked)"
+  while true; do
+    choice=$(ask "Choose 1 or 2" "$default")
+    case "$choice" in
+      1) SOURCE_TYPE=repos && prompt_repos && return ;;
+      2) SOURCE_TYPE=copy && prompt_copy_folder && return ;;
+    esac
+    echo "Answer 1 or 2."
+  done
+}
+
+prompt_repos() {
+  local url name names="" previous=$REPOS
+  REPOS=
+  SOURCE_DIR=
+  COPY_GIT_FILES_ONLY=
+  if [ -n "$previous" ]; then
+    echo "Current repositories: $previous"
+    if confirm "Keep them" y; then
+      REPOS=$previous
+      return
+    fi
+  fi
+  echo "Enter repository URLs (HTTPS or SSH), one per line. Leave empty to finish."
+  while true; do
+    read -r -p "  Repository URL: " url
+    if [ -z "$url" ]; then
+      [ -n "$REPOS" ] && return
+      echo "  Enter at least one repository."
+      continue
+    fi
+    name=$(repo_folder_name "$url")
+    if [[ "$url" =~ [[:space:]] ]] || [ -z "$name" ]; then
+      echo "  '$url' does not look like a repository URL."
+    elif contains_word "$names" "$name"; then
+      echo "  Another repository already uses ~/Project/$name."
+    else
+      REPOS="${REPOS:+$REPOS }$url"
+      names="$names $name"
+    fi
+  done
+}
+
+prompt_copy_folder() {
+  local answer folder
+  REPOS=
+  while true; do
+    answer=$(ask "Folder to copy" "${SOURCE_DIR:-$PWD}")
+    if folder=$(absolute_folder "$answer"); then
+      break
+    fi
+    echo "'$answer' is not a folder."
+  done
+  SOURCE_DIR=$folder
+  COPY_GIT_FILES_ONLY=
+  if git_repo_root "$SOURCE_DIR"; then
+    echo "$SOURCE_DIR is a git repository."
+    if confirm "Copy only .git and the files git tracks or doesn't ignore (leaves out node_modules, bin, obj, .env and anything else ignored)" y; then
+      COPY_GIT_FILES_ONLY=yes
+    fi
+  fi
+}
+
+default_project_name() {
+  local first_repo
+  case "$SOURCE_TYPE" in
+    repos)
+      for first_repo in $REPOS; do break; done
+      repo_folder_name "$first_repo"
+      ;;
+    copy) basename "$SOURCE_DIR" ;;
+  esac
+}
+
+prompt_name() {
+  local answer
+  while true; do
+    answer=$(ask "Project name" "$(sanitize_name "$(default_project_name)")")
+    if ! valid_name "$answer"; then
+      echo "Use lowercase letters, digits and dashes, starting with a letter or digit."
+    elif project_exists "$answer"; then
+      echo "A project named '$answer' already exists. Pick another name, or change it with: dev config $answer"
+    else
+      PROJECT_NAME=$answer
+      return
+    fi
+  done
+}
+
+prompt_dependencies() {
+  local channel version_key selected="" godot
+  echo
+  echo "Dependencies (Neovim, Node, git, Claude Code and the CLI tools are always included):"
+  for channel in $DOTNET_CHANNELS; do
+    version_key="DOTNET_${channel}_VERSION"
+    if confirm "  .NET SDK $channel (${!version_key})" "$(contains_word "$DOTNET" "$channel" && echo y || echo n)"; then
+      selected="$selected $channel"
+    fi
+  done
+  DOTNET=${selected# }
+
+  if confirm "  Java (Temurin $JAVA_VERSION)" "$(default_flag "$JAVA")"; then JAVA=yes; else JAVA=; fi
+
+  while true; do
+    godot=$(ask "  Godot $GODOT_VERSION: none, standard or dotnet" "${GODOT:-none}")
+    case "$godot" in
+      none) GODOT= && break ;;
+      standard | dotnet) GODOT=$godot && break ;;
+    esac
+    echo "  Answer none, standard or dotnet."
+  done
+  if [ "$GODOT" = dotnet ] && [ -z "$DOTNET" ]; then
+    echo "  Note: Godot .NET needs a .NET SDK to build C# scripts, and none is selected."
+  fi
+
+  if confirm "  Python (pip, venv, headers)" "$(default_flag "$PYTHON")"; then PYTHON=yes; else PYTHON=; fi
+
+  if confirm "  Container engine inside the container (Podman, docker CLI, compose; runs privileged)" "$(default_flag "$CONTAINER_ENGINE")"; then
+    CONTAINER_ENGINE=yes
+  else
+    CONTAINER_ENGINE=
+  fi
+}
+
+prompt_ports() {
+  local answer
+  echo
+  echo "Ports your apps listen on that this machine should reach at localhost (for example 4200 5000)."
+  while true; do
+    answer=$(ask "Ports, space-separated" "${PORTS:-none}")
+    [ "$answer" = none ] && answer=
+    if valid_ports "$answer"; then
+      PORTS=$(echo "$answer" | tr -s ' ')
+      PORTS=${PORTS# }
+      PORTS=${PORTS% }
+      return
+    fi
+  done
+}
+
+ensure_volume() {
+  local volume=$1 label=$2
+  "$RUNTIME" volume inspect "$volume" >/dev/null 2>&1 || "$RUNTIME" volume create --label "$label" "$volume" >/dev/null
+}
+
+build_image() {
+  [ "$(id -u)" -ne 0 ] || die "Run dev as your normal user, not root."
+  echo "==> Building image $(image_name "$PROJECT_NAME")"
+  "$RUNTIME" build \
+    --file "$DEVENV_DIR/Containerfile" \
+    --tag "$(image_name "$PROJECT_NAME")" \
+    --label "$PROJECT_LABEL=$PROJECT_NAME" \
+    --build-arg UBUNTU_IMAGE="$UBUNTU_IMAGE" \
+    --build-arg WITH_DOTNET="$DOTNET" \
+    --build-arg WITH_JAVA="$JAVA" \
+    --build-arg WITH_GODOT="$GODOT" \
+    --build-arg WITH_PYTHON="$PYTHON" \
+    --build-arg WITH_CONTAINER_ENGINE="$CONTAINER_ENGINE" \
+    --build-arg USER_NAME="$CONTAINER_USER" \
+    --build-arg USER_UID="$(id -u)" \
+    --build-arg USER_GID="$(id -g)" \
+    "$DEVENV_DIR"
+}
+
+host_mount_args() {
+  local xdg_git_config=${XDG_CONFIG_HOME:-$HOME/.config}/git/config excludes_file
+  [ -f "$HOME/.gitconfig" ] && echo "$HOME/.gitconfig:$CONTAINER_HOME/.host/gitconfig:ro"
+  [ -f "$xdg_git_config" ] && echo "$xdg_git_config:$CONTAINER_HOME/.host/gitconfig-xdg:ro"
+  [ -f "$HOME/.git-credentials" ] && echo "$HOME/.git-credentials:$CONTAINER_HOME/.git-credentials"
+  excludes_file=$(git config --global --path --get core.excludesfile 2>/dev/null || true)
+  [ -n "$excludes_file" ] && [ -f "$excludes_file" ] && echo "$excludes_file:$CONTAINER_HOME/.host/gitignore_global:ro"
+  [ -d "$HOME/.ssh" ] && echo "$HOME/.ssh:$CONTAINER_HOME/.host/ssh:ro"
+  return 0
+}
+
+create_container() {
+  local mount port index=0 forwards=""
+  local args=(
+    run --detach --init
+    --name "$(container_name "$PROJECT_NAME")"
+    --hostname "$PROJECT_NAME"
+    --label "$PROJECT_LABEL=$PROJECT_NAME"
+    --security-opt label=disable
+    --volume "$CACHE_VOLUME:$CONTAINER_HOME/.cache"
+  )
+
+  ensure_volume "$CACHE_VOLUME" "$CACHE_LABEL=true"
+  if rootless_podman; then
+    args+=(--userns=keep-id)
+  fi
+
+  while read -r mount; do
+    args+=(--volume "$mount")
+  done < <(host_mount_args)
+
+  if [ -n "$CONTAINER_ENGINE" ]; then
+    ensure_volume "$(engine_volume "$PROJECT_NAME")" "$PROJECT_LABEL=$PROJECT_NAME"
+    args+=(
+      --privileged
+      --volume "$(engine_volume "$PROJECT_NAME"):/var/lib/containers"
+      --env "DOCKER_HOST=unix://$ENGINE_SOCKET"
+      --env "CONTAINER_HOST=unix://$ENGINE_SOCKET"
+      --env "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=$ENGINE_SOCKET"
+    )
+  fi
+
+  for port in $PORTS; do
+    args+=(--publish "127.0.0.1:$port:$((PORT_FORWARD_BASE + index))")
+    forwards="$forwards $port:$((PORT_FORWARD_BASE + index))"
+    index=$((index + 1))
+  done
+  args+=(--env "DEVENV_PORT_FORWARDS=${forwards# }")
+
+  echo "==> Creating container $(container_name "$PROJECT_NAME")"
+  "$RUNTIME" "${args[@]}" "$(image_name "$PROJECT_NAME")" >/dev/null
+}
+
+remove_container() {
+  "$RUNTIME" rm --force "$(container_name "$1")" >/dev/null 2>&1 || true
+}
+
+exec_in_container() {
+  local flags=(--interactive)
+  [ -t 0 ] && [ -t 1 ] && flags+=(--tty)
+  "$RUNTIME" exec "${flags[@]}" --user "$CONTAINER_USER" "$@"
+}
+
+host_tar() {
+  if tar --help 2>&1 | grep -q -- --no-mac-metadata; then
+    tar --no-mac-metadata --no-xattrs "$@"
+  else
+    tar "$@"
+  fi
+}
+
+existing_paths_only() {
+  local path
+  while IFS= read -r -d '' path; do
+    if [ -e "$path" ] || [ -L "$path" ]; then
+      printf '%s\0' "$path"
+    fi
+  done
+}
+
+git_files_to_copy() {
+  printf '.git\0'
+  git ls-files -z --cached --others --exclude-standard | existing_paths_only
+}
+
+clone_repos() {
+  local url name failed=""
+  for url in $REPOS; do
+    name=$(repo_folder_name "$url")
+    echo "==> Cloning $url into ~/Project/$name"
+    exec_in_container --workdir "$CONTAINER_PROJECT_DIR" "$(container_name "$PROJECT_NAME")" \
+      git clone "$url" "$name" || failed="$failed $url"
+  done
+  if [ -n "$failed" ]; then
+    echo "WARNING: Could not clone:$failed" >&2
+    echo "Clone them yourself after: dev enter $PROJECT_NAME" >&2
+  fi
+}
+
+copy_folder() {
+  local name target container
+  name=$(basename "$SOURCE_DIR")
+  target=$CONTAINER_PROJECT_DIR/$name
+  container=$(container_name "$PROJECT_NAME")
+  echo "==> Copying $SOURCE_DIR into ~/Project/$name"
+  "$RUNTIME" exec --user "$CONTAINER_USER" "$container" mkdir -p "$target"
+  (
+    cd "$SOURCE_DIR"
+    export COPYFILE_DISABLE=1
+    if [ -n "$COPY_GIT_FILES_ONLY" ]; then
+      git_files_to_copy | host_tar --null -T - -cf -
+    else
+      host_tar -cf - .
+    fi
+  ) | "$RUNTIME" exec --interactive --user "$CONTAINER_USER" "$container" \
+    tar --warning=no-unknown-keyword -xf - -C "$target"
+}
+
+fill_project() {
+  case "$SOURCE_TYPE" in
+    repos) clone_repos ;;
+    copy) copy_folder || echo "WARNING: Copying $SOURCE_DIR did not finish. Rerun with: dev rebuild $PROJECT_NAME" >&2 ;;
+  esac
+}
+
+run_setup() {
+  "$RUNTIME" exec --interactive --user "$CONTAINER_USER" "$(container_name "$PROJECT_NAME")" \
+    bash -s -- "$DOTFILES_REPO" "$DOTFILES_BRANCH" "$HOME" <"$DEVENV_DIR/setup.sh"
+}
+
+require_running() {
+  local status
+  status=$(container_status "$1")
+  case "$status" in
+    running) return 0 ;;
+    "not created")
+      echo "The container for '$1' does not exist. Create it with:" >&2
+      echo "  dev rebuild $1" >&2
+      ;;
+    *)
+      echo "The container for '$1' is $status. Start it with:" >&2
+      echo "  dev start $1" >&2
+      ;;
+  esac
+  exit 1
+}
+
+print_summary() {
+  local port
+  echo
+  echo "Project '$PROJECT_NAME' is ready, with its code in ~/Project. Enter it with:"
+  echo "  dev enter $PROJECT_NAME"
+  for port in $PORTS; do
+    echo "  localhost:$port on this machine reaches port $port in the container"
+  done
+}
+
+cmd_new() {
+  require_engine
+  reset_project_settings
+  prompt_sources
+  if [ -n "${1:-}" ]; then
+    valid_name "$1" || die "Invalid project name '$1'. Use lowercase letters, digits and dashes."
+    project_exists "$1" && die "A project named '$1' already exists. Change it with: dev config $1"
+    PROJECT_NAME=$1
+  else
+    prompt_name
+  fi
+  if [ "$(container_status "$PROJECT_NAME")" != "not created" ]; then
+    die "A container named $(container_name "$PROJECT_NAME") already exists without project settings. Remove it with: $RUNTIME rm -f $(container_name "$PROJECT_NAME")"
+  fi
+  prompt_dependencies
+  prompt_ports
+  save_project
+  build_image
+  create_container
+  run_setup
+  fill_project
+  print_summary
+}
+
+cmd_config() {
+  load_project "${1:-}"
+  require_engine
+  prompt_sources
+  prompt_dependencies
+  prompt_ports
+  save_project
+  echo
+  echo "Saved. Apply the changes with:"
+  echo "  dev rebuild $PROJECT_NAME"
+}
+
+cmd_rebuild() {
+  load_project "${1:-}"
+  require_engine
+  if [ "$(container_status "$PROJECT_NAME")" != "not created" ]; then
+    echo "This recreates $(container_name "$PROJECT_NAME") with fresh code: uncommitted or unpushed work in ~/Project is lost."
+    echo "The shared package cache and the inner container engine's images and data are kept."
+    confirm "Continue" n || exit 1
+  fi
+  build_image
+  remove_container "$PROJECT_NAME"
+  create_container
+  run_setup
+  fill_project
+  print_summary
+}
+
+cmd_setup() {
+  load_project "${1:-}"
+  require_engine
+  require_running "$PROJECT_NAME"
+  run_setup
+}
+
+cmd_enter() {
+  load_project "${1:-}"
+  require_engine
+  require_running "$PROJECT_NAME"
+  exec_in_container \
+    --workdir "$CONTAINER_PROJECT_DIR" \
+    --env TERM=xterm-256color \
+    --env COLORTERM=truecolor \
+    "$(container_name "$PROJECT_NAME")" bash --login
+}
+
+cmd_start() {
+  load_project "${1:-}"
+  require_engine
+  case "$(container_status "$PROJECT_NAME")" in
+    running) echo "$(container_name "$PROJECT_NAME") is already running." ;;
+    "not created") require_running "$PROJECT_NAME" ;;
+    *) "$RUNTIME" start "$(container_name "$PROJECT_NAME")" >/dev/null && echo "Started. Enter it with: dev enter $PROJECT_NAME" ;;
+  esac
+}
+
+cmd_stop() {
+  load_project "${1:-}"
+  require_engine
+  case "$(container_status "$PROJECT_NAME")" in
+    running) "$RUNTIME" stop "$(container_name "$PROJECT_NAME")" >/dev/null && echo "Stopped." ;;
+    *) echo "$(container_name "$PROJECT_NAME") is not running." ;;
+  esac
+}
+
+cmd_rm() {
+  local volume
+  load_project "${1:-}"
+  require_engine
+  volume=$(engine_volume "$PROJECT_NAME")
+  echo "This removes the container (including the code in ~/Project), image, settings and the images and data of containers run inside it for '$PROJECT_NAME'."
+  confirm "Remove '$PROJECT_NAME'" n || exit 1
+  remove_container "$PROJECT_NAME"
+  "$RUNTIME" rmi --force "$(image_name "$PROJECT_NAME")" >/dev/null 2>&1 || true
+  if "$RUNTIME" volume inspect "$volume" >/dev/null 2>&1; then
+    "$RUNTIME" volume rm --force "$volume" >/dev/null
+  fi
+  rm -f "$(project_file "$PROJECT_NAME")"
+  echo "Removed '$PROJECT_NAME'."
+}
+
+cmd_ls() {
+  local file reachable=no
+  detect_runtime
+  engine_reachable && reachable=yes
+  if [ ! -d "$PROJECTS_DIR" ] || [ -z "$(ls -A "$PROJECTS_DIR" 2>/dev/null)" ]; then
+    echo "No projects yet. Create one with: dev new"
+    return
+  fi
+  printf '%-20s %-12s %s\n' PROJECT STATUS CODE
+  for file in "$PROJECTS_DIR"/*.env; do
+    reset_project_settings
+    . "$file"
+    if [ "$reachable" = yes ]; then
+      printf '%-20s %-12s %s\n' "$PROJECT_NAME" "$(container_status "$PROJECT_NAME")" "$(source_summary)"
+    else
+      printf '%-20s %-12s %s\n' "$PROJECT_NAME" "unknown" "$(source_summary)"
+    fi
+  done
+  [ "$reachable" = yes ] || print_engine_start_hint
+}
+
+cmd_purge() {
+  require_engine
+  if [ "${1:-}" != --yes ]; then
+    echo "This removes every devenv container, image and volume (including the shared cache),"
+    echo "and all project settings in $PROJECTS_DIR. Folders on this machine are not touched."
+    confirm "Remove everything" n || exit 1
+  fi
+  "$RUNTIME" ps --all --quiet --filter "label=$PROJECT_LABEL" | xargs -r "$RUNTIME" rm --force >/dev/null
+  "$RUNTIME" images --quiet --filter "label=$PROJECT_LABEL" | sort -u | xargs -r "$RUNTIME" rmi --force >/dev/null
+  "$RUNTIME" volume ls --quiet --filter "label=$PROJECT_LABEL" | xargs -r "$RUNTIME" volume rm --force >/dev/null
+  "$RUNTIME" volume ls --quiet --filter "label=$CACHE_LABEL" | xargs -r "$RUNTIME" volume rm --force >/dev/null
+  rm -rf "$PROJECTS_DIR"
+  echo "Removed all devenv containers, images, volumes and project settings."
+}
+
+command=${1:-help}
+shift || true
+case "$command" in
+  new) cmd_new "$@" ;;
+  enter) cmd_enter "$@" ;;
+  start) cmd_start "$@" ;;
+  stop) cmd_stop "$@" ;;
+  rebuild) cmd_rebuild "$@" ;;
+  setup) cmd_setup "$@" ;;
+  config) cmd_config "$@" ;;
+  rm) cmd_rm "$@" ;;
+  ls) cmd_ls ;;
+  purge) cmd_purge "$@" ;;
+  help | -h | --help) usage ;;
+  *)
+    usage >&2
+    exit 1
+    ;;
+esac
