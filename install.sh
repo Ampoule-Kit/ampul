@@ -3,8 +3,8 @@ set -euo pipefail
 
 DEVENV_DIR=$(cd -P "$(dirname "$0")" && pwd)
 BIN_DIR=${DEVENV_BIN_DIR:-$HOME/.local/bin}
-SOURCE=$DEVENV_DIR/dev
-TARGET=$BIN_DIR/dev
+DEV_SCRIPT=$DEVENV_DIR/dev
+DEV_LINK=$BIN_DIR/dev
 MINIMUM_MACHINE_MEMORY_MIB=4096
 
 die() {
@@ -21,30 +21,29 @@ check_not_root() {
 }
 
 make_scripts_executable() {
-  chmod +x "$SOURCE" "$DEVENV_DIR/setup.sh" "$DEVENV_DIR/entrypoint.sh" "$DEVENV_DIR/install.sh" "$DEVENV_DIR/uninstall.sh"
-  find "$DEVENV_DIR/deps" -name '*.sh' ! -name lib.sh -exec chmod +x {} +
+  chmod +x "$DEV_SCRIPT" "$DEVENV_DIR/install.sh" "$DEVENV_DIR/uninstall.sh" "$DEVENV_DIR"/container/*.sh "$DEVENV_DIR"/image/tools/*.sh
 }
 
 link_command() {
   local current
   mkdir -p "$BIN_DIR" || die "Could not create $BIN_DIR."
-  if [ -L "$TARGET" ]; then
-    current=$(readlink "$TARGET")
-    if [ "$current" = "$SOURCE" ]; then
-      echo "$TARGET already points to this copy of devenv."
+  if [ -L "$DEV_LINK" ]; then
+    current=$(readlink "$DEV_LINK")
+    if [ "$current" = "$DEV_SCRIPT" ]; then
+      echo "$DEV_LINK already points to this copy of devenv."
       return
     fi
-    if [ ! -e "$TARGET" ]; then
-      echo "Replacing a broken link at $TARGET (it pointed to $current)."
-      rm "$TARGET"
+    if [ ! -e "$DEV_LINK" ]; then
+      echo "Replacing a broken link at $DEV_LINK (it pointed to $current)."
+      rm "$DEV_LINK"
     else
-      die "$TARGET already points to $current. Run uninstall.sh from that copy first, or remove the link yourself."
+      die "$DEV_LINK already points to $current. Run uninstall.sh from that copy first, or remove the link yourself."
     fi
-  elif [ -e "$TARGET" ]; then
-    die "$TARGET already exists and is not a devenv link. Move it away first, or install elsewhere with DEVENV_BIN_DIR=/some/dir ./install.sh"
+  elif [ -e "$DEV_LINK" ]; then
+    die "$DEV_LINK already exists and is not a devenv link. Move it away first, or install elsewhere with DEVENV_BIN_DIR=/some/dir ./install.sh"
   fi
-  ln -s "$SOURCE" "$TARGET"
-  echo "Linked $TARGET -> $SOURCE"
+  ln -s "$DEV_SCRIPT" "$DEV_LINK"
+  echo "Linked $DEV_LINK -> $DEV_SCRIPT"
 }
 
 check_path() {
@@ -58,7 +57,7 @@ check_path() {
       ;;
   esac
   resolved=$(type -P dev || true)
-  if [ -n "$resolved" ] && [ "$resolved" != "$TARGET" ]; then
+  if [ -n "$resolved" ] && [ "$resolved" != "$DEV_LINK" ]; then
     note "Another 'dev' at $resolved comes earlier on your PATH and hides this one. Move $BIN_DIR earlier on your PATH, or remove the other command."
   fi
 }

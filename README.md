@@ -2,8 +2,8 @@
 
 A portable, containerized developer environment. One command creates a container for a project with your tools, dotfiles, Neovim setup, git and SSH config already in place, and the project's code cloned or copied inside it. You then `dev enter` it and work as on any Linux machine.
 
-- No files are added to your projects. Everything devenv needs lives in this repo and in `~/.config/devenv/`.
-- Every tool version is pinned and checksummed in [`versions`](versions), so a rebuild months from now gives the same environment. Nothing changes until you bump a version.
+- No files are added to your projects. Everything devenv needs, your dotfiles included, lives in this repo and in `~/.config/devenv/`.
+- Every tool version is pinned and checksummed in [`image/versions`](image/versions), so a rebuild months from now gives the same environment. Nothing changes until you bump a version.
 - Plain bash, a Containerfile and Podman or Docker. No other tooling is required.
 
 ## Requirements
@@ -93,9 +93,9 @@ You work as the user `dev`, which has passwordless `sudo` and the same user ID a
 
 ### Dotfiles and Neovim
 
-Every new or rebuilt container clones the dotfiles repository and branch set in [`devenv.conf`](devenv.conf) into `~/dotfiles` and links them into the home folder with `stow --no-folding`. It then installs the Neovim plugins pinned in `lazy-lock.json`, the Mason language servers and formatters, and the treesitter parsers. Anything that fails to install is reported as a warning, and the full output is in `/tmp/devenv/setup.log`.
+[`dotfiles/`](dotfiles) holds everything that goes into the container's home folder: the bash profile, and the Neovim, yazi and zellij configs. `dev new`, `dev rebuild` and `dev setup` copy it into `~/dotfiles` in the container and link it into the home folder with `stow --no-folding`. They then install the Neovim plugins pinned in `lazy-lock.json`, the Mason language servers and formatters, and the treesitter parsers. Anything that fails to install is reported as a warning, and the full output is in `/tmp/devenv/setup.log`.
 
-To pick up a dotfiles change, push it to that branch and run `dev rebuild <name>`, or `dev setup <name>` to keep the container.
+To pick up a change to `dotfiles/`, run `dev setup <name>`. It copies your working copy in, so there is nothing to commit first. Links to files you deleted from `dotfiles/` are removed.
 
 ### Git and SSH
 
@@ -132,8 +132,6 @@ Their images and data live in a volume per project, so they survive `dev rebuild
 
 | Setting | Meaning |
 | --- | --- |
-| `DOTFILES_REPO` | Git URL of the dotfiles cloned into every container. |
-| `DOTFILES_BRANCH` | Branch of that repository. |
 | `CONTAINER_USER` | Name of the user in the container. |
 | `RUNTIME` | `podman` or `docker`. Empty picks Podman when it is installed, otherwise Docker. |
 
@@ -143,7 +141,7 @@ Each project's answers are saved in `~/.config/devenv/projects/<name>.env`. Chan
 
 ### Bumping a version
 
-[`versions`](versions) holds every pinned version and its checksums for arm64 and amd64. To bump a tool:
+[`image/versions`](image/versions) holds every pinned version and its checksums for arm64 and amd64. To bump a tool:
 
 1. Change its `_VERSION`.
 2. Replace both checksums with the new release's, from the source the tool publishes them in:
@@ -160,29 +158,28 @@ Each project's answers are saved in `~/.config/devenv/projects/<name>.env`. Chan
 
 3. Run `dev rebuild <name>`. A wrong checksum fails the build and names the file.
 
-To offer another .NET SDK, add its channel to `DOTNET_CHANNELS` and add its `DOTNET_<channel>_VERSION` and both `DOTNET_<channel>_SHA512_*` lines. `dev new` then lists it.
+To offer another .NET SDK, add its channel to `DOTNET_CHANNELS` in `image/versions` and add its `DOTNET_<channel>_VERSION` and both `DOTNET_<channel>_SHA512_*` lines. `dev new` then lists it.
 
 Downloads are cached by the container engine between builds, so rebuilding only downloads what changed.
 
 ### Adding a dependency
 
-1. Add its pins to `versions`.
-2. Add `deps/<tool>.sh`, following the existing scripts: `fetch` downloads and verifies a file, `install_dir` and `link_bin` put it under `/opt` and on the `PATH`.
-3. Install it in the [`Containerfile`](Containerfile): always, or behind a `WITH_<TOOL>` build argument.
-4. For an optional dependency, ask for it in `prompt_dependencies` in [`dev`](dev), save it in `save_project` and pass it in `build_image`.
+1. Add its pins to `image/versions`.
+2. Add `image/tools/<tool>.sh`, following the existing scripts: `download_verified` downloads a file and checks it against its pinned hash, and `fresh_install_dir` and `link_into_path` put it under `/opt` and on the `PATH`.
+3. Install it in [`image/Containerfile`](image/Containerfile): always, or behind a `WITH_<TOOL>` build argument.
+4. For an optional dependency, ask for it in `prompt_dependencies` in [`cli/prompts.sh`](cli/prompts.sh), save it in `save_project` in [`cli/projects.sh`](cli/projects.sh) and pass it to the build in `build_image` in [`cli/containers.sh`](cli/containers.sh).
 
-## Files
+## Layout
 
-| File | Purpose |
+| Path | Purpose |
 | --- | --- |
-| `dev` | The command-line tool. |
+| `dev` | The command: loads the settings and the `cli/` modules, and runs a command. |
 | `install.sh`, `uninstall.sh` | Link and unlink the `dev` command. |
-| `devenv.conf` | Dotfiles source, container user and runtime. |
-| `versions` | Pinned versions and checksums. |
-| `Containerfile` | The image, shared by every project. |
-| `deps/` | One install script per tool, plus the shared `lib.sh`. |
-| `setup.sh` | Runs in each new container: dotfiles, Neovim, git and SSH. |
-| `entrypoint.sh` | The container's main process: ssh-agent, inner container engine and port forwarders. |
+| `devenv.conf` | Container user and runtime. |
+| `cli/` | The `dev` command's modules, run on this machine: `engine.sh` (Podman or Docker), `projects.sh` (names and saved settings), `prompts.sh` (questions), `containers.sh` (image, container and setup), `project-code.sh` (cloning or copying the code) and `commands.sh` (one function per command). |
+| `image/` | What builds the image: `Containerfile`, `versions`, `install-helpers.sh` and one script per tool in `tools/`. |
+| `container/` | What runs inside a container: `entrypoint.sh` (ssh-agent, inner container engine and port forwarders) and `setup.sh` (dotfiles, Neovim, git and SSH). |
+| `dotfiles/` | Everything linked into the container's home folder. |
 
 ## Troubleshooting
 

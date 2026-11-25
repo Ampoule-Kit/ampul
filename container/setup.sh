@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-if [ $# -ne 3 ]; then
-  echo "Usage: setup.sh <dotfiles-repo> <dotfiles-branch> <host-home>" >&2
+if [ $# -ne 1 ]; then
+  echo "Usage: setup.sh <host-home>" >&2
   exit 1
 fi
 
-DOTFILES_REPO=$1
-DOTFILES_BRANCH=$2
-HOST_HOME=$3
+HOST_HOME=$1
 DOTFILES_DIR=$HOME/dotfiles
 HOST_DIR=$HOME/.host
 GIT_CONFIG_FILE=$HOME/.config/git/config
@@ -25,13 +23,16 @@ warn() {
   printf 'WARNING: %s\n' "$1" >&2
 }
 
-link_dotfiles() {
-  step "Cloning $DOTFILES_REPO ($DOTFILES_BRANCH)"
-  rm -rf "$DOTFILES_DIR"
-  git clone --quiet --branch "$DOTFILES_BRANCH" "$DOTFILES_REPO" "$DOTFILES_DIR" || return 1
+remove_links_to_deleted_dotfiles() {
+  find "$HOME" \( -path "$DOTFILES_DIR" -o -path "$HOST_DIR" -o -path "$HOME/Project" -o -path "$HOME/.cache" -o -path "$HOME/.local" \) -prune \
+    -o -xtype l -lname '*dotfiles/*' -exec rm {} +
+}
 
+link_dotfiles() {
+  [ -d "$DOTFILES_DIR" ] || return 1
   step "Linking dotfiles into $HOME"
   rm -f "$HOME/.bashrc" "$HOME/.profile" "$HOME/.bash_logout"
+  remove_links_to_deleted_dotfiles
   (cd "$DOTFILES_DIR" && stow --no-folding .)
 }
 
@@ -133,7 +134,7 @@ install_neovim_plugins() {
 
 install_neovim_tools() {
   step "Installing language servers, formatters and treesitter parsers"
-  nvim --headless "+lua require('tools').install_blocking()" 2>>"$LOG_FILE" | tee -a "$LOG_FILE"
+  nvim --headless "+lua require('language_tools').install_all_then_quit()" 2>>"$LOG_FILE" | tee -a "$LOG_FILE"
 }
 
 mkdir -p "$(dirname "$LOG_FILE")"
@@ -143,7 +144,7 @@ if link_dotfiles; then
   install_neovim_plugins || warn "Neovim plugins did not install cleanly. See $LOG_FILE, then run :Lazy restore in Neovim."
   install_neovim_tools || warn "Some Neovim tools did not install (listed above). See $LOG_FILE, then run :Mason in Neovim."
 else
-  warn "Dotfiles could not be cloned or linked, so Neovim was not set up."
+  warn "Dotfiles could not be linked, so Neovim was not set up."
 fi
 
 link_host_git_config || warn "The host's git config could not be linked."

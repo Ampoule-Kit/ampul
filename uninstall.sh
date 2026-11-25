@@ -3,8 +3,8 @@ set -euo pipefail
 
 DEVENV_DIR=$(cd -P "$(dirname "$0")" && pwd)
 BIN_DIR=${DEVENV_BIN_DIR:-$HOME/.local/bin}
-SOURCE=$DEVENV_DIR/dev
-TARGET=$BIN_DIR/dev
+DEV_SCRIPT=$DEVENV_DIR/dev
+DEV_LINK=$BIN_DIR/dev
 PROJECTS_DIR=${XDG_CONFIG_HOME:-$HOME/.config}/devenv/projects
 
 confirm() {
@@ -18,8 +18,8 @@ confirm() {
 
 offer_purge() {
   echo "Containers, images and volumes made by devenv stay until you remove them."
-  if confirm "Remove every devenv container, image, volume and project setting now? Project folders are not touched."; then
-    if ! "$SOURCE" purge --yes; then
+  if confirm "Remove every devenv container, image, volume and project setting now? Folders on this machine are not touched."; then
+    if ! "$DEV_SCRIPT" purge --yes; then
       echo "Purge did not finish (see above). The 'dev' command is kept so you can rerun this once it works."
       exit 1
     fi
@@ -27,17 +27,17 @@ offer_purge() {
 }
 
 remove_link() {
-  if [ -L "$TARGET" ]; then
-    if [ "$(readlink "$TARGET")" != "$SOURCE" ]; then
-      echo "$TARGET points to $(readlink "$TARGET"), not to this copy of devenv, so it was left alone."
+  if [ -L "$DEV_LINK" ]; then
+    if [ "$(readlink "$DEV_LINK")" != "$DEV_SCRIPT" ]; then
+      echo "$DEV_LINK points to $(readlink "$DEV_LINK"), not to this copy of devenv, so it was left alone."
       return
     fi
-    rm "$TARGET"
-    echo "Removed $TARGET"
-  elif [ -e "$TARGET" ]; then
-    echo "$TARGET is not a devenv link, so it was left alone."
+    rm "$DEV_LINK"
+    echo "Removed $DEV_LINK"
+  elif [ -e "$DEV_LINK" ]; then
+    echo "$DEV_LINK is not a devenv link, so it was left alone."
   else
-    echo "devenv was not installed at $TARGET."
+    echo "devenv was not installed at $DEV_LINK."
   fi
 }
 

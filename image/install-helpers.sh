@@ -3,10 +3,10 @@ set -euo pipefail
 . /opt/devenv/versions
 
 ARCH=$(dpkg --print-architecture)
-ARCH_KEY=$(echo "$ARCH" | tr '[:lower:]' '[:upper:]')
+ARCH_SUFFIX=$(echo "$ARCH" | tr '[:lower:]' '[:upper:]')
 DOWNLOAD_CACHE=/var/cache/devenv
 
-for_arch() {
+pick_for_architecture() {
   case "$ARCH" in
     arm64) echo "$1" ;;
     amd64) echo "$2" ;;
@@ -15,7 +15,7 @@ for_arch() {
 }
 
 pinned_hash() {
-  local key="$1_$ARCH_KEY"
+  local key="$1_$ARCH_SUFFIX"
   if [ -z "${!key:-}" ]; then
     echo "No hash pinned for $key in versions" >&2
     exit 1
@@ -28,7 +28,7 @@ hash_matches() {
   echo "$expected  $file" | "${algorithm}sum" --check --status
 }
 
-fetch() {
+download_verified() {
   local url="$1" algorithm="$2" expected="$3"
   local file="$DOWNLOAD_CACHE/${expected:0:16}-${url##*/}"
   mkdir -p "$DOWNLOAD_CACHE"
@@ -46,12 +46,12 @@ fetch() {
   echo "$file"
 }
 
-install_dir() {
+fresh_install_dir() {
   rm -rf "$1"
   mkdir -p "$1"
   echo "$1"
 }
 
-link_bin() {
+link_into_path() {
   ln -sf "$1" "/usr/local/bin/${2:-${1##*/}}"
 }

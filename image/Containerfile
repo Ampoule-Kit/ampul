@@ -12,36 +12,37 @@ RUN apt-get update \
  && ln -s /usr/bin/fdfind /usr/local/bin/fd \
  && rm -rf /var/lib/apt/lists/*
 
-COPY versions /opt/devenv/versions
-COPY deps/ /opt/devenv/deps/
+COPY image/versions /opt/devenv/versions
+COPY image/install-helpers.sh /opt/devenv/install-helpers.sh
+COPY image/tools/ /opt/devenv/tools/
 
-RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/deps/neovim.sh
-RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/deps/tree-sitter.sh
-RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/deps/node.sh
-RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/deps/lazygit.sh
-RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/deps/yazi.sh
-RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/deps/zellij.sh
-RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/deps/lsd.sh
-RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/deps/claude-code.sh
+RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/tools/neovim.sh
+RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/tools/tree-sitter.sh
+RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/tools/node.sh
+RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/tools/lazygit.sh
+RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/tools/yazi.sh
+RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/tools/zellij.sh
+RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/tools/lsd.sh
+RUN --mount=type=cache,target=/var/cache/devenv /opt/devenv/tools/claude-code.sh
 
 ARG WITH_DOTNET=
 RUN --mount=type=cache,target=/var/cache/devenv \
-    if [ -n "$WITH_DOTNET" ]; then /opt/devenv/deps/dotnet.sh $WITH_DOTNET; fi
+    if [ -n "$WITH_DOTNET" ]; then /opt/devenv/tools/dotnet.sh $WITH_DOTNET; fi
 
 ARG WITH_JAVA=
 RUN --mount=type=cache,target=/var/cache/devenv \
-    if [ -n "$WITH_JAVA" ]; then /opt/devenv/deps/java.sh; fi
+    if [ -n "$WITH_JAVA" ]; then /opt/devenv/tools/java.sh; fi
 
 ARG WITH_GODOT=
 RUN --mount=type=cache,target=/var/cache/devenv \
-    if [ -n "$WITH_GODOT" ]; then /opt/devenv/deps/godot.sh "$WITH_GODOT"; fi
+    if [ -n "$WITH_GODOT" ]; then /opt/devenv/tools/godot.sh "$WITH_GODOT"; fi
 
 ARG WITH_PYTHON=
-RUN if [ -n "$WITH_PYTHON" ]; then /opt/devenv/deps/python.sh; fi
+RUN if [ -n "$WITH_PYTHON" ]; then /opt/devenv/tools/python.sh; fi
 
 ARG WITH_CONTAINER_ENGINE=
 RUN --mount=type=cache,target=/var/cache/devenv \
-    if [ -n "$WITH_CONTAINER_ENGINE" ]; then /opt/devenv/deps/container-engine.sh; fi
+    if [ -n "$WITH_CONTAINER_ENGINE" ]; then /opt/devenv/tools/container-engine.sh; fi
 
 ARG USER_NAME=dev
 ARG USER_UID=1000
@@ -66,7 +67,7 @@ ENV PATH=/opt/node/bin:/opt/java/bin:/opt/dotnet:/home/${USER_NAME}/.dotnet/tool
     NODE_OPTIONS=--dns-result-order=ipv4first \
     SSH_AUTH_SOCK=/tmp/devenv/ssh-agent.sock
 
-COPY entrypoint.sh /opt/devenv/entrypoint.sh
+COPY container/entrypoint.sh /opt/devenv/entrypoint.sh
 
 USER ${USER_NAME}
 WORKDIR /home/${USER_NAME}/Project
