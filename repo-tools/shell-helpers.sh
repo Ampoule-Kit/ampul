@@ -22,7 +22,3 @@ ask() {
   read -r -p "$1 [$2]: " answer
   echo "${answer:-$2}"
 }
-
-list_contains() {
-  case " $1 " in *" $2 "*) return 0 ;; *) return 1 ;; esac
-}

@@ -1,0 +1,28 @@
+{
+  "label": "tree-sitter CLI",
+  "description": "The tree-sitter command, which Neovim uses to build its syntax parsers.",
+  "version": "0.27.2",
+  "selectedByDefault": true,
+  "requires": [
+    "build-essential"
+  ],
+  "downloads": [
+    {
+      "url": "https://github.com/tree-sitter/tree-sitter/releases/download/v{version}/tree-sitter-linux-{arch}.gz",
+      "architectures": {
+        "arm64": "arm64",
+        "amd64": "x64"
+      },
+      "sha256": {
+        "arm64": "34fcc5c4fa7bdd2058a2a45a03b6eb9a49b03a93b6d52ec750f99b1516d98d33",
+        "amd64": "7ed56d152c52437397b9fcaa43cf341f49933cecc1ca291843f0d347c6e2cb3a"
+      },
+      "installTo": "/opt/tree-sitter",
+      "fileName": "tree-sitter",
+      "commands": [
+        "tree-sitter"
+      ]
+    }
+  ],
+  "check": "tree-sitter --version"
+}

@@ -1,0 +1,9 @@
+{
+  "label": "ripgrep",
+  "description": "Fast recursive search, the rg command. Neovim's search uses it.",
+  "selectedByDefault": true,
+  "packages": [
+    "ripgrep"
+  ],
+  "check": "rg --version"
+}

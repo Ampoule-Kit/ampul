@@ -1,3 +1,5 @@
+import { moduleCatalog } from '../../modules/moduleCatalog.js'
+import { defaultModuleIds, withRequiredModules } from '../../modules/moduleSelection.js'
 import { presetRanges, presetsCoveredBy } from '../../projects/portPresets.js'
 import { combinePorts, portRanges, type PortRange } from '../../projects/ports.js'
 import type { ProjectSettings } from '../../projects/ProjectSettings.js'
@@ -8,8 +10,7 @@ export interface ProjectDraft {
   folder: string
   onlyGitFiles: boolean
   name: string
-  dotnetSdks: string[]
-  optionalDependencies: Record<string, string>
+  modules: string[]
   portPresetIds: string[]
   addsOtherPorts: boolean
   otherPortRanges: PortRange[]
@@ -22,8 +23,7 @@ export function emptyDraft(name = ''): ProjectDraft {
     folder: '',
     onlyGitFiles: true,
     name,
-    dotnetSdks: [],
-    optionalDependencies: {},
+    modules: defaultModuleIds(moduleCatalog()),
     portPresetIds: [],
     addsOtherPorts: false,
     otherPortRanges: [],
@@ -39,8 +39,7 @@ export function draftFromSettings(settings: ProjectSettings): ProjectDraft {
     folder: source.kind === 'folder' ? source.folder : '',
     onlyGitFiles: source.kind === 'folder' ? source.onlyGitFiles : true,
     name: settings.name,
-    dotnetSdks: settings.dotnetSdks,
-    optionalDependencies: settings.optionalDependencies,
+    modules: settings.modules,
     portPresetIds: presetIds,
     addsOtherPorts: otherPorts.length > 0,
     otherPortRanges: portRanges(otherPorts),
@@ -54,8 +53,7 @@ export function settingsFromDraft(draft: ProjectDraft): ProjectSettings {
       draft.codeSourceKind === 'repositories'
         ? { kind: 'repositories', repositories: draft.repositories }
         : { kind: 'folder', folder: draft.folder, onlyGitFiles: draft.onlyGitFiles },
-    dotnetSdks: draft.dotnetSdks,
-    optionalDependencies: draft.optionalDependencies,
+    modules: withRequiredModules(draft.modules, moduleCatalog()),
     ports: draftPorts(draft),
   }
 }

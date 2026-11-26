@@ -1,5 +1,0 @@
-SETTING|CHOICES|LABEL|DESCRIPTION
-JAVA|yes-no|Java (Temurin)|The Eclipse Temurin JDK, with JAVA_HOME set, for Java, Kotlin and Gradle or Maven builds.
-GODOT|standard,dotnet|Godot|The Godot engine and editor. The dotnet build runs C# scripts and needs a .NET SDK.
-PYTHON|yes-no|Python (pip, venv, headers)|Ubuntu's Python 3 with pip, venv and the headers that native packages build against.
-CONTAINER_ENGINE|yes-no|Container engine inside the container|Podman with the docker CLI and compose, so databases, compose stacks and Testcontainers run inside the project. The container then runs privileged.

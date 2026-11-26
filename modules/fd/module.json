@@ -1,0 +1,9 @@
+{
+  "label": "fd",
+  "description": "A fast, friendly find, the fd command.",
+  "selectedByDefault": true,
+  "packages": [
+    "fd-find"
+  ],
+  "check": "fd --version"
+}

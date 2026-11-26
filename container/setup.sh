@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-if [ $# -ne 1 ]; then
-  echo "Usage: setup.sh <host-home>" >&2
+if [ $# -lt 1 ]; then
+  echo "Usage: setup.sh <host-home> [module]..." >&2
   exit 1
 fi
 
 HOST_HOME=$1
-DOTFILES_DIR=$HOME/dotfiles
+shift
+MODULES=("$@")
+DEVENV_DIR=$HOME/.devenv
+LEGACY_DOTFILES_DIR=$HOME/dotfiles
 HOST_DIR=$HOME/.host
 GIT_CONFIG_FILE=$HOME/.config/git/config
 LOG_FILE=/tmp/devenv/setup.log
@@ -23,17 +26,40 @@ warn() {
   printf 'WARNING: %s\n' "$1" >&2
 }
 
-remove_links_to_deleted_dotfiles() {
-  find "$HOME" \( -path "$DOTFILES_DIR" -o -path "$HOST_DIR" -o -path "$HOME/Project" -o -path "$HOME/.cache" -o -path "$HOME/.local" \) -prune \
-    -o -xtype l -lname '*dotfiles/*' -exec rm {} +
+remove_links_to_deleted_config() {
+  local link
+  find "$HOME" \( -path "$DEVENV_DIR" -o -path "$HOST_DIR" -o -path "$HOME/Project" -o -path "$HOME/.cache" -o -path "$HOME/.local" \) -prune \
+    -o -xtype l \( -lname '*.devenv/*' -o -lname '*dotfiles/*' \) -print0 |
+    while IFS= read -r -d '' link; do
+      rm "$link"
+      rmdir --parents --ignore-fail-on-non-empty "$(dirname "$link")" 2>/dev/null
+    done
 }
 
-link_dotfiles() {
-  [ -d "$DOTFILES_DIR" ] || return 1
-  step "Linking dotfiles into $HOME"
+module_config_dir() {
+  echo "$DEVENV_DIR/modules/$1/config"
+}
+
+link_config() {
+  local module
+  [ -d "$DEVENV_DIR/dotfiles" ] || return 1
+  step "Linking your dotfiles and the tools' config into $HOME"
+  rm -rf "$LEGACY_DOTFILES_DIR"
   rm -f "$HOME/.bashrc" "$HOME/.profile" "$HOME/.bash_logout"
-  remove_links_to_deleted_dotfiles
-  (cd "$DOTFILES_DIR" && stow --no-folding .)
+  remove_links_to_deleted_config
+  stow --no-folding --dir "$DEVENV_DIR" --target "$HOME" dotfiles || return 1
+  for module in "${MODULES[@]}"; do
+    [ -d "$(module_config_dir "$module")" ] || continue
+    stow --no-folding --dir "$DEVENV_DIR/modules/$module" --target "$HOME" config || return 1
+  done
+}
+
+run_module_setups() {
+  local module script
+  for module in "${MODULES[@]}"; do
+    script=$DEVENV_DIR/modules/$module/setup.sh
+    [ -f "$script" ] && . "$script"
+  done
 }
 
 credential_helper_available() {
@@ -127,24 +153,13 @@ link_host_ssh() {
   fi
 }
 
-install_neovim_plugins() {
-  step "Installing the Neovim plugins pinned in lazy-lock.json"
-  nvim --headless "+Lazy! restore" "+Lazy! clean" "+Lazy! build base46" +qa >>"$LOG_FILE" 2>&1
-}
-
-install_neovim_tools() {
-  step "Installing language servers, formatters and treesitter parsers"
-  nvim --headless "+lua require('language_tools').install_all_then_quit()" 2>>"$LOG_FILE" | tee -a "$LOG_FILE"
-}
-
 mkdir -p "$(dirname "$LOG_FILE")"
 : >"$LOG_FILE"
 
-if link_dotfiles; then
-  install_neovim_plugins || warn "Neovim plugins did not install cleanly. See $LOG_FILE, then run :Lazy restore in Neovim."
-  install_neovim_tools || warn "Some Neovim tools did not install (listed above). See $LOG_FILE, then run :Mason in Neovim."
+if link_config; then
+  run_module_setups
 else
-  warn "Dotfiles could not be linked, so Neovim was not set up."
+  warn "The dotfiles and tool config could not be linked, so the tools were not set up. See $LOG_FILE."
 fi
 
 link_host_git_config || warn "The host's git config could not be linked."

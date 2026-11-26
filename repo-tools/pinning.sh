@@ -1,78 +1,33 @@
 ARCHITECTURES="arm64 amd64"
 
-architecture_suffix() {
-  echo "$1" | tr '[:lower:]' '[:upper:]'
-}
+. "$REPO_DIR/image/module-downloads.sh"
 
-name_to_variable_prefix() {
-  echo "$1" | tr '[:lower:]-' '[:upper:]_'
-}
-
-variable_prefix_to_name() {
-  echo "$1" | tr '[:upper:]_' '[:lower:]-'
+module_file() {
+  echo "$REPO_DIR/modules/$1/module.json"
 }
 
 is_valid_version() {
   [[ "$1" =~ ^[0-9A-Za-z][0-9A-Za-z.+_-]*$ ]]
 }
 
-variable_value() {
-  sed -n "s/^$2=//p" "$1" | head -1 | sed -e 's/^"//' -e 's/"$//'
+update_json() {
+  local file=$1
+  shift
+  jq "$@" "$file" >"$file.edited" && mv "$file.edited" "$file"
 }
 
-has_variable() {
-  grep -q "^$2=" "$1"
+modules_in_catalog_order() {
+  jq -r '.sections[].modules[]' "$REPO_DIR/modules/catalog.json"
 }
 
-replace_line() {
-  awk -v pattern="$2" -v line="$3" '$0 ~ pattern && !done { print line; done = 1; next } { print }' "$1" >"$1.edited" &&
-    mv "$1.edited" "$1"
-}
-
-insert_line_after() {
-  awk -v pattern="$2" -v line="$3" '{ print } $0 ~ pattern && !done { print line; done = 1 } END { if (!done) print line }' "$1" >"$1.edited" &&
-    mv "$1.edited" "$1"
-}
-
-replace_or_insert_line() {
-  local file=$1 existing_pattern=$2 new_line=$3 insert_after_pattern=$4
-  if grep -qE "$existing_pattern" "$file"; then
-    replace_line "$file" "$existing_pattern" "$new_line"
-  elif [ -n "$insert_after_pattern" ]; then
-    insert_line_after "$file" "$insert_after_pattern" "$new_line"
-  else
-    echo "$new_line" >>"$file"
-  fi
-}
-
-set_variable() {
-  local file=$1 name=$2 value=$3 insert_after_pattern=${4:-}
-  replace_or_insert_line "$file" "^$name=" "$name=$value" "$insert_after_pattern"
-}
-
-pinned_downloads() {
-  grep -oE '^[A-Z0-9_]+_SHA(256|512)_ARM64=' "$1" | sed -E 's/_SHA(256|512)_ARM64=$//'
-}
-
-version_variable_of() {
-  local file=$1 prefix=$2
-  while [ -n "$prefix" ]; do
-    if has_variable "$file" "${prefix}_VERSION"; then
-      echo "${prefix}_VERSION"
-      return
-    fi
-    case "$prefix" in *_*) prefix=${prefix%_*} ;; *) prefix= ;; esac
-  done
-  return 1
-}
-
-downloads_pinned_by() {
-  local file=$1 version_variable=$2 download
-  for download in $(pinned_downloads "$file"); do
-    if [ "$(version_variable_of "$file" "$download")" = "$version_variable" ]; then
-      echo "$download"
-    fi
-  done
+modules_with_requirements() {
+  local id required
+  for id in "$@"; do
+    for required in $(jq -r '.requires // [] | .[]' "$(module_file "$id")"); do
+      modules_with_requirements "$required"
+    done
+    echo "$id"
+  done | awk '!seen[$0]++'
 }
 
 sha256_of() {
@@ -125,28 +80,18 @@ verify_against_published_hash() {
 }
 
 pin_download() {
-  local versions_file=$1 download=$2 download_dir=$3 download_urls_file=${4:-$REPO_DIR/image/download-urls.sh}
-  local version_variable architecture url file hash anchor
-  version_variable=$(version_variable_of "$versions_file" "$download")
-  anchor="^$version_variable="
-  rm -f "$download_dir/$download.pins"
-  (
-    . "$versions_file"
-    . "$download_urls_file"
-    for architecture in $ARCHITECTURES; do
-      url=$(download_url "$download" "$architecture") || exit 1
-      echo "  $download ($architecture): $url"
-      file=$(download_into "$download_dir" "$url") || exit 1
-      hash=$(sha256_of "$file") || exit 1
-      echo "    sha256 $hash"
-      verify_against_published_hash "$url" "$hash" || exit 1
-      echo "$architecture $hash $file" >>"$download_dir/$download.pins"
-    done
-  ) || return 1
-
-  while read -r architecture hash file; do
-    replace_or_insert_line "$versions_file" "^${download}_SHA(256|512)_$(architecture_suffix "$architecture")=" \
-      "${download}_SHA256_$(architecture_suffix "$architecture")=$hash" "$anchor"
-    anchor="^${download}_SHA256_$(architecture_suffix "$architecture")="
-  done <"$download_dir/$download.pins"
+  local module_file=$1 index=$2 download_dir=$3 architecture url file hash
+  mkdir -p "$download_dir"
+  rm -f "$download_dir/$index.files"
+  for architecture in $ARCHITECTURES; do
+    url=$(download_url "$module_file" "$index" "$architecture") || return 1
+    echo "  $architecture: $url"
+    file=$(download_into "$download_dir" "$url") || return 1
+    hash=$(sha256_of "$file") || return 1
+    echo "    sha256 $hash"
+    verify_against_published_hash "$url" "$hash" || return 1
+    update_json "$module_file" --argjson index "$index" --arg arch "$architecture" --arg hash "$hash" \
+      '.downloads[$index] |= (del(.sha512) | .sha256[$arch] = $hash)'
+    echo "$architecture $file" >>"$download_dir/$index.files"
+  done
 }

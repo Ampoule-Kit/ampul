@@ -11,13 +11,9 @@ export interface FolderSource {
 
 export type CodeSource = RepositoriesSource | FolderSource
 
-export interface DependencySelection {
-  dotnetSdks: string[]
-  optionalDependencies: Record<string, string>
-}
-
-export interface ProjectSettings extends DependencySelection {
+export interface ProjectSettings {
   name: string
   codeSource: CodeSource
+  modules: string[]
   ports: number[]
 }

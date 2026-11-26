@@ -1,6 +1,6 @@
 import { Box, Text } from 'ink'
 import { createContainer, removeContainer } from '../../containers/containerCreation.js'
-import { copyDotfilesIntoContainer, runContainerSetup } from '../../containers/containerSetup.js'
+import { copyConfigIntoContainer, runContainerSetup } from '../../containers/containerSetup.js'
 import { buildImage } from '../../containers/imageBuild.js'
 import {
   cloneCommand,
@@ -25,11 +25,11 @@ import { openShell } from './containerAccess.js'
 
 export function setupTask(engine: ContainerEngine, project: ProjectSettings): Task {
   return {
-    title: 'Set up dotfiles, Neovim, git and SSH',
+    title: 'Set up your dotfiles, tools, git and SSH',
     run: async (context) => {
-      context.detail('Copying the dotfiles in')
-      await copyDotfilesIntoContainer(engine, project.name, context)
-      await runContainerSetup(engine, project.name, context)
+      context.detail('Copying the dotfiles and tool config in')
+      await copyConfigIntoContainer(engine, project, context)
+      await runContainerSetup(engine, project, context)
     },
   }
 }

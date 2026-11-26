@@ -20,6 +20,7 @@ interface MultiSelectListProps<Value> {
   onSubmit: (selection: Value[]) => void
   onCancel?: () => void
   footer?: (selection: Value[]) => ReactNode
+  requiredOptions?: (selection: Value[]) => Map<Value, string>
   maxVisible?: number
 }
 
@@ -29,13 +30,25 @@ export function MultiSelectList<Value>({
   onSubmit,
   onCancel,
   footer,
+  requiredOptions,
   maxVisible = 12,
 }: MultiSelectListProps<Value>) {
   const [focusedIndex, setFocusedIndex] = useState(0)
   const [selection, setSelection] = useState<Value[]>(initialSelection)
+  const [lockedNotice, setLockedNotice] = useState<string>()
   const visible = visibleWindow(options.length, focusedIndex, maxVisible)
+  const required = requiredOptions?.(selection) ?? new Map<Value, string>()
+  const effectiveSelection = options
+    .map((option) => option.value)
+    .filter((value) => selection.includes(value) || required.has(value))
 
   const toggle = (option: MultiSelectOption<Value>) => {
+    const requiredReason = required.get(option.value)
+    if (requiredReason) {
+      setLockedNotice(`${option.label} stays selected: ${requiredReason}.`)
+      return
+    }
+    setLockedNotice(undefined)
     setSelection((current) => {
       if (current.includes(option.value)) return current.filter((value) => value !== option.value)
       const othersInGroup = options
@@ -45,16 +58,21 @@ export function MultiSelectList<Value>({
     })
   }
 
+  const moveFocus = (step: number) => {
+    setLockedNotice(undefined)
+    setFocusedIndex((index) => (index + step + options.length) % options.length)
+  }
+
   useInput((input, key) => {
     if (key.upArrow || input === 'k') {
-      setFocusedIndex((index) => (index - 1 + options.length) % options.length)
+      moveFocus(-1)
     } else if (key.downArrow || input === 'j') {
-      setFocusedIndex((index) => (index + 1) % options.length)
+      moveFocus(1)
     } else if (input === ' ') {
       const focused = options[focusedIndex]
       if (focused) toggle(focused)
     } else if (key.return) {
-      onSubmit(options.map((option) => option.value).filter((value) => selection.includes(value)))
+      onSubmit(effectiveSelection)
     } else if (key.escape && onCancel) {
       onCancel()
     }
@@ -67,7 +85,8 @@ export function MultiSelectList<Value>({
       {options.slice(visible.start, visible.end).map((option, offset) => {
         const index = visible.start + offset
         const isFocused = index === focusedIndex
-        const isSelected = selection.includes(option.value)
+        const isSelected = effectiveSelection.includes(option.value)
+        const requiredReason = required.get(option.value)
         const startsSection = option.section && option.section !== options[index - 1]?.section
         const mark = option.exclusiveGroup
           ? isSelected
@@ -92,18 +111,24 @@ export function MultiSelectList<Value>({
                 {option.label}
               </Text>
               {option.hint && <Text color={colors.muted}> {option.hint}</Text>}
+              {requiredReason && <Text color={colors.muted}> · {requiredReason}</Text>}
             </Text>
           </Fragment>
         )
       })}
       {visible.hasBelow && <Text color={colors.muted}> ↓ more</Text>}
       {focused?.description && <Description>{focused.description}</Description>}
-      {footer?.(selection)}
+      {lockedNotice && (
+        <Text color={colors.warning}>
+          {symbols.warning} {lockedNotice}
+        </Text>
+      )}
+      {footer?.(effectiveSelection)}
       <KeyHints
         hints={[
           ['↑↓', 'move'],
           ['space', 'select'],
-          ['enter', `continue (${selection.length} selected)`],
+          ['enter', `continue (${effectiveSelection.length} selected)`],
           ...(onCancel ? ([['esc', 'back']] as [string, string][]) : []),
         ]}
       />

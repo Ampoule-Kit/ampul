@@ -1,32 +1,9 @@
 set -euo pipefail
 
-. /opt/devenv/versions
-. /opt/devenv/download-urls.sh
+. /opt/devenv/module-downloads.sh
 
 ARCH=$(dpkg --print-architecture)
-ARCH_SUFFIX=$(echo "$ARCH" | tr '[:lower:]' '[:upper:]')
 DOWNLOAD_CACHE=/var/cache/devenv
-
-pick_for_architecture() {
-  architecture_name "$ARCH" "$1" "$2"
-}
-
-pinned_hash_variable() {
-  local algorithm variable
-  for algorithm in SHA256 SHA512; do
-    variable="${1}_${algorithm}_$ARCH_SUFFIX"
-    if [ -n "${!variable:-}" ]; then
-      echo "$variable"
-      return
-    fi
-  done
-  echo "No hash is pinned for $1 on $ARCH in versions" >&2
-  exit 1
-}
-
-hash_algorithm_of() {
-  echo "$1" | sed -E 's/.*_(SHA[0-9]+)_[A-Z0-9]+$/\1/' | tr '[:upper:]' '[:lower:]'
-}
 
 hash_matches() {
   local file=$1 algorithm=$2 expected=$3
@@ -51,16 +28,9 @@ download_verified() {
   echo "$file"
 }
 
-download_pinned() {
-  local hash_variable
-  hash_variable=$(pinned_hash_variable "$1")
-  download_verified "$(download_url "$1" "$ARCH")" "$(hash_algorithm_of "$hash_variable")" "${!hash_variable}"
-}
-
 fresh_install_dir() {
   rm -rf "$1"
   mkdir -p "$1"
-  echo "$1"
 }
 
 move_single_top_level_folder_up() {
@@ -79,20 +49,8 @@ extract_archive() {
     *.tar.gz | *.tgz) tar -xzf "$archive" -C "$dir" ;;
     *.tar.xz) tar -xJf "$archive" -C "$dir" ;;
     *.zip) unzip -q "$archive" -d "$dir" ;;
-    *)
-      echo "Unsupported archive type: $archive" >&2
-      exit 1
-      ;;
   esac
   move_single_top_level_folder_up "$dir"
-}
-
-list_contains() {
-  case " $1 " in *" $2 "*) return 0 ;; *) return 1 ;; esac
-}
-
-install_executable() {
-  install -m 0755 "$1" "$2"
 }
 
 link_into_path() {

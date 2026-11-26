@@ -1,7 +1,11 @@
 import fs from 'node:fs'
 import type { ContainerEngine } from '../engine/ContainerEngine.js'
+import type { ModuleDefinition } from '../modules/ModuleDefinition.js'
+import { moduleCatalog } from '../modules/moduleCatalog.js'
+import { installationOrder } from '../modules/moduleSelection.js'
 import { Problem } from '../problems/Problem.js'
-import { resourcePath } from '../resources/resourceDirectory.js'
+import type { ProjectSettings } from '../projects/ProjectSettings.js'
+import { resourceDirectory, resourcePath } from '../resources/resourceDirectory.js'
 import { homeDirectory } from '../system/platform.js'
 import type { TaskContext } from '../tasks/TaskRunner.js'
 import { archiveOf, replaceContainerFolder } from './archives.js'
@@ -17,29 +21,41 @@ function specificWarning(warning: string, failedTools: string[]): string {
   return warning.replace(listedAboveMarker, `: ${failedTools.join(', ')}`)
 }
 
-export async function copyDotfilesIntoContainer(
+function projectModules(project: ProjectSettings): ModuleDefinition[] {
+  return installationOrder(project.modules, moduleCatalog())
+}
+
+function configEntries(modules: ModuleDefinition[]): string[] {
+  return [
+    'dotfiles',
+    ...modules.filter((module) => module.hasConfig).map((module) => `modules/${module.id}/config`),
+    ...modules.filter((module) => module.hasSetup).map((module) => `modules/${module.id}/setup.sh`),
+  ]
+}
+
+export async function copyConfigIntoContainer(
   engine: ContainerEngine,
-  projectName: string,
+  project: ProjectSettings,
   context: TaskContext,
 ): Promise<void> {
   const { exitCode, errorOutput } = await replaceContainerFolder(
     engine,
-    projectName,
-    `${containerHome()}/dotfiles`,
-    archiveOf(resourcePath('dotfiles')),
+    project.name,
+    `${containerHome()}/.devenv`,
+    archiveOf(resourceDirectory(), configEntries(projectModules(project))),
   )
   context.output(errorOutput)
   if (exitCode !== 0) {
-    throw new Problem('The dotfiles could not be copied into the container', {
+    throw new Problem('The dotfiles and tool config could not be copied into the container', {
       outputTail: errorOutput.trim().split('\n'),
-      fixes: [{ description: 'Try the setup again', command: `dev setup ${projectName}` }],
+      fixes: [{ description: 'Try the setup again', command: `dev setup ${project.name}` }],
     })
   }
 }
 
 export async function runContainerSetup(
   engine: ContainerEngine,
-  projectName: string,
+  project: ProjectSettings,
   context: TaskContext,
 ): Promise<void> {
   const setupScript = fs.readFileSync(resourcePath('container', 'setup.sh'))
@@ -50,11 +66,12 @@ export async function runContainerSetup(
       '--interactive',
       '--user',
       containerUser(),
-      containerName(projectName),
+      containerName(project.name),
       'bash',
       '-s',
       '--',
       homeDirectory,
+      ...projectModules(project).map((module) => module.id),
     ],
     {
       input: setupScript,
@@ -74,11 +91,11 @@ export async function runContainerSetup(
   )
   if (exitCode !== 0) {
     throw new Problem('The in-container setup failed', {
-      explanation: 'Neovim, git and SSH may be only partly set up.',
+      explanation: 'The tools, git and SSH may be only partly set up.',
       fixes: [
         {
           description: 'Read the log, then run the setup again',
-          command: `dev setup ${projectName}`,
+          command: `dev setup ${project.name}`,
         },
       ],
     })

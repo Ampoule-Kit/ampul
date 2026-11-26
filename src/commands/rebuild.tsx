@@ -58,7 +58,7 @@ export const rebuildCommand: CommandDefinition = {
   ],
   flags: [yesFlag],
   description: [
-    'Builds the image again with the project’s current settings and pinned tool versions, replaces the container, sets it up and fetches the code again. Use it after dev config, after changing image/versions, or when a container is broken.',
+    'Builds the image again with the project’s current settings and pinned tool versions, replaces the container, sets it up and fetches the code again. Use it after dev config, after pinning a new tool version, or when a container is broken.',
     'Image layers that did not change are reused, so a rebuild is much faster than the first build.',
     'The container is thrown away, and ~/Project with it: push your work first.',
   ],

@@ -1,0 +1,59 @@
+{
+  "sections": [
+    {
+      "title": "Editor",
+      "modules": [
+        "neovim",
+        "tree-sitter"
+      ]
+    },
+    {
+      "title": "Terminal tools",
+      "modules": [
+        "lazygit",
+        "yazi",
+        "zellij",
+        "lsd",
+        "ripgrep",
+        "fd",
+        "fzf"
+      ]
+    },
+    {
+      "title": "AI",
+      "modules": [
+        "claude-code"
+      ]
+    },
+    {
+      "title": "Languages",
+      "modules": [
+        "node",
+        "build-essential",
+        "python",
+        "java"
+      ]
+    },
+    {
+      "title": ".NET",
+      "modules": [
+        "dotnet-10",
+        "dotnet-8",
+        "dotnet-6"
+      ]
+    },
+    {
+      "title": "Game engines",
+      "modules": [
+        "godot",
+        "godot-dotnet"
+      ]
+    },
+    {
+      "title": "Containers",
+      "modules": [
+        "container-engine"
+      ]
+    }
+  ]
+}

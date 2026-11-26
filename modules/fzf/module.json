@@ -1,0 +1,9 @@
+{
+  "label": "fzf",
+  "description": "A fuzzy finder for the command line.",
+  "selectedByDefault": true,
+  "packages": [
+    "fzf"
+  ],
+  "check": "fzf --version"
+}

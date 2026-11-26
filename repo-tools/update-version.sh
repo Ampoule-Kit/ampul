@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_DIR=$(cd -P "$(dirname "$0")/.." && pwd)
-VERSIONS_FILE=$REPO_DIR/image/versions
+BASE_IMAGE_FILE=$REPO_DIR/image/base-image.json
 
 die() {
   printf 'Error: %s\n' "$*" >&2
@@ -15,51 +15,39 @@ die() {
 
 usage() {
   cat <<EOF
-Usage: repo-tools/update-version.sh                       List what is pinned
-       repo-tools/update-version.sh <name> <version>      Pin <name> to <version>
-       repo-tools/update-version.sh ubuntu <tag>          Pin the base image to ubuntu:<tag>
+Usage: repo-tools/update-version.sh                               List the modules and what they pin
+       repo-tools/update-version.sh <module> <version>            Pin a module to <version>
+       repo-tools/update-version.sh <module>:<download> <version> Pin one named download of a module
+       repo-tools/update-version.sh ubuntu <tag>                  Pin the base image to ubuntu:<tag>
 
 Options:
   --skip-install-test    Don't test the install in a container
 
-A new .NET channel is added with: repo-tools/update-version.sh dotnet-<channel> <sdk-version>
+Examples:
+  repo-tools/update-version.sh neovim 0.12.7
+  repo-tools/update-version.sh container-engine:docker 29.11.0
+
+A new .NET SDK channel is a new module: copy modules/dotnet-10 to modules/dotnet-<channel>,
+add it to modules/catalog.json, then pin it with this script.
 EOF
 }
 
+module_pins() {
+  jq -r '
+    if .version then .version
+    elif ((.downloads // []) | map(select(.name)) | length) > 0 then
+      (.downloads | map(select(.name) | "\(.name) \(.version)") | join(", "))
+    else "Ubuntu packages: \(.packages // [] | join(" "))" end
+  ' "$1"
+}
+
 list_pins() {
-  local variable
-  printf '%-18s %s\n' NAME VERSION
-  printf '%-18s %s\n' ubuntu "$(variable_value "$VERSIONS_FILE" UBUNTU_IMAGE | sed -E 's/^.*:([^@]+)@.*$/\1/')"
-  while read -r variable; do
-    printf '%-18s %s\n' "$(variable_prefix_to_name "${variable%_VERSION}")" "$(variable_value "$VERSIONS_FILE" "$variable")"
-  done < <(grep -oE '^[A-Z0-9_]+_VERSION=' "$VERSIONS_FILE" | sed 's/=$//')
-}
-
-install_test_command() {
-  local download=$1 script
-  case "$download" in
-    DOTNET_*) echo "dotnet.sh ${download#DOTNET_}" ;;
-    GODOT) echo "godot.sh standard" ;;
-    GODOT_DOTNET) echo "godot.sh dotnet" ;;
-    *)
-      script=$(grep -lE "download_pinned $download\)" "$REPO_DIR"/image/tools/*.sh | head -1)
-      [ -n "$script" ] || die "No script in image/tools installs $download."
-      basename "$script"
-      ;;
-  esac
-}
-
-add_dotnet_channel() {
-  local versions_file=$1 channel=$2 existing channels last_dotnet_line
-  channels=$(
-    for existing in $(variable_value "$versions_file" DOTNET_CHANNELS); do echo "$existing"; done
-    echo "$channel"
-  )
-  channels=$(echo "$channels" | sort -n | tr '\n' ' ')
-  set_variable "$versions_file" DOTNET_CHANNELS "\"${channels% }\""
-  last_dotnet_line=$(grep -E '^DOTNET_[0-9]+_' "$versions_file" | tail -1 | cut -d= -f1)
-  insert_line_after "$versions_file" "^$last_dotnet_line=" "DOTNET_${channel}_VERSION=placeholder"
-  insert_line_after "$versions_file" "^$last_dotnet_line=" ""
+  local id
+  printf '%-18s %s\n' MODULE VERSION
+  printf '%-18s %s\n' ubuntu "$(base_image | sed -E 's/^.*:([^@]+)@.*$/\1/')"
+  for id in $(modules_in_catalog_order); do
+    printf '%-18s %s\n' "$id" "$(module_pins "$(module_file "$id")")"
+  done
 }
 
 registry_token() {
@@ -69,7 +57,7 @@ registry_token() {
 
 update_ubuntu() {
   local tag=$1 skip_install_test=$2 token manifest_url headers index digest current_tag image
-  current_tag=$(variable_value "$VERSIONS_FILE" UBUNTU_IMAGE | sed -E 's/^.*:([^@]+)@.*$/\1/')
+  current_tag=$(base_image | sed -E 's/^.*:([^@]+)@.*$/\1/')
   manifest_url="https://registry-1.docker.io/v2/library/ubuntu/manifests/$tag"
   token=$(registry_token) || die "Could not reach Docker Hub."
   echo "==> Resolving ubuntu:$tag"
@@ -88,54 +76,72 @@ update_ubuntu() {
   image="docker.io/library/ubuntu:$tag@$digest"
 
   if [ "${tag%%.*}" != "${current_tag%%.*}" ]; then
-    echo "Note: this moves from Ubuntu $current_tag to $tag. Package names pinned in image/tools (such as libicu74 in dotnet.sh) may differ; build a project with .NET to check."
+    echo "Note: this moves from Ubuntu $current_tag to $tag. Ubuntu package names in modules (such as libicu74 in the dotnet modules) may differ; build a project with them to check."
   fi
   if [ "$skip_install_test" = no ]; then
     require_engine
     build_install_test_base "$image" || die "The base image does not build on ubuntu:$tag."
     echo "    passed"
   fi
-  set_variable "$VERSIONS_FILE" UBUNTU_IMAGE "$image"
+  update_json "$BASE_IMAGE_FILE" --arg image "$image" '.image = $image'
   echo "Pinned ubuntu to $tag."
 }
 
-update_download() {
-  local name=$1 version=$2 skip_install_test=$3
-  local prefix versions_file downloads download new_dotnet_channel=no
-  prefix=$(name_to_variable_prefix "$name")
+download_index_named() {
+  jq --arg name "$2" '(.downloads // []) | map(.name) | index($name) // empty' "$1"
+}
+
+downloads_following_module_version() {
+  jq '(.downloads // []) | to_entries[] | select(.value.version == null) | .key' "$1"
+}
+
+first_download_name() {
+  jq -r '[.downloads[]?.name // empty][0] // "name"' "$1"
+}
+
+update_module() {
+  local target=$1 version=$2 skip_install_test=$3
+  local module=${target%%:*} download_name= file staged indexes index modules
+  [[ "$target" == *:* ]] && download_name=${target#*:}
   is_valid_version "$version" || die "'$version' is not a valid version."
-  if ! has_variable "$VERSIONS_FILE" "${prefix}_VERSION"; then
-    [[ "$prefix" =~ ^DOTNET_[0-9]+$ ]] || die "Nothing named '$name' is pinned. Run repo-tools/update-version.sh to list the names."
-    new_dotnet_channel=yes
-  fi
+  file=$(module_file "$module")
+  [ -f "$file" ] || die "There is no module named '$module'. Run repo-tools/update-version.sh to list them."
 
   WORK_DIR=$(mktemp -d)
   trap 'rm -rf "$WORK_DIR"' EXIT
-  versions_file=$WORK_DIR/versions
-  cp "$VERSIONS_FILE" "$versions_file"
-  [ "$new_dotnet_channel" = yes ] && add_dotnet_channel "$versions_file" "${prefix#DOTNET_}"
-  set_variable "$versions_file" "${prefix}_VERSION" "$version"
+  staged=$WORK_DIR/module.json
+  cp "$file" "$staged"
 
-  downloads=$(downloads_pinned_by "$versions_file" "${prefix}_VERSION")
-  [ -n "$downloads" ] || downloads=$prefix
+  if [ -n "$download_name" ]; then
+    index=$(download_index_named "$staged" "$download_name")
+    [ -n "$index" ] || die "$module has no download named '$download_name'."
+    update_json "$staged" --argjson index "$index" --arg version "$version" '.downloads[$index].version = $version'
+    indexes=$index
+  else
+    [ -n "$(jq -r '.version // empty' "$staged")" ] ||
+      die "$module pins each download on its own. Pin one with $module:<download>, such as $module:$(first_download_name "$staged")."
+    update_json "$staged" --arg version "$version" '.version = $version'
+    indexes=$(downloads_following_module_version "$staged")
+  fi
+  [ -n "$indexes" ] || die "$module only installs Ubuntu packages, so there is no version to pin."
 
-  echo "==> Downloading $name $version for $ARCHITECTURES"
-  for download in $downloads; do
-    pin_download "$versions_file" "$download" "$WORK_DIR/downloads" || die "$name $version could not be pinned. image/versions is unchanged."
+  echo "==> Downloading $target $version for $ARCHITECTURES"
+  for index in $indexes; do
+    pin_download "$staged" "$index" "$WORK_DIR/downloads" || die "$target $version could not be pinned. Nothing was changed."
   done
 
   if [ "$skip_install_test" = no ]; then
     require_engine
-    build_install_test_base "$(variable_value "$versions_file" UBUNTU_IMAGE)"
-    stage_image_files "$WORK_DIR/staging" "$versions_file"
-    for download in $downloads; do
-      run_install_test "$WORK_DIR/staging" "$(install_test_command "$download")" ||
-        die "$name $version does not install. image/versions is unchanged."
-    done
+    build_install_test_base "$(base_image)"
+    modules=$(modules_with_requirements "$module")
+    stage_modules_for_test "$WORK_DIR/staging" $modules
+    cp "$staged" "$WORK_DIR/staging/modules/$module/module.json"
+    run_install_test "$WORK_DIR/staging" "$(jq -r .check "$staged")" $modules ||
+      die "$target $version does not install. Nothing was changed."
   fi
 
-  cp "$versions_file" "$VERSIONS_FILE"
-  echo "Pinned $name to $version in image/versions. Apply it to a project with: dev rebuild <project>"
+  cp "$staged" "$file"
+  echo "Pinned $target to $version in modules/$module/module.json. Apply it to a project with: dev rebuild <project>"
 }
 
 skip_install_test=no
@@ -154,7 +160,7 @@ case "${#arguments[@]}" in
     if [ "${arguments[0]}" = ubuntu ]; then
       update_ubuntu "${arguments[1]}" "$skip_install_test"
     else
-      update_download "${arguments[0]}" "${arguments[1]}" "$skip_install_test"
+      update_module "${arguments[0]}" "${arguments[1]}" "$skip_install_test"
     fi
     ;;
   *)

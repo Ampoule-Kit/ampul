@@ -1,0 +1,9 @@
+{
+  "label": "build-essential",
+  "description": "gcc, g++ and make, for native npm packages, Python wheels and Neovim's parsers.",
+  "selectedByDefault": true,
+  "packages": [
+    "build-essential"
+  ],
+  "check": "gcc --version && make --version"
+}

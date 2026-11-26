@@ -14,7 +14,7 @@ const isMacOS = process.platform === 'darwin'
 
 const binaryPath = path.join(distDirectory, isWindows ? 'dev.exe' : 'dev')
 
-const embeddedFolders = ['image', 'container', 'dotfiles']
+const embeddedFolders = ['image', 'container', 'dotfiles', 'modules']
 const embeddedFiles = ['.dockerignore']
 const seaFuse = 'NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2'
 

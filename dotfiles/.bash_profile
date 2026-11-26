@@ -9,11 +9,11 @@ reset='\[\e[m\]'
 export PS1="${yellow}\u${reset} ${magenta}\W${reset}${green}\$(git_branch_suffix)${reset} >> "
 unset yellow magenta green reset
 
-alias ls='lsd -Alh'
 alias gits='git status'
-alias lg='lazygit'
-alias y='yazi'
-alias z='zellij attach -c DEV'
 
-export ASPNETCORE_ENVIRONMENT=Development
 export PATH="$HOME/.local/bin:$PATH"
+
+for module_shell_config in "$HOME"/.bashrc.d/*.sh; do
+    [ -r "$module_shell_config" ] && . "$module_shell_config"
+done
+unset module_shell_config

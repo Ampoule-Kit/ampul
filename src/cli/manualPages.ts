@@ -127,7 +127,7 @@ export function overviewManualPage(commands: CommandDefinition[]): string {
     {
       heading: 'DESCRIPTION',
       body: paragraphs([
-        'dev creates a container for each of your projects, with your tools, dotfiles, Neovim setup, git and SSH config already in place, and the code cloned or copied inside it.',
+        'dev creates a container for each of your projects, with the tools you pick, your dotfiles and their config, git and SSH already in place, and the code cloned or copied inside it.',
         'Run dev on its own to see your projects and act on them, or run one of the commands below. Commands that need a project ask you to pick one when you leave the name out.',
       ]),
     },

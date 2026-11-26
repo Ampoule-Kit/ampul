@@ -6,11 +6,12 @@ import {
   type ContainerState,
 } from '../containers/containerState.js'
 import { createEngine, diagnoseEngine } from '../engine/engineReadiness.js'
+import { moduleCatalog } from '../modules/moduleCatalog.js'
+import { moduleLabels } from '../modules/moduleSelection.js'
 import type { Problem } from '../problems/Problem.js'
 import { describeCodeSource } from '../projects/codeSources.js'
 import { formatPortList } from '../projects/ports.js'
 import { listProjects } from '../projects/projectStore.js'
-import { selectedToolNames } from '../projects/projectSummary.js'
 import type { ProjectSettings } from '../projects/ProjectSettings.js'
 import { ProblemView } from '../ui/components/ProblemView.js'
 import { printElement } from '../ui/terminal.js'
@@ -88,7 +89,7 @@ function printJson(rows: ProjectRow[]): void {
   const output = rows.map(({ project, state }) => ({
     ...project,
     status: state ?? 'unknown',
-    tools: selectedToolNames(project),
+    tools: moduleLabels(project.modules, moduleCatalog()),
   }))
   process.stdout.write(JSON.stringify(output, null, 2) + '\n')
 }

@@ -15,10 +15,10 @@ import {
   sharedCacheVolume,
 } from './naming.js'
 
-const containerEngineSetting = 'CONTAINER_ENGINE'
+const innerContainerEngineModule = 'container-engine'
 
 export function usesInnerContainerEngine(project: ProjectSettings): boolean {
-  return Boolean(project.optionalDependencies[containerEngineSetting])
+  return project.modules.includes(innerContainerEngineModule)
 }
 
 async function createVolumeIfMissing(engine: ContainerEngine, volume: string, label: string) {

@@ -1,0 +1,28 @@
+{
+  "label": "Node.js",
+  "description": "Node.js with npm, for JavaScript and TypeScript. Neovim's language servers run on it.",
+  "version": "26.13.1",
+  "selectedByDefault": true,
+  "downloads": [
+    {
+      "url": "https://nodejs.org/dist/v{version}/node-v{version}-linux-{arch}.tar.xz",
+      "architectures": {
+        "arm64": "arm64",
+        "amd64": "x64"
+      },
+      "sha256": {
+        "arm64": "89e1853138db51e8b82d3e98ba9c0d3f2956a28e5e55ea1b7e12d25aae92d5dd",
+        "amd64": "5c063e46bab0fbc1c17cc445d7ff129cbdcd0471be6ed83b6ab864f8143bc864"
+      },
+      "installTo": "/opt/node"
+    }
+  ],
+  "environment": {
+    "npm_config_cache": "{home}/.cache/npm",
+    "NODE_OPTIONS": "--dns-result-order=ipv4first"
+  },
+  "path": [
+    "/opt/node/bin"
+  ],
+  "check": "node --version && npm --version"
+}

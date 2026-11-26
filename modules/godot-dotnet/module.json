@@ -1,0 +1,34 @@
+{
+  "label": "Godot (.NET)",
+  "description": "The Godot engine and editor with C# scripting. It builds with the .NET 8 SDK, which is selected with it.",
+  "version": "4.7.2-stable",
+  "selectedByDefault": false,
+  "requires": [
+    "dotnet-8"
+  ],
+  "group": "godot",
+  "packages": [
+    "libfontconfig1"
+  ],
+  "downloads": [
+    {
+      "url": "https://github.com/godotengine/godot/releases/download/{version}/Godot_v{version}_mono_linux_{arch}.zip",
+      "architectures": {
+        "arm64": "arm64",
+        "amd64": "x86_64"
+      },
+      "sha256": {
+        "arm64": "0dc8ad63feacc6c19d7cb5c89ae828085b0ac3fa8039bc816a08a0537744e523",
+        "amd64": "129f82db7bafd54ae14bb5bb284041c73860e8c7a009a3a026ca5e946cbff247"
+      },
+      "installTo": "/opt/godot",
+      "commands": [
+        {
+          "path": "Godot_v{version}_mono_linux.{arch}",
+          "as": "godot"
+        }
+      ]
+    }
+  ],
+  "check": "godot --headless --version"
+}

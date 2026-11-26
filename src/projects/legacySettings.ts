@@ -1,4 +1,4 @@
-import type { ProjectSettings } from './ProjectSettings.js'
+import type { SettingsBeforeModules } from './settingsMigration.js'
 
 const nonDependencySettings = new Set([
   'PROJECT_NAME',
@@ -10,7 +10,7 @@ const nonDependencySettings = new Set([
   'PORTS',
 ])
 
-export function parseLegacySettings(fileContent: string): ProjectSettings {
+export function parseLegacySettings(fileContent: string): SettingsBeforeModules {
   const values = new Map<string, string>()
   for (const line of fileContent.split('\n')) {
     const assignment = line.match(/^([A-Z0-9_]+)=(.*)$/)

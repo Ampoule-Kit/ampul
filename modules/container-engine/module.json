@@ -1,0 +1,48 @@
+{
+  "label": "Container engine",
+  "description": "Podman with the docker CLI and compose, so databases, compose stacks and Testcontainers run inside the project. The container then runs privileged.",
+  "selectedByDefault": false,
+  "packages": [
+    "podman",
+    "netavark",
+    "aardvark-dns",
+    "iptables",
+    "fuse-overlayfs"
+  ],
+  "downloads": [
+    {
+      "name": "docker",
+      "version": "29.10.1",
+      "url": "https://download.docker.com/linux/static/stable/{arch}/docker-{version}.tgz",
+      "architectures": {
+        "arm64": "aarch64",
+        "amd64": "x86_64"
+      },
+      "sha256": {
+        "arm64": "a38c8a9ef6d17bce07499bfd3a3688542274769dc3b4f75c06ea2705fe65053e",
+        "amd64": "061642059fa7f2ed9b2f04a327a951cff4249585cf04b2661c2a6539197c9962"
+      },
+      "installTo": "/opt/docker-cli",
+      "commands": [
+        "docker"
+      ]
+    },
+    {
+      "name": "compose",
+      "version": "5.8.0",
+      "url": "https://github.com/docker/compose/releases/download/v{version}/docker-compose-linux-{arch}",
+      "architectures": {
+        "arm64": "aarch64",
+        "amd64": "x86_64"
+      },
+      "sha256": {
+        "arm64": "1a9c918b2fb49b9c87f0018c64b5abd0d30715155e98dc939779fbaee6c414d3",
+        "amd64": "b8840f5008c447f41fce0a57ae3adeab42c89b1eb6e6012524bcabbfb4ffbaf6"
+      },
+      "installTo": "/usr/local/lib/docker/cli-plugins",
+      "sharedFolder": true,
+      "fileName": "docker-compose"
+    }
+  ],
+  "check": "podman --version && docker --version && docker compose version"
+}

@@ -4,6 +4,11 @@ import { Problem } from '../problems/Problem.js'
 import { devenvPaths } from '../system/platform.js'
 import { parseLegacySettings } from './legacySettings.js'
 import type { ProjectSettings } from './ProjectSettings.js'
+import {
+  isFromBeforeModules,
+  migrateToModules,
+  type StoredProjectSettings,
+} from './settingsMigration.js'
 
 const settingsExtension = '.json'
 const legacySettingsExtension = '.env'
@@ -38,7 +43,13 @@ export function listProjects(): ProjectSettings[] {
 
 export function loadProject(name: string): ProjectSettings {
   if (fs.existsSync(projectSettingsFile(name))) {
-    return JSON.parse(fs.readFileSync(projectSettingsFile(name), 'utf8')) as ProjectSettings
+    const stored = JSON.parse(
+      fs.readFileSync(projectSettingsFile(name), 'utf8'),
+    ) as StoredProjectSettings
+    if (!isFromBeforeModules(stored)) return stored
+    const migrated = migrateToModules(stored)
+    saveProject(migrated)
+    return migrated
   }
   if (fs.existsSync(legacySettingsFile(name))) {
     return migrateLegacySettings(name)
@@ -61,8 +72,10 @@ export function deleteAllProjectSettings(): void {
 }
 
 function migrateLegacySettings(name: string): ProjectSettings {
-  const settings = parseLegacySettings(fs.readFileSync(legacySettingsFile(name), 'utf8'))
-  settings.name = name
+  const settings = migrateToModules({
+    ...parseLegacySettings(fs.readFileSync(legacySettingsFile(name), 'utf8')),
+    name,
+  })
   saveProject(settings)
   fs.rmSync(legacySettingsFile(name))
   return settings

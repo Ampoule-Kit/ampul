@@ -35,7 +35,7 @@ async function run(invocation: Invocation): Promise<number> {
 
 export const setupCommand: CommandDefinition = {
   name: 'setup',
-  summary: 'Copy the dotfiles in again and rerun the setup, keeping the container',
+  summary: 'Copy the dotfiles and tool config in again and rerun the setup, keeping the container',
   arguments: [
     {
       name: 'project',
@@ -45,12 +45,12 @@ export const setupCommand: CommandDefinition = {
   ],
   flags: [],
   description: [
-    'Copies this repo’s dotfiles/ folder into the container and links it into the home folder, then installs the Neovim plugins pinned in lazy-lock.json, the language servers, formatters and treesitter parsers, and links the git and SSH config of this machine.',
-    'Nothing else is touched, so ~/Project and running work are safe. Links to dotfiles you deleted are removed. Run it after changing your dotfiles or SSH config.',
-    'The dotfiles are built into the dev command, so run the installer again first when you changed them in the repo.',
+    'Copies this repo’s dotfiles/ folder and the config of each tool the project has (modules/<tool>/config) into the container and links them into the home folder. It then runs each tool’s own setup, such as installing the Neovim plugins pinned in lazy-lock.json and its language servers, and links the git and SSH config of this machine.',
+    'Nothing else is touched, so ~/Project and running work are safe. Links to config you deleted are removed. Run it after changing your dotfiles, a tool’s config or your SSH config.',
+    'The dotfiles and tool config are built into the dev command, so run the installer again first when you changed them in the repo. Adding or removing a tool needs dev config, then dev rebuild.',
   ],
   examples: [
-    { command: 'dev setup api', explanation: 'Refresh the dotfiles and Neovim setup in api.' },
+    { command: 'dev setup api', explanation: 'Refresh the dotfiles and tool config in api.' },
   ],
   seeAlso: ['rebuild'],
   run,

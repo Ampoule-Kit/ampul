@@ -1,9 +1,9 @@
 # devenv
 
-A portable, containerized developer environment with a terminal UI. One command creates a container for a project with your tools, dotfiles, Neovim setup, git and SSH config already in place, and the project's code cloned or copied inside it. `dev start <name>` then drops you into a shell in it.
+A portable, containerized developer environment with a terminal UI. One command creates a container for a project with the tools you pick, your dotfiles and their config, git and SSH already in place, and the project's code cloned or copied inside it. `dev start <name>` then drops you into a shell in it.
 
 - No files are added to your projects. Everything devenv needs, your dotfiles included, lives in this repo, is built into the `dev` binary, and keeps its settings in `~/.config/devenv/`.
-- Every tool version in the container is pinned and checksummed in [`image/versions`](image/versions), so a rebuild months from now gives the same environment.
+- Every tool is a module in [`modules/`](modules) with its version pinned and checksummed, so a rebuild months from now gives the same environment, and adding a tool means adding a folder.
 - `dev` is a single self-contained binary built from this repo with Node.js and [Ink](https://github.com/vadimdemedes/ink). It guides you through creating projects, shows what is happening at every step, and tells you how to fix anything that goes wrong.
 
 ## Requirements
@@ -27,11 +27,11 @@ On Windows, run `install.cmd`. The installer works on a fresh clone:
 
 1. It checks the Node.js and npm versions, and tells you how to upgrade when they are too old.
 2. It installs the build tools with `npm ci`.
-3. It builds `dev` for the machine it runs on: one binary with the Node.js runtime, the app, the image definition and your dotfiles inside.
+3. It builds `dev` for the machine it runs on: one binary with the Node.js runtime, the app, the image definition, the modules and your dotfiles inside.
 4. It copies the binary to `~/.local/bin/dev` (on Windows, `%LOCALAPPDATA%\Programs\devenv\dev.exe`). To put it elsewhere, run `DEVENV_BIN_DIR=/some/dir ./install.sh`. It replaces an earlier devenv, including the old bash `dev` link, and never overwrites a command that is not devenv.
 5. It runs `dev doctor`, which checks the container runtime, the engine, memory, git, SSH and your `PATH`, and prints the fix for anything that is not ready.
 
-Run `./install.sh` again after pulling this repo, or after changing `dotfiles/` or `image/`, to rebuild `dev`.
+Run `./install.sh` again after pulling this repo, or after changing `dotfiles/`, `modules/` or `image/`, to rebuild `dev`.
 
 ## Uninstall
 
@@ -70,8 +70,8 @@ The code lives only in the container. Push your work before running `dev rebuild
 | `dev stop [name]` | Stops a project's container. `--all` stops every running project. |
 | `dev ls` | Lists projects, their status, ports and where their code comes from. `--json` for scripts. |
 | `dev config [name]` | Changes a project's code source, tools or ports in the same form, marks what changed, and can rebuild right away. |
-| `dev rebuild [name]` | Rebuilds the image and recreates the container with fresh code and dotfiles. |
-| `dev setup [name]` | Copies the dotfiles in again and reruns the in-container setup (Neovim, git and SSH) without recreating anything. |
+| `dev rebuild [name]` | Rebuilds the image with the project's tools and recreates the container with fresh code and config. |
+| `dev setup [name]` | Copies the dotfiles and tool config in again and reruns each tool's setup, git and SSH, without recreating anything. |
 | `dev rm [name]` | Removes a project's container, image, volumes and settings. |
 | `dev purge` | Removes every devenv container, image, volume and project setting. |
 | `dev doctor` | Checks that this machine is ready and prints the fix for anything that is not. |
@@ -83,23 +83,52 @@ Commands that delete something show exactly what goes and what stays, then ask. 
 
 ## What's in the container
 
-Every container is Ubuntu 24.04 with:
+Every container is Ubuntu 24.04 with git, curl, wget, ssh, sudo, jq, socat, GNU stow and bash completion. Everything else is a module you pick in `dev new` or `dev config`:
 
-| Always | Optional, per project |
+| Selected by default | Offered |
 | --- | --- |
-| Neovim, tree-sitter CLI, Node.js and npm | .NET SDKs, side by side |
+| Neovim and the tree-sitter CLI | .NET 6, 8 and 10 SDKs, side by side |
 | lazygit, yazi, zellij, lsd | Java (Temurin JDK) |
-| Claude Code | Godot, standard or .NET build |
-| git, ripgrep, fd, fzf, jq, GNU stow | Python with pip, venv and headers |
-| build-essential, curl, wget, socat | Podman, docker CLI and docker compose |
+| ripgrep, fd, fzf | Godot, standard or .NET build |
+| Claude Code | Python with pip, venv and headers |
+| Node.js and npm, build-essential | Podman, docker CLI and docker compose |
+
+A module that another one needs is selected with it and stays selected while that one is: Neovim brings Node.js, the tree-sitter CLI, ripgrep, fd and build-essential, and Godot's .NET build brings the .NET 8 SDK. Only the selected modules are installed, and only their config is linked into the home folder.
 
 You work as the user `dev`, which has passwordless `sudo` and the same user ID as you on the host.
 
-### Dotfiles and Neovim
+### Modules
 
-[`dotfiles/`](dotfiles) holds everything that goes into the container's home folder: the bash profile, and the Neovim, yazi and zellij configs. `dev new`, `dev rebuild` and `dev setup` copy it into `~/dotfiles` in the container and link it into the home folder with `stow --no-folding`. They then install the Neovim plugins pinned in `lazy-lock.json`, the Mason language servers and formatters, and the treesitter parsers. Anything that fails to install is reported as a warning, and the full output is in `/tmp/devenv/setup.log`.
+Each folder in [`modules/`](modules) is one tool:
 
-The dotfiles are built into the `dev` binary, so a change to `dotfiles/` takes two steps: run `./install.sh` to rebuild the binary with your working copy (there is nothing to commit first), then `dev setup <name>` to copy it into a running project. Links to files you deleted from `dotfiles/` are removed.
+| File | Purpose |
+| --- | --- |
+| `module.json` | The label and description `dev new` shows, the pinned `version`, whether it is `selectedByDefault`, the modules it `requires`, and how it installs: Ubuntu `packages`, pinned `downloads` and the `environment` and `path` it adds. `check` is the command that proves it works. |
+| `config/` | Optional. Files linked into the container's home folder, such as `config/.config/nvim/` or `config/.bashrc.d/<module>.sh` for aliases. |
+| `setup.sh` | Optional. Runs in the container after the config is linked, such as Neovim installing its plugins. It can call `step` and `warn`. |
+| `install.sh` | Optional. Runs at image build after the packages and downloads, for anything else, such as the inner Podman's config. |
+
+[`modules/catalog.json`](modules/catalog.json) puts the modules in sections, in the order `dev new` lists them. A download is described once and works for both architectures:
+
+```json
+{
+  "url": "https://github.com/neovim/neovim/releases/download/v{version}/nvim-linux-{arch}.tar.gz",
+  "architectures": { "arm64": "arm64", "amd64": "x86_64" },
+  "sha256": { "arm64": "8f1f…", "amd64": "4744…" },
+  "installTo": "/opt/neovim",
+  "commands": ["bin/nvim"]
+}
+```
+
+Archives are unpacked into `installTo`, and `commands` are linked onto the `PATH`. A single executable is saved as `fileName`. `sharedFolder` lets several modules install into one folder, as the .NET SDKs do. A download can pin its own `version` and carry a `name`, as the container engine's docker CLI and compose do. Besides `{version}` and `{arch}`, URLs can use `{version:major}`, `{version:url}` and `{version:underscored}` for versions such as `25.0.5.1+2`.
+
+Each selected module is its own cached layer of the image, so changing one rebuilds only from that module on.
+
+### Dotfiles and tool config
+
+[`dotfiles/`](dotfiles) holds the bash profile, which every container gets. Each module's `config/` holds that tool's own config, so a project without Neovim gets no Neovim config. `dev new`, `dev rebuild` and `dev setup` copy both into `~/.devenv` in the container, link them into the home folder with `stow --no-folding`, then run each module's `setup.sh`. For Neovim that installs the plugins pinned in `lazy-lock.json`, the Mason language servers and formatters, and the treesitter parsers. Anything that fails is reported as a warning, and the full output is in `/tmp/devenv/setup.log`.
+
+The dotfiles and modules are built into the `dev` binary, so a change takes two steps: run `./install.sh` to rebuild the binary with your working copy (there is nothing to commit first), then `dev setup <name>` to copy it into a running project. Links to files you deleted are removed. Adding or removing a tool from a project needs `dev config <name>`, then `dev rebuild <name>`.
 
 ### Git and SSH
 
@@ -129,7 +158,7 @@ Their images and data live in a volume per project, so they survive `dev rebuild
 | Kept | Recreated |
 | --- | --- |
 | The shared package cache (NuGet, npm and other `~/.cache` data) | `~/Project`, with freshly cloned or copied code |
-| Images and data of the containers run inside the container | Dotfiles, Neovim plugins and tools |
+| Images and data of the containers run inside the container | Dotfiles, tool config, Neovim plugins and tools |
 | Project settings in `~/.config/devenv/projects/` | Everything else in the container |
 
 ## Configuration
@@ -143,36 +172,34 @@ Their images and data live in a volume per project, so they survive `dev rebuild
 
 ### Updating a pinned version
 
-[`image/versions`](image/versions) holds every pinned version and its sha256 checksums for arm64 and amd64. Change them with `repo-tools/update-version.sh`:
+Change a module's pinned version with `repo-tools/update-version.sh`:
 
 ```sh
-repo-tools/update-version.sh                  # list what is pinned
-repo-tools/update-version.sh neovim 0.12.7    # pin a tool to another version
-repo-tools/update-version.sh ubuntu 24.04     # re-pin the base image tag
-repo-tools/update-version.sh dotnet-11 11.0.100   # offer another .NET SDK in dev new
+repo-tools/update-version.sh                                  # list every module and what it pins
+repo-tools/update-version.sh neovim 0.12.7                    # pin a module to another version
+repo-tools/update-version.sh container-engine:docker 29.11.0  # pin one named download of a module
+repo-tools/update-version.sh ubuntu 24.04                     # re-pin the base image tag
 ```
 
-Before it changes `image/versions`, it:
+Before it changes the module's `module.json`, it:
 
 1. downloads the release for both architectures and computes their checksums,
 2. compares them with the checksums GitHub publishes, for GitHub releases,
-3. runs the tool's install script in a container built from the pinned Ubuntu image (`--skip-install-test` skips this).
+3. installs the module, and the modules it requires, in a container built from the pinned Ubuntu image, then runs its `check` command (`--skip-install-test` skips this).
 
-If any step fails, `image/versions` is left as it was. Run `./install.sh` to build the new pins into `dev`, then apply them to a project with `dev rebuild <name>`.
+If any step fails, nothing is changed. Run `./install.sh` to build the new pins into `dev`, then apply them to a project with `dev rebuild <name>`. A new .NET SDK channel is a new module: copy `modules/dotnet-10` to `modules/dotnet-<channel>`, add it to `modules/catalog.json`, and pin it.
 
-### Adding a dependency
+### Adding a module
 
-`repo-tools/add-dependency.sh` adds a tool that `dev new` and `dev config` offer as a yes/no choice. It asks for:
+`repo-tools/add-module.sh` creates a module that `dev new` and `dev config` offer. It asks for:
 
-- a name and the label `dev new` shows,
+- a name, the label `dev new` shows and a one-sentence description,
+- the section it goes in, whether it is selected by default, and the modules it requires,
 - how it installs: Ubuntu packages, or a release download (an archive or a single executable) with `{version}` and `{arch}` in its URL,
 - for an archive, which executables go on the `PATH`,
 - a command that proves it works, such as `rg --version`.
 
-It checks every answer: the packages exist in the pinned Ubuntu, both downloads exist and match GitHub's checksums, and the executables are in both archives. Then it installs the tool in a test container and runs the check command. Only when everything passes does it write `image/tools/<name>.sh` and add the tool to `image/versions`, `image/download-urls.sh`, `image/optional-dependencies` and `image/Containerfile`. Pin later versions of it with `repo-tools/update-version.sh <name> <version>`.
-
-Tools that need more than this, such as the .NET SDK channels or Godot's two builds, are written by hand in the same files: the download URL in `image/download-urls.sh`, the install script in `image/tools/`, a `WITH_<NAME>` block in `image/Containerfile`, and a line in `image/optional-dependencies` (`yes-no`, or a comma-separated list of choices).
-
+It checks every answer: the packages exist in the pinned Ubuntu, both downloads exist and match GitHub's checksums, the executables are in both archives, and the required modules exist. Then it installs the module in a test container and runs the check command. Only when everything passes does it write `modules/<name>/module.json` and add it to `modules/catalog.json`. Add a `config/`, `setup.sh` or `install.sh` by hand when the tool needs them, then run `./install.sh`.
 
 ## Development
 
@@ -184,7 +211,7 @@ npm run format            # format with Prettier
 npm run build             # build dist/dev for this machine
 ```
 
-`npm run dev` reads `image/`, `container/` and `dotfiles/` straight from the repo, so changes show up without rebuilding.
+`npm run dev` reads `image/`, `container/`, `modules/` and `dotfiles/` straight from the repo, so changes show up without rebuilding.
 
 ## Layout
 
@@ -194,18 +221,20 @@ npm run build             # build dist/dev for this machine
 | `src/cli/` | Command definitions, argument parsing, typo suggestions and the manual pages. |
 | `src/commands/` | One file per command, plus `shared/` for what several commands do: connecting to the engine, picking a project, confirming, building a project and opening a shell. |
 | `src/engine/` | Choosing Podman or Docker, checking that the engine runs, and the Podman machine. |
-| `src/containers/` | Image builds, container creation, setup, fetching the code, and starting, stopping and removing. |
-| `src/projects/` | Project settings, names, code sources and ports. |
-| `src/resources/` | Finding `image/`, `container/` and `dotfiles/` (in the repo, or unpacked from the binary), and reading the tool catalog. |
+| `src/containers/` | Writing each project's Containerfile, image builds, container creation, setup, fetching the code, and starting, stopping and removing. |
+| `src/projects/` | Project settings and their migration, names, code sources and ports. |
+| `src/modules/` | Reading and checking the module catalog, and working out which modules a selection needs and in what order they install. |
+| `src/resources/` | Finding `image/`, `container/`, `modules/` and `dotfiles/`, in the repo or unpacked from the binary. |
 | `src/tasks/` | The task runner behind every progress view, and the log files. |
 | `src/ui/` | The terminal UI: theme, components (lists, multiselect, text input, confirmation, progress, problems), the project form and the screens. |
 | `src/system/` | Platform paths, running processes, finding executables, folders and preferences. |
 | `scripts/` | `build.mjs` (the single-executable build), `install.mjs` and `uninstall.mjs`, and the binary's launcher in `sea/`. |
 | `install.sh`, `uninstall.sh`, `*.cmd` | Thin wrappers that check for Node.js and run the scripts above. |
-| `image/` | What builds the image: `Containerfile`, `versions` (pinned versions and checksums), `download-urls.sh`, `optional-dependencies` (what `dev new` offers, with descriptions), `install-helpers.sh` and one install script per tool in `tools/`. |
-| `container/` | What runs inside a container: `entrypoint.sh` (ssh-agent, inner container engine and port forwarders) and `setup.sh` (dotfiles, Neovim, git and SSH). |
-| `dotfiles/` | Everything linked into the container's home folder. |
-| `repo-tools/` | Tools for maintaining this repo: `update-version.sh` and `add-dependency.sh`, with their shared `pinning.sh`, `install-test.sh` and `shell-helpers.sh`. |
+| `image/` | The parts of every image: `base.Containerfile` (Ubuntu and the basics), `user.Containerfile` (your user), `base-image.json` (the pinned Ubuntu), and `install-module.sh` with its helpers, which installs one module from its `module.json`. |
+| `modules/` | One folder per tool, and `catalog.json`. See [Modules](#modules). |
+| `container/` | What runs inside a container: `entrypoint.sh` (ssh-agent, inner container engine and port forwarders) and `setup.sh` (dotfiles, tool config and setup, git and SSH). |
+| `dotfiles/` | The bash profile every container gets. Tool config lives with its module. |
+| `repo-tools/` | Tools for maintaining this repo: `update-version.sh` and `add-module.sh`, with their shared `pinning.sh`, `install-test.sh` and `shell-helpers.sh`. |
 
 ## Troubleshooting
 

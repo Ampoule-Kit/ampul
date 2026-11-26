@@ -2,6 +2,8 @@ import { Box, Text } from 'ink'
 import { useState } from 'react'
 import { usesInnerContainerEngine } from '../../containers/containerCreation.js'
 import { imageName } from '../../containers/naming.js'
+import { moduleCatalog } from '../../modules/moduleCatalog.js'
+import { installationOrder, joinInProse } from '../../modules/moduleSelection.js'
 import { describeCodeSource } from '../../projects/codeSources.js'
 import { describePorts, describeTools } from '../../projects/projectSummary.js'
 import type { ProjectSettings } from '../../projects/ProjectSettings.js'
@@ -46,6 +48,14 @@ function SummaryRow({
   )
 }
 
+function setupStepDescription(project: ProjectSettings): string {
+  const toolsWithSetup = installationOrder(project.modules, moduleCatalog())
+    .filter((module) => module.hasSetup)
+    .map((module) => module.label)
+  const toolSetup = toolsWithSetup.length > 0 ? `, then set up ${joinInProse(toolsWithSetup)}` : ''
+  return `Link your dotfiles and each tool’s config, and your git and SSH config${toolSetup}.`
+}
+
 function plannedSteps(project: ProjectSettings): string[] {
   const source = project.codeSource
   return [
@@ -53,7 +63,7 @@ function plannedSteps(project: ProjectSettings): string[] {
     project.ports.length > 0
       ? `Create the container and forward ${pluralize(project.ports.length, 'port')} to this machine.`
       : 'Create the container.',
-    'Copy your dotfiles in, then set up Neovim plugins and language servers, git and SSH.',
+    setupStepDescription(project),
     source.kind === 'repositories'
       ? `Clone ${pluralize(source.repositories.length, 'repository', 'repositories')} into ~/Project.`
       : 'Copy the folder into ~/Project.',

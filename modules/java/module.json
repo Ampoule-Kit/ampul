@@ -1,0 +1,27 @@
+{
+  "label": "Java (Temurin)",
+  "description": "The Eclipse Temurin JDK, with JAVA_HOME set, for Java, Kotlin and Gradle or Maven builds.",
+  "version": "25.0.5.1+2",
+  "selectedByDefault": false,
+  "downloads": [
+    {
+      "url": "https://github.com/adoptium/temurin{version:major}-binaries/releases/download/jdk-{version:url}/OpenJDK{version:major}U-jdk_{arch}_linux_hotspot_{version:underscored}.tar.gz",
+      "architectures": {
+        "arm64": "aarch64",
+        "amd64": "x64"
+      },
+      "sha256": {
+        "arm64": "c37879e0d08eeb1baa69fcbb7758cd455b7b1c0ceab1e2a136ccb1713c530984",
+        "amd64": "760f91b22c3efc9bd1b64ff950598231be82928cc807e30691a0e7a2995a62c0"
+      },
+      "installTo": "/opt/java"
+    }
+  ],
+  "environment": {
+    "JAVA_HOME": "/opt/java"
+  },
+  "path": [
+    "/opt/java/bin"
+  ],
+  "check": "java -version"
+}

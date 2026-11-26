@@ -4,8 +4,8 @@ import { Header } from '../components/Header.js'
 import { answeredSteps, Wizard, type WizardStep } from '../components/Wizard.js'
 import type { Finish } from '../terminal.js'
 import { CodeSourceStep, describeCodeSourceKind } from './CodeSourceStep.js'
-import { DependenciesStep, describeDependencies } from './DependenciesStep.js'
 import { describeFolder, FolderStep } from './FolderStep.js'
+import { describeModulesAnswer, ModulesStep } from './ModulesStep.js'
 import { describeGitFiles, GitFilesStep } from './GitFilesStep.js'
 import { NameStep } from './NameStep.js'
 import { describeOtherPorts, OtherPortsStep } from './OtherPortsStep.js'
@@ -71,8 +71,8 @@ function questionSteps(askForName: boolean): WizardStep<ProjectDraft>[] {
     {
       id: 'tools',
       title: 'Tools',
-      summary: describeDependencies,
-      render: (controls) => <DependenciesStep {...controls} />,
+      summary: describeModulesAnswer,
+      render: (controls) => <ModulesStep {...controls} />,
     },
     {
       id: 'ports',
