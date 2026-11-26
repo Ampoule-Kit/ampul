@@ -1,23 +1,29 @@
 import chalk from 'chalk'
 import { render, Text, useInput } from 'ink'
-import { stopRunningProcesses } from '../system/processes.js'
-import type { LogFile } from '../tasks/LogFile.js'
+import { stopRunningProcesses } from '../system/processes.ts'
+import type { LogFile } from '../tasks/LogFile.ts'
 import {
-  TaskRunner,
   type Task,
   type TaskObserver,
+  TaskRunner,
   type TaskRunResult,
-} from '../tasks/TaskRunner.js'
-import { TaskProgressView } from './components/TaskProgressView.js'
-import { isInteractiveTerminal, printElement } from './terminal.js'
-import { colors, symbols } from './theme.js'
+} from '../tasks/TaskRunner.ts'
+import { TaskProgressView } from './components/TaskProgressView.tsx'
+import { isInteractiveTerminal, printElement } from './terminal.tsx'
+import { colors, symbols } from './theme.ts'
 
 const interruptedExitCode = 130
 
 const plainOutputObserver: TaskObserver = {
-  taskStarted: (title) => process.stdout.write(chalk.bold(`==> ${title}\n`)),
-  outputLine: (line) => process.stdout.write(`${line}\n`),
-  warning: (message) => process.stderr.write(chalk.yellow(`${symbols.warning} ${message}\n`)),
+  taskStarted: (title) => {
+    process.stdout.write(chalk.bold(`==> ${title}\n`))
+  },
+  outputLine: (line) => {
+    process.stdout.write(`${line}\n`)
+  },
+  warning: (message) => {
+    process.stderr.write(chalk.yellow(`${symbols.warning} ${message}\n`))
+  },
 }
 
 function interrupt(logFile: LogFile): never {

@@ -1,20 +1,21 @@
-import type { CommandDefinition, Invocation } from '../cli/CommandDefinition.js'
-import { containerState } from '../containers/containerState.js'
-import { containerName } from '../containers/naming.js'
-import type { ContainerEngine } from '../engine/ContainerEngine.js'
-import { Problem, UserCancelled } from '../problems/Problem.js'
-import { projectNameFormatProblem } from '../projects/projectNames.js'
-import { projectExists, saveProject } from '../projects/projectStore.js'
-import { emptyDraft, settingsFromDraft } from '../ui/projectForm/ProjectDraft.js'
+import type { CommandDefinition, Invocation } from '../cli/CommandDefinition.ts'
+import { containerState } from '../containers/containerState.ts'
+import { containerName } from '../containers/naming.ts'
+import type { ContainerEngine } from '../engine/ContainerEngine.ts'
+import { Problem } from '../problems/Problem.ts'
+import { UserCancelled } from '../problems/UserCancelled.ts'
+import { projectNameFormatProblem } from '../projects/projectNames.ts'
+import { projectExists, saveProject } from '../projects/projectStore.ts'
+import { emptyDraft, settingsFromDraft } from '../ui/projectForm/ProjectDraft.ts'
 import {
   ProjectForm,
-  ProjectFormSummary,
   type ProjectFormResult,
-} from '../ui/projectForm/ProjectForm.js'
-import { showInteractiveScreen } from '../ui/terminal.js'
-import { connectToEngine } from './shared/engineConnection.js'
-import { buildProject } from './shared/projectBuild.js'
-import { describeRuntime } from './shared/runtimeDescription.js'
+  ProjectFormSummary,
+} from '../ui/projectForm/ProjectForm.tsx'
+import { showInteractiveScreen } from '../ui/terminal.tsx'
+import { connectToEngine } from './shared/engineConnection.tsx'
+import { buildProject } from './shared/projectBuild/buildProject.tsx'
+import { describeRuntime } from './shared/runtimeDescription.ts'
 
 function validateGivenName(name: string): void {
   const formatProblem = projectNameFormatProblem(name)

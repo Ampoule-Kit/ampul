@@ -1,16 +1,13 @@
-import type { Readable } from 'node:stream'
+import { Readable } from 'node:stream'
 import { create as createTarStream } from 'tar'
-import type { ContainerEngine } from '../engine/ContainerEngine.js'
-import { containerName, containerUser } from './naming.js'
+import type { ContainerEngine } from '../engine/ContainerEngine.ts'
+import { containerName, containerUser } from './naming.ts'
 
 const extractIntoFreshFolderScript =
   'rm -rf "$1" && mkdir -p "$1" && tar --warning=no-unknown-keyword -xf - -C "$1"'
 
 export function archiveOf(directory: string, entries: string[] = ['.']): Readable {
-  return createTarStream(
-    { cwd: directory, portable: true, follow: false },
-    entries,
-  ) as unknown as Readable
+  return Readable.from(createTarStream({ cwd: directory, portable: true, follow: false }, entries))
 }
 
 export async function replaceContainerFolder(
@@ -33,7 +30,12 @@ export async function replaceContainerFolder(
       'extract',
       containerFolder,
     ],
-    { input: archive, onOutput: (chunk) => (errorOutput += chunk) },
+    {
+      input: archive,
+      onOutput: (chunk) => {
+        errorOutput += chunk
+      },
+    },
   )
   return { exitCode, errorOutput }
 }

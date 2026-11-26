@@ -1,7 +1,7 @@
 import { Box, Text } from 'ink'
-import type { Problem } from '../../problems/Problem.js'
-import { displayPath } from '../../system/platform.js'
-import { colors, symbols } from '../theme.js'
+import type { Problem } from '../../problems/Problem.ts'
+import { displayPath } from '../../system/platform.ts'
+import { colors, symbols } from '../theme.ts'
 
 const outputLinesShown = 15
 

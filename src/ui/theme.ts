@@ -29,3 +29,9 @@ export const symbols = {
 
 export const spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 export const spinnerIntervalMilliseconds = 80
+
+export type ThemeColor = (typeof colors)[keyof typeof colors]
+
+export function colorOrTerminalDefault(color: ThemeColor | undefined): { color?: ThemeColor } {
+  return color === undefined ? {} : { color }
+}

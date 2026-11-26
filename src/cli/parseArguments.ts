@@ -1,6 +1,6 @@
-import { Problem } from '../problems/Problem.js'
-import { helpFlag, type CommandDefinition, type FlagDefinition } from './CommandDefinition.js'
-import { closestMatch } from './suggestions.js'
+import { Problem } from '../problems/Problem.ts'
+import { type CommandDefinition, type FlagDefinition, helpFlag } from './CommandDefinition.ts'
+import { closestMatch } from './suggestions.ts'
 
 export interface ParsedArguments {
   positionals: string[]

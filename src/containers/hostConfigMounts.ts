@@ -1,8 +1,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { captureCommand } from '../system/processes.js'
-import { homeDirectory } from '../system/platform.js'
-import { containerHome } from './naming.js'
+import { environmentVariable } from '../system/environment.ts'
+import { homeDirectory } from '../system/platform.ts'
+import { captureCommand } from '../system/processes.ts'
+import { containerHome } from './naming.ts'
 
 export interface HostMount {
   hostPath: string
@@ -11,7 +12,7 @@ export interface HostMount {
 }
 
 function xdgGitConfig(): string {
-  const configRoot = process.env.XDG_CONFIG_HOME || path.join(homeDirectory, '.config')
+  const configRoot = environmentVariable('XDG_CONFIG_HOME') ?? path.join(homeDirectory, '.config')
   return path.join(configRoot, 'git', 'config')
 }
 

@@ -1,5 +1,5 @@
 import { Text, useAnimation } from 'ink'
-import { colors, spinnerFrames, spinnerIntervalMilliseconds } from '../theme.js'
+import { colors, spinnerFrames, spinnerIntervalMilliseconds } from '../theme.ts'
 
 export function Spinner({ color = colors.accent }: { color?: string }) {
   const { frame } = useAnimation({ interval: spinnerIntervalMilliseconds })

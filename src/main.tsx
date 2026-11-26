@@ -1,20 +1,21 @@
 import { Text } from 'ink'
-import { commandManualPage, overviewManualPage } from './cli/manualPages.js'
-import { parseArguments } from './cli/parseArguments.js'
-import { runHome } from './commands/home.js'
-import { allCommands, findCommand, unknownCommand } from './commands/registry.js'
-import { asProblem, UserCancelled } from './problems/Problem.js'
-import { ProblemView } from './ui/components/ProblemView.js'
-import { isInteractiveTerminal, printElement, printErrorElement } from './ui/terminal.js'
-import { colors } from './ui/theme.js'
-import { devenvVersion } from './version.js'
+import { commandManualPage, overviewManualPage } from './cli/manualPages.ts'
+import { parseArguments } from './cli/parseArguments.ts'
+import { runHome } from './commands/home.tsx'
+import { allCommands, commandNamed, unknownCommand } from './commands/registry.ts'
+import { asProblem } from './problems/Problem.ts'
+import { UserCancelled } from './problems/UserCancelled.ts'
+import { ProblemView } from './ui/components/ProblemView.tsx'
+import { isInteractiveTerminal, printElement, printErrorElement } from './ui/terminal.tsx'
+import { colors } from './ui/theme.ts'
+import { devenvVersion } from './version.ts'
 
 const cancelledExitCode = 130
 const failureExitCode = 1
 const versionFlags = new Set(['--version', '-v', 'version'])
 const helpFlags = new Set(['--help', '-h'])
 
-async function dispatch(args: string[]): Promise<number> {
+function dispatch(args: string[]): Promise<number> | number {
   const [commandName, ...rest] = args
   if (!commandName) {
     if (isInteractiveTerminal()) return runHome()
@@ -30,14 +31,14 @@ async function dispatch(args: string[]): Promise<number> {
     return 0
   }
 
-  const command = findCommand(commandName)
+  const command = commandNamed(commandName)
   if (!command) throw unknownCommand(commandName)
   const { positionals, flags } = parseArguments(command, rest)
   if (flags.has('help')) {
     process.stdout.write(commandManualPage(command))
     return 0
   }
-  return (await command.run({ positionals, flags, interactive: isInteractiveTerminal() })) ?? 0
+  return command.run({ positionals, flags, interactive: isInteractiveTerminal() })
 }
 
 async function main(): Promise<void> {

@@ -1,13 +1,13 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import type { ContainerEngine } from '../engine/ContainerEngine.js'
-import { Problem } from '../problems/Problem.js'
-import { repositoryFolderName } from '../projects/codeSources.js'
-import type { FolderSource, ProjectSettings } from '../projects/ProjectSettings.js'
-import { captureCommand } from '../system/processes.js'
-import type { TaskContext } from '../tasks/TaskRunner.js'
-import { archiveOf, replaceContainerFolder } from './archives.js'
-import { containerName, containerProjectDirectory, containerUser } from './naming.js'
+import type { ContainerEngine } from '../engine/ContainerEngine.ts'
+import { Problem } from '../problems/Problem.ts'
+import { repositoryFolderName } from '../projects/codeSources.ts'
+import type { FolderSource, ProjectSettings } from '../projects/ProjectSettings.ts'
+import { captureCommand } from '../system/processes.ts'
+import type { TaskContext } from '../tasks/TaskRunner.ts'
+import { archiveOf, replaceContainerFolder } from './archives.ts'
+import { containerName, containerProjectDirectory, containerUser } from './naming.ts'
 
 export interface CloneOutcome {
   failedRepositories: string[]

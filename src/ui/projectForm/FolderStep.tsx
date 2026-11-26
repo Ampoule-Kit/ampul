@@ -1,17 +1,17 @@
-import { Text } from 'ink'
 import path from 'node:path'
+import { Text } from 'ink'
 import {
   completeFolderPath,
   isGitRepositoryRoot,
   matchingSubfolders,
   resolveFolder,
-} from '../../system/folders.js'
-import { displayPath } from '../../system/platform.js'
-import { Question } from '../components/Question.js'
-import { TextPrompt } from '../components/TextPrompt.js'
-import type { StepControls } from '../components/Wizard.js'
-import { colors, symbols } from '../theme.js'
-import type { ProjectDraft } from './ProjectDraft.js'
+} from '../../system/folders.ts'
+import { displayPath } from '../../system/platform.ts'
+import { Question } from '../components/Question.tsx'
+import { TextPrompt } from '../components/TextPrompt.tsx'
+import type { StepControls } from '../components/Wizard.tsx'
+import { colors, symbols } from '../theme.ts'
+import type { ProjectDraft } from './ProjectDraft.ts'
 
 const shownMatches = 6
 
@@ -49,7 +49,8 @@ export function FolderStep({ draft, submit, back }: StepControls<ProjectDraft>) 
         complete={completeFolderPath}
         preview={(value) => <FolderPreview enteredPath={value} />}
         onSubmit={(value) => {
-          const folder = resolveFolder(value)!
+          const folder = resolveFolder(value)
+          if (folder === undefined) return
           submit({ folder, onlyGitFiles: isGitRepositoryRoot(folder) && draft.onlyGitFiles })
         }}
         onCancel={back}

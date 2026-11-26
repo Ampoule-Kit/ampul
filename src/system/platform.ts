@@ -1,5 +1,6 @@
 import os from 'node:os'
 import path from 'node:path'
+import { environmentVariable } from './environment.ts'
 
 export const isWindows = process.platform === 'win32'
 export const isMacOS = process.platform === 'darwin'
@@ -10,15 +11,15 @@ export const homeDirectory = os.homedir()
 const fallbackUserId = 1000
 
 function windowsRoamingAppData(): string {
-  return process.env.APPDATA ?? path.join(homeDirectory, 'AppData', 'Roaming')
+  return environmentVariable('APPDATA') ?? path.join(homeDirectory, 'AppData', 'Roaming')
 }
 
 function windowsLocalAppData(): string {
-  return process.env.LOCALAPPDATA ?? path.join(homeDirectory, 'AppData', 'Local')
+  return environmentVariable('LOCALAPPDATA') ?? path.join(homeDirectory, 'AppData', 'Local')
 }
 
-function xdgDirectory(environmentVariable: string, fallback: string): string {
-  return process.env[environmentVariable] || path.join(homeDirectory, fallback)
+function xdgDirectory(variableName: string, fallbackUnderHome: string): string {
+  return environmentVariable(variableName) ?? path.join(homeDirectory, fallbackUnderHome)
 }
 
 function configRoot(): string {

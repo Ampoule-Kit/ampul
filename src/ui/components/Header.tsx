@@ -1,6 +1,6 @@
 import { Box, Text } from 'ink'
-import { devenvVersion } from '../../version.js'
-import { colors } from '../theme.js'
+import { devenvVersion } from '../../version.ts'
+import { colors } from '../theme.ts'
 
 interface HeaderProps {
   title: string

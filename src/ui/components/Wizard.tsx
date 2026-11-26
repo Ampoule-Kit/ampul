@@ -1,6 +1,7 @@
 import { Box } from 'ink'
-import { useState, type ReactNode } from 'react'
-import { AnsweredQuestion } from './Question.js'
+import { type ReactNode, useState } from 'react'
+import { AnsweredQuestion } from './Question.tsx'
+import { firstActiveStepIndex, type NavigableStep, nextStepIndex } from './wizardNavigation.ts'
 
 export interface StepControls<Draft> {
   draft: Draft
@@ -11,21 +12,23 @@ export interface StepControls<Draft> {
   cancel: () => void
 }
 
-export interface WizardStep<Draft> {
-  id: string
+export interface WizardStep<Draft> extends NavigableStep<Draft> {
   title: string
-  isSkipped?: (draft: Draft) => boolean
-  isComplete?: (draft: Draft) => boolean
-  summary?: (draft: Draft) => string
+  summary?: ((draft: Draft) => string) | undefined
   render: (controls: StepControls<Draft>) => ReactNode
 }
 
 interface WizardProps<Draft> {
   steps: WizardStep<Draft>[]
   initialDraft: Draft
-  initialStepId?: string
+  initialStepId?: string | undefined
   onFinish: (draft: Draft) => void
   onCancel: () => void
+}
+
+interface Detour {
+  jumpedToStepId: string
+  returnToStepId: string
 }
 
 export function answeredSteps<Draft>(
@@ -33,17 +36,10 @@ export function answeredSteps<Draft>(
   draft: Draft,
   beforeIndex = steps.length,
 ) {
-  return steps
-    .slice(0, beforeIndex)
-    .filter((step) => step.summary && !step.isSkipped?.(draft))
-    .map((step) => (
-      <AnsweredQuestion key={step.id} title={step.title} answer={step.summary!(draft)} />
-    ))
-}
-
-interface Detour {
-  jumpedToStepId: string
-  returnToStepId: string
+  return steps.slice(0, beforeIndex).flatMap((step) => {
+    if (!step.summary || step.isSkipped?.(draft)) return []
+    return [<AnsweredQuestion key={step.id} title={step.title} answer={step.summary(draft)} />]
+  })
 }
 
 export function Wizard<Draft>({
@@ -56,35 +52,44 @@ export function Wizard<Draft>({
   const indexOf = (stepId: string) => steps.findIndex((candidate) => candidate.id === stepId)
   const [draft, setDraft] = useState(initialDraft)
   const [stepIndex, setStepIndex] = useState(() =>
-    initialStepId ? indexOf(initialStepId) : firstActiveIndex(steps, initialDraft, 0, 1),
+    initialStepId === undefined
+      ? firstActiveStepIndex(steps, initialDraft, 0, 1)
+      : indexOf(initialStepId),
   )
   const [detour, setDetour] = useState<Detour>()
 
-  const endDetour = (stepId: string) => {
+  const currentStep = steps[stepIndex]
+  if (!currentStep) return null
+
+  const endDetour = (returnToStepId: string) => {
     setDetour(undefined)
-    setStepIndex(indexOf(stepId))
+    setStepIndex(indexOf(returnToStepId))
   }
 
-  const step = steps[stepIndex]!
   const controls: StepControls<Draft> = {
     draft,
     submit: (changes) => {
       const nextDraft = { ...draft, ...changes }
       const nextIndex = nextStepIndex(steps, nextDraft, stepIndex, detour?.returnToStepId)
-      if (nextIndex >= steps.length) return onFinish(nextDraft)
+      if (nextIndex >= steps.length) {
+        onFinish(nextDraft)
+        return
+      }
       setDraft(nextDraft)
-      if (detour && nextIndex === indexOf(detour.returnToStepId))
-        return endDetour(detour.returnToStepId)
-      setStepIndex(nextIndex)
+      if (detour && nextIndex === indexOf(detour.returnToStepId)) endDetour(detour.returnToStepId)
+      else setStepIndex(nextIndex)
     },
     back: () => {
-      if (detour?.jumpedToStepId === step.id) return endDetour(detour.returnToStepId)
-      const previous = firstActiveIndex(steps, draft, stepIndex - 1, -1)
-      if (previous < 0) return onCancel()
-      setStepIndex(previous)
+      if (detour?.jumpedToStepId === currentStep.id) {
+        endDetour(detour.returnToStepId)
+        return
+      }
+      const previousIndex = firstActiveStepIndex(steps, draft, stepIndex - 1, -1)
+      if (previousIndex < 0) onCancel()
+      else setStepIndex(previousIndex)
     },
     jumpTo: (stepId) => {
-      setDetour({ jumpedToStepId: stepId, returnToStepId: step.id })
+      setDetour({ jumpedToStepId: stepId, returnToStepId: currentStep.id })
       setStepIndex(indexOf(stepId))
     },
     finish: () => onFinish(draft),
@@ -94,35 +99,9 @@ export function Wizard<Draft>({
   return (
     <Box flexDirection="column">
       {answeredSteps(steps, draft, stepIndex)}
-      <Box key={step.id} flexDirection="column">
-        {step.render(controls)}
+      <Box key={currentStep.id} flexDirection="column">
+        {currentStep.render(controls)}
       </Box>
     </Box>
   )
-}
-
-function firstActiveIndex<Draft>(
-  steps: WizardStep<Draft>[],
-  draft: Draft,
-  from: number,
-  direction: 1 | -1,
-) {
-  let index = from
-  while (index >= 0 && index < steps.length && steps[index]!.isSkipped?.(draft)) index += direction
-  return index
-}
-
-function nextStepIndex<Draft>(
-  steps: WizardStep<Draft>[],
-  draft: Draft,
-  currentIndex: number,
-  returnToStepId: string | undefined,
-): number {
-  let index = firstActiveIndex(steps, draft, currentIndex + 1, 1)
-  if (!returnToStepId) return index
-  const returnIndex = steps.findIndex((step) => step.id === returnToStepId)
-  while (index < returnIndex && (steps[index]!.isComplete?.(draft) ?? true)) {
-    index = firstActiveIndex(steps, draft, index + 1, 1)
-  }
-  return index
 }

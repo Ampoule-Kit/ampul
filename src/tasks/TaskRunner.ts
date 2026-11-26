@@ -1,71 +1,89 @@
-import { asProblem, Problem } from '../problems/Problem.js'
-import type { LogFile } from './LogFile.js'
+import { asProblem, Problem } from '../problems/Problem.ts'
+import type { LogFile } from './LogFile.ts'
 
 export interface TaskContext {
-  output(chunk: string): void
-  outputLine(line: string): void
-  detail(text: string | undefined): void
-  progress(completed: number, total: number): void
-  warn(message: string): void
+  output: (chunk: string) => void
+  outputLine: (line: string) => void
+  detail: (text: string | undefined) => void
+  progress: (completed: number, total: number) => void
+  warn: (message: string) => void
 }
 
 export interface Task {
   title: string
-  run(context: TaskContext): Promise<void>
+  run: (context: TaskContext) => Promise<void> | void
 }
 
 export type TaskStatus = 'pending' | 'running' | 'succeeded' | 'failed'
 
+export interface TaskProgress {
+  completed: number
+  total: number
+}
+
 export interface TaskState {
   title: string
   status: TaskStatus
-  detail?: string
-  progress?: { completed: number; total: number }
+  detail: string | undefined
+  progress: TaskProgress | undefined
   recentOutput: string[]
-  startedAt?: number
-  finishedAt?: number
+  startedAt: number | undefined
+  finishedAt: number | undefined
 }
 
-export interface TaskRunResult {
-  succeeded: boolean
-  problem?: Problem
-  warnings: string[]
-  logFile: string
-}
+export type TaskRunResult =
+  | { succeeded: true; warnings: string[]; logFile: string }
+  | { succeeded: false; problem: Problem; warnings: string[]; logFile: string }
 
 export interface TaskRunSnapshot {
   tasks: TaskState[]
   warnings: string[]
 }
 
-type Listener = (snapshot: TaskRunSnapshot) => void
+type SnapshotListener = (snapshot: TaskRunSnapshot) => void
 
 export interface TaskObserver {
-  taskStarted?(title: string): void
-  outputLine?(line: string): void
-  warning?(message: string): void
+  taskStarted?: (title: string) => void
+  outputLine?: (line: string) => void
+  warning?: (message: string) => void
 }
 
 const recentOutputLimit = 200
 const failureOutputLines = 20
 
+function pendingState(task: Task): TaskState {
+  return {
+    title: task.title,
+    status: 'pending',
+    detail: undefined,
+    progress: undefined,
+    recentOutput: [],
+    startedAt: undefined,
+    finishedAt: undefined,
+  }
+}
+
 export class TaskRunner {
+  private readonly tasks: Task[]
+  private readonly logFile: LogFile
+  private readonly observer: TaskObserver
   private readonly states: TaskState[]
   private readonly warnings: string[] = []
-  private readonly listeners = new Set<Listener>()
+  private readonly listeners = new Set<SnapshotListener>()
 
-  constructor(
-    private readonly tasks: Task[],
-    private readonly logFile: LogFile,
-    private readonly observer: TaskObserver = {},
-  ) {
-    this.states = tasks.map((task) => ({ title: task.title, status: 'pending', recentOutput: [] }))
+  constructor(tasks: Task[], logFile: LogFile, observer: TaskObserver = {}) {
+    this.tasks = tasks
+    this.logFile = logFile
+    this.observer = observer
+    this.states = tasks.map(pendingState)
   }
 
-  subscribe(listener: Listener): () => void {
+  subscribe(listener: SnapshotListener): () => void {
     this.listeners.add(listener)
     listener(this.snapshot())
-    return () => this.listeners.delete(listener)
+    return () => {
+      this.listeners.delete(listener)
+    }
   }
 
   snapshot(): TaskRunSnapshot {
@@ -77,7 +95,8 @@ export class TaskRunner {
 
   async run(): Promise<TaskRunResult> {
     for (const [index, task] of this.tasks.entries()) {
-      const state = this.states[index]!
+      const state = this.states[index]
+      if (!state) continue
       this.update(state, { status: 'running', startedAt: Date.now() })
       this.logFile.heading(task.title)
       this.observer.taskStarted?.(task.title)
@@ -104,7 +123,9 @@ export class TaskRunner {
       this.publish()
     }
     return {
-      output: (chunk) => this.logFile.write(chunk),
+      output: (chunk) => {
+        this.logFile.write(chunk)
+      },
       outputLine: appendLine,
       detail: (text) => this.update(state, { detail: text }),
       progress: (completed, total) => this.update(state, { progress: { completed, total } }),

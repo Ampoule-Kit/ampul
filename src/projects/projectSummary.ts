@@ -1,7 +1,7 @@
-import { moduleCatalog } from '../modules/moduleCatalog.js'
-import { describeModuleSelection } from '../modules/moduleSelection.js'
-import { formatPortRange, portRanges } from './ports.js'
-import type { ProjectSettings } from './ProjectSettings.js'
+import { moduleCatalog } from '../modules/moduleCatalog.ts'
+import { describeModuleSelection } from '../modules/moduleSelection.ts'
+import type { ProjectSettings } from './ProjectSettings.ts'
+import { formatPortRange, portRanges } from './ports.ts'
 
 export function describePorts(ports: number[]): string {
   const ranges = portRanges(ports)

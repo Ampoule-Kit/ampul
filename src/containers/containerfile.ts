@@ -1,16 +1,19 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import type { ModuleDefinition } from '../modules/ModuleDefinition.js'
-import { resourcePath } from '../resources/resourceDirectory.js'
-import { devenvPaths } from '../system/platform.js'
-import { containerHome } from './naming.js'
+import { z } from 'zod'
+import type { ModuleDefinition } from '../modules/ModuleDefinition.ts'
+import { resourcePath } from '../resources/resourceDirectory.ts'
+import { devenvPaths } from '../system/platform.ts'
+import { containerHome } from './naming.ts'
 
 const downloadCacheMount = '--mount=type=cache,target=/var/cache/devenv'
 const homePlaceholder = '{home}'
 
+const baseImageFileSchema = z.strictObject({ image: z.string().min(1) })
+
 export function baseImage(): string {
   const file = fs.readFileSync(resourcePath('image', 'base-image.json'), 'utf8')
-  return (JSON.parse(file) as { image: string }).image
+  return baseImageFileSchema.parse(JSON.parse(file)).image
 }
 
 function readImageFile(name: string): string {

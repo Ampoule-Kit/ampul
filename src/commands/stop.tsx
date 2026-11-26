@@ -1,15 +1,15 @@
 import { Text } from 'ink'
-import type { CommandDefinition, Invocation } from '../cli/CommandDefinition.js'
-import { allContainerStates } from '../containers/containerState.js'
-import { stopContainer } from '../containers/projectLifecycle.js'
-import type { ContainerEngine } from '../engine/ContainerEngine.js'
-import { Problem } from '../problems/Problem.js'
-import { LogFile } from '../tasks/LogFile.js'
-import { runTasks } from '../ui/runTasks.js'
-import { printElement } from '../ui/terminal.js'
-import { colors, symbols } from '../ui/theme.js'
-import { connectToEngine } from './shared/engineConnection.js'
-import { selectProject } from './shared/projectSelection.js'
+import type { CommandDefinition, Invocation } from '../cli/CommandDefinition.ts'
+import { allContainerStates } from '../containers/containerState.ts'
+import { stopContainer } from '../containers/projectLifecycle.ts'
+import type { ContainerEngine } from '../engine/ContainerEngine.ts'
+import { Problem } from '../problems/Problem.ts'
+import { LogFile } from '../tasks/LogFile.ts'
+import { runTasks } from '../ui/runTasks.tsx'
+import { printElement } from '../ui/terminal.tsx'
+import { colors, symbols } from '../ui/theme.ts'
+import { connectToEngine } from './shared/engineConnection.tsx'
+import { selectProject } from './shared/projectSelection.tsx'
 
 async function projectsToStop(engine: ContainerEngine, invocation: Invocation): Promise<string[]> {
   const states = await allContainerStates(engine)
@@ -48,7 +48,7 @@ async function run(invocation: Invocation): Promise<number> {
     names.map((name) => ({ title: `Stopping ${name}`, run: () => stopContainer(engine, name) })),
     new LogFile('engine', 'stop'),
   )
-  if (!result.succeeded && result.problem) throw result.problem
+  if (!result.succeeded) throw result.problem
   printElement(
     <Text>
       <Text color={colors.success}>{symbols.success}</Text> Stopped {names.join(', ')}.{' '}

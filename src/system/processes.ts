@@ -1,5 +1,6 @@
-import { spawn, type ChildProcess } from 'node:child_process'
+import { type ChildProcess, spawn } from 'node:child_process'
 import type { Readable } from 'node:stream'
+import { LineSplitter } from './LineSplitter.ts'
 
 export interface CapturedOutput {
   exitCode: number
@@ -8,18 +9,20 @@ export interface CapturedOutput {
 }
 
 export interface ProcessOptions {
-  input?: string | Buffer | Readable
-  environment?: Record<string, string>
-  workingDirectory?: string
-  timeoutMilliseconds?: number
+  input?: string | Buffer | Readable | undefined
+  environment?: Record<string, string> | undefined
+  workingDirectory?: string | undefined
+  timeoutMilliseconds?: number | undefined
 }
 
 export interface StreamingOptions extends ProcessOptions {
-  onOutput?: (chunk: string) => void
-  onLine?: (line: string) => void
+  onOutput?: ((chunk: string) => void) | undefined
+  onLine?: ((line: string) => void) | undefined
 }
 
 const commandNotFoundExitCode = 127
+const killedBySignalExitCode = 128
+const genericFailureExitCode = 1
 const runningChildren = new Set<ChildProcess>()
 
 function startProcess(
@@ -36,7 +39,9 @@ function startProcess(
     windowsHide: true,
   })
   runningChildren.add(child)
-  child.on('close', () => runningChildren.delete(child))
+  child.on('close', () => {
+    runningChildren.delete(child)
+  })
   return child
 }
 
@@ -67,7 +72,9 @@ function waitForExit(
       )
       resolve(commandNotFoundExitCode)
     })
-    child.on('close', (exitCode, signal) => resolve(exitCode ?? (signal ? 128 : 1)))
+    child.on('close', (exitCode, signal) =>
+      resolve(exitCode ?? (signal ? killedBySignalExitCode : genericFailureExitCode)),
+    )
   })
 }
 
@@ -79,10 +86,16 @@ export async function captureCommand(
   const child = startProcess(executable, args, options, 'pipe')
   let stdout = ''
   let stderr = ''
-  child.stdout?.setEncoding('utf8').on('data', (chunk: string) => (stdout += chunk))
-  child.stderr?.setEncoding('utf8').on('data', (chunk: string) => (stderr += chunk))
+  child.stdout?.setEncoding('utf8').on('data', (chunk: string) => {
+    stdout += chunk
+  })
+  child.stderr?.setEncoding('utf8').on('data', (chunk: string) => {
+    stderr += chunk
+  })
   feedInput(child, options.input)
-  const exitCode = await waitForExit(child, (message) => (stderr += message))
+  const exitCode = await waitForExit(child, (message) => {
+    stderr += message
+  })
   return { exitCode, stdout, stderr }
 }
 
@@ -100,33 +113,20 @@ export async function streamCommand(
   child.stdout?.setEncoding('utf8').on('data', receive)
   child.stderr?.setEncoding('utf8').on('data', receive)
   feedInput(child, options.input)
-  const exitCode = await waitForExit(child, (message) => receive(message + '\n'))
+  const exitCode = await waitForExit(child, (message) => {
+    receive(message + '\n')
+  })
   lines.flush()
   return exitCode
 }
 
-export async function runAttachedToTerminal(
+export function runAttachedToTerminal(
   executable: string,
   args: string[],
   options: ProcessOptions = {},
 ): Promise<number> {
   const child = startProcess(executable, args, options, 'inherit')
-  return waitForExit(child, (message) => process.stderr.write(message + '\n'))
-}
-
-class LineSplitter {
-  private pending = ''
-
-  constructor(private readonly onLine: (line: string) => void) {}
-
-  push(chunk: string): void {
-    const pieces = (this.pending + chunk).split(/\r\n|\n|\r/)
-    this.pending = pieces.pop() ?? ''
-    for (const piece of pieces) this.onLine(piece)
-  }
-
-  flush(): void {
-    if (this.pending) this.onLine(this.pending)
-    this.pending = ''
-  }
+  return waitForExit(child, (message) => {
+    process.stderr.write(message + '\n')
+  })
 }

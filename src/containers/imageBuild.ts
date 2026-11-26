@@ -1,24 +1,19 @@
-import type { ContainerEngine } from '../engine/ContainerEngine.js'
-import { Problem } from '../problems/Problem.js'
-import type { ModuleDefinition } from '../modules/ModuleDefinition.js'
-import { moduleCatalog } from '../modules/moduleCatalog.js'
-import { installationOrder } from '../modules/moduleSelection.js'
-import type { ProjectSettings } from '../projects/ProjectSettings.js'
-import { resourceDirectory } from '../resources/resourceDirectory.js'
-import { hostGroupId, hostUserId } from '../system/platform.js'
-import type { TaskContext } from '../tasks/TaskRunner.js'
-import { baseImage, writeContainerfile } from './containerfile.js'
-import { containerUser, imageName, projectLabel } from './naming.js'
-
-interface BuildStep {
-  number: number
-  total: number
-  instruction: string
-}
-
-const podmanStepPattern = /STEP (\d+)\/(\d+): (.*)$/
-const dockerStepPattern = /^#\d+ \[[\w-]*\s+(\d+)\/(\d+)\] (.*)$/
-const moduleInstallPattern = /install-module\.sh ([\w-]+)/
+import type { ContainerEngine } from '../engine/ContainerEngine.ts'
+import type { ModuleDefinition } from '../modules/ModuleDefinition.ts'
+import { moduleCatalog } from '../modules/moduleCatalog.ts'
+import { installationOrder } from '../modules/moduleSelection.ts'
+import { Problem } from '../problems/Problem.ts'
+import type { ProjectSettings } from '../projects/ProjectSettings.ts'
+import { resourceDirectory } from '../resources/resourceDirectory.ts'
+import { hostGroupId, hostUserId } from '../system/platform.ts'
+import type { TaskContext } from '../tasks/TaskRunner.ts'
+import { baseImage, writeContainerfile } from './containerfile.ts'
+import {
+  describeBuildInstruction,
+  isOutOfMemoryMessage,
+  parseBuildStep,
+} from './imageBuildOutput.ts'
+import { containerUser, imageName, projectLabel } from './naming.ts'
 
 function imageBuildArguments(
   engine: ContainerEngine,
@@ -58,33 +53,15 @@ export async function buildImage(
     onOutput: context.output,
     onLine: (line) => {
       context.outputLine(line)
-      if (/out of memory|signal: killed|exit code: 137/i.test(line)) sawOutOfMemory = true
+      if (isOutOfMemoryMessage(line)) sawOutOfMemory = true
       const step = parseBuildStep(line)
       if (step) {
         context.progress(step.number, step.total)
-        context.detail(describeInstruction(step.instruction, modules))
+        context.detail(describeBuildInstruction(step.instruction, modules))
       }
     },
   })
   if (exitCode !== 0) throw imageBuildFailed(project, engine, sawOutOfMemory)
-}
-
-function parseBuildStep(line: string): BuildStep | undefined {
-  const match = line.match(podmanStepPattern) ?? line.match(dockerStepPattern)
-  if (!match) return undefined
-  return { number: Number(match[1]), total: Number(match[2]), instruction: match[3] ?? '' }
-}
-
-function describeInstruction(instruction: string, modules: ModuleDefinition[]): string {
-  const moduleId = instruction.match(moduleInstallPattern)?.[1]
-  const module = modules.find((candidate) => candidate.id === moduleId)
-  if (module) return `Installing ${module.label}`
-  const keyword = instruction.split(' ')[0]?.toUpperCase()
-  if (keyword === 'FROM') return 'Preparing the Ubuntu base image'
-  if (keyword === 'COPY') return 'Copying the install scripts'
-  if (instruction.includes('apt-get install')) return 'Installing the Ubuntu basics'
-  if (instruction.includes('create-user.sh')) return 'Creating your user'
-  return 'Configuring the image'
 }
 
 function imageBuildFailed(

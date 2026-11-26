@@ -1,16 +1,17 @@
 import { Text } from 'ink'
-import { yesFlag, type CommandDefinition, type Invocation } from '../cli/CommandDefinition.js'
-import { removeContainer, usesInnerContainerEngine } from '../containers/containerCreation.js'
-import { removeImage, removeInnerEngineVolume } from '../containers/projectLifecycle.js'
-import { deleteProjectSettings, projectSettingsFile } from '../projects/projectStore.js'
-import { displayPath } from '../system/platform.js'
-import { LogFile } from '../tasks/LogFile.js'
-import { runTasks } from '../ui/runTasks.js'
-import { printElement } from '../ui/terminal.js'
-import { colors, symbols } from '../ui/theme.js'
-import { confirmDestructiveAction } from './shared/confirmation.js'
-import { connectToEngine } from './shared/engineConnection.js'
-import { selectProject } from './shared/projectSelection.js'
+import { type CommandDefinition, type Invocation, yesFlag } from '../cli/CommandDefinition.ts'
+import { removeContainer } from '../containers/containerCreation.ts'
+import { usesInnerContainerEngine } from '../containers/containerRunArguments.ts'
+import { removeImage, removeInnerEngineVolume } from '../containers/removal.ts'
+import { deleteProjectSettings, projectSettingsFile } from '../projects/projectStore.ts'
+import { displayPath } from '../system/platform.ts'
+import { LogFile } from '../tasks/LogFile.ts'
+import { runTasks } from '../ui/runTasks.tsx'
+import { printElement } from '../ui/terminal.tsx'
+import { colors, symbols } from '../ui/theme.ts'
+import { confirmDestructiveAction } from './shared/confirmation.tsx'
+import { connectToEngine } from './shared/engineConnection.tsx'
+import { selectProject } from './shared/projectSelection.tsx'
 
 async function run(invocation: Invocation): Promise<number> {
   const engine = await connectToEngine(invocation.interactive)
@@ -44,11 +45,16 @@ async function run(invocation: Invocation): Promise<number> {
         title: 'Remove the inner container data',
         run: () => removeInnerEngineVolume(engine, project.name),
       },
-      { title: 'Remove the settings', run: async () => deleteProjectSettings(project.name) },
+      {
+        title: 'Remove the settings',
+        run: () => {
+          deleteProjectSettings(project.name)
+        },
+      },
     ],
     new LogFile(project.name, 'remove'),
   )
-  if (!result.succeeded && result.problem) throw result.problem
+  if (!result.succeeded) throw result.problem
   printElement(
     <Text>
       <Text color={colors.success}>{symbols.success}</Text> Removed {project.name}.

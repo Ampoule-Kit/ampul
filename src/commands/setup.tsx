@@ -1,14 +1,14 @@
 import { Text } from 'ink'
-import type { CommandDefinition, Invocation } from '../cli/CommandDefinition.js'
-import { LogFile } from '../tasks/LogFile.js'
-import { pluralize } from '../ui/formatting.js'
-import { runTasks } from '../ui/runTasks.js'
-import { printElement } from '../ui/terminal.js'
-import { colors, symbols } from '../ui/theme.js'
-import { ensureContainerRunning } from './shared/containerAccess.js'
-import { connectToEngine } from './shared/engineConnection.js'
-import { setupTask } from './shared/projectBuild.js'
-import { selectProject } from './shared/projectSelection.js'
+import type { CommandDefinition, Invocation } from '../cli/CommandDefinition.ts'
+import { LogFile } from '../tasks/LogFile.ts'
+import { pluralize } from '../text/prose.ts'
+import { runTasks } from '../ui/runTasks.tsx'
+import { printElement } from '../ui/terminal.tsx'
+import { colors, symbols } from '../ui/theme.ts'
+import { ensureContainerRunning } from './shared/containerAccess.tsx'
+import { connectToEngine } from './shared/engineConnection.tsx'
+import { setupTask } from './shared/projectBuild/buildTasks.ts'
+import { selectProject } from './shared/projectSelection.tsx'
 
 async function run(invocation: Invocation): Promise<number> {
   const engine = await connectToEngine(invocation.interactive)
@@ -20,7 +20,7 @@ async function run(invocation: Invocation): Promise<number> {
   })
   await ensureContainerRunning(engine, project)
   const result = await runTasks([setupTask(engine, project)], new LogFile(project.name, 'setup'))
-  if (!result.succeeded && result.problem) throw result.problem
+  if (!result.succeeded) throw result.problem
   printElement(
     <Text>
       <Text color={result.warnings.length > 0 ? colors.warning : colors.success}>

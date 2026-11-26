@@ -1,46 +1,12 @@
 import chalk from 'chalk'
-import { devenvPaths, displayPath } from '../system/platform.js'
-import { devenvVersion } from '../version.js'
-import { helpFlag, type CommandDefinition, type FlagDefinition } from './CommandDefinition.js'
-
-const indent = '    '
-const maximumWidth = 100
+import { devenvPaths, displayPath } from '../system/platform.ts'
+import { devenvVersion } from '../version.ts'
+import { type CommandDefinition, type FlagDefinition, helpFlag } from './CommandDefinition.ts'
+import { definitionList, indent, pageWidth, paragraphs, wrap } from './textLayout.ts'
 
 interface Section {
   heading: string
   body: string[]
-}
-
-function pageWidth(): number {
-  return Math.min(process.stdout.columns || maximumWidth, maximumWidth)
-}
-
-function wrap(text: string, leadingSpace: string): string[] {
-  const available = Math.max(20, pageWidth() - leadingSpace.length)
-  const lines: string[] = []
-  let current = ''
-  for (const word of text.split(/\s+/).filter(Boolean)) {
-    if (current && current.length + 1 + word.length > available) {
-      lines.push(leadingSpace + current)
-      current = word
-    } else {
-      current = current ? `${current} ${word}` : word
-    }
-  }
-  if (current) lines.push(leadingSpace + current)
-  return lines
-}
-
-function paragraphs(texts: string[]): string[] {
-  return texts.flatMap((text, index) => [...(index > 0 ? [''] : []), ...wrap(text, indent)])
-}
-
-function definitionList(entries: [term: string, definition: string][]): string[] {
-  const termWidth = Math.max(...entries.map(([term]) => term.length)) + 3
-  return entries.flatMap(([term, definition]) => {
-    const [first = '', ...rest] = wrap(definition, indent + ' '.repeat(termWidth))
-    return [indent + chalk.bold(term) + first.slice(indent.length + term.length), ...rest]
-  })
 }
 
 function flagTerm(flag: FlagDefinition): string {
@@ -88,10 +54,11 @@ export function commandManualPage(command: CommandDefinition): string {
       [...command.flags, helpFlag].map((flag) => [flagTerm(flag), flag.description]),
     ),
   })
-  if (command.aliases?.length) {
+  const aliases = command.aliases ?? []
+  if (aliases.length > 0) {
     sections.push({
       heading: 'ALIASES',
-      body: [indent + command.aliases.map((alias) => `dev ${alias}`).join(', ')],
+      body: [indent + aliases.map((alias) => `dev ${alias}`).join(', ')],
     })
   }
   if (command.examples.length > 0) {

@@ -4,18 +4,18 @@ export interface ProblemFix {
 }
 
 export interface ProblemDetails {
-  explanation?: string
+  explanation?: string | undefined
   fixes?: ProblemFix[]
   outputTail?: string[]
-  logFile?: string
+  logFile?: string | undefined
 }
 
 export class Problem extends Error {
   readonly title: string
-  readonly explanation?: string
+  readonly explanation: string | undefined
   readonly fixes: ProblemFix[]
   readonly outputTail: string[]
-  readonly logFile?: string
+  readonly logFile: string | undefined
 
   constructor(title: string, details: ProblemDetails = {}) {
     super(title)
@@ -25,13 +25,6 @@ export class Problem extends Error {
     this.fixes = details.fixes ?? []
     this.outputTail = details.outputTail ?? []
     this.logFile = details.logFile
-  }
-}
-
-export class UserCancelled extends Error {
-  constructor() {
-    super('Cancelled')
-    this.name = 'UserCancelled'
   }
 }
 

@@ -1,19 +1,20 @@
 import { Text } from 'ink'
-import type { CommandDefinition, Invocation } from '../cli/CommandDefinition.js'
-import { Problem, UserCancelled } from '../problems/Problem.js'
-import { saveProject } from '../projects/projectStore.js'
-import { draftFromSettings, settingsFromDraft } from '../ui/projectForm/ProjectDraft.js'
+import type { CommandDefinition, Invocation } from '../cli/CommandDefinition.ts'
+import { Problem } from '../problems/Problem.ts'
+import { UserCancelled } from '../problems/UserCancelled.ts'
+import { saveProject } from '../projects/projectStore.ts'
+import { draftFromSettings, settingsFromDraft } from '../ui/projectForm/ProjectDraft.ts'
 import {
   ProjectForm,
-  ProjectFormSummary,
   type ProjectFormResult,
-} from '../ui/projectForm/ProjectForm.js'
-import { printElement, showInteractiveScreen } from '../ui/terminal.js'
-import { colors, symbols } from '../ui/theme.js'
-import { connectToEngine } from './shared/engineConnection.js'
-import { selectProject } from './shared/projectSelection.js'
-import { describeRuntime } from './shared/runtimeDescription.js'
-import { confirmAndRebuild } from './rebuild.js'
+  ProjectFormSummary,
+} from '../ui/projectForm/ProjectForm.tsx'
+import { printElement, showInteractiveScreen } from '../ui/terminal.tsx'
+import { colors, symbols } from '../ui/theme.ts'
+import { confirmAndRebuild } from './rebuild.tsx'
+import { connectToEngine } from './shared/engineConnection.tsx'
+import { selectProject } from './shared/projectSelection.tsx'
+import { describeRuntime } from './shared/runtimeDescription.ts'
 
 async function run(invocation: Invocation): Promise<number> {
   if (!invocation.interactive) {

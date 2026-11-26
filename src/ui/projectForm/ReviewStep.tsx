@@ -1,18 +1,18 @@
 import { Box, Text } from 'ink'
 import { useState } from 'react'
-import { usesInnerContainerEngine } from '../../containers/containerCreation.js'
-import { imageName } from '../../containers/naming.js'
-import { moduleCatalog } from '../../modules/moduleCatalog.js'
-import { installationOrder, joinInProse } from '../../modules/moduleSelection.js'
-import { describeCodeSource } from '../../projects/codeSources.js'
-import { describePorts, describeTools } from '../../projects/projectSummary.js'
-import type { ProjectSettings } from '../../projects/ProjectSettings.js'
-import { pluralize } from '../formatting.js'
-import { Question } from '../components/Question.js'
-import { SelectList, type SelectOption } from '../components/SelectList.js'
-import type { StepControls } from '../components/Wizard.js'
-import { colors, symbols } from '../theme.js'
-import { settingsFromDraft, type ProjectDraft } from './ProjectDraft.js'
+import { usesInnerContainerEngine } from '../../containers/containerRunArguments.ts'
+import { imageName } from '../../containers/naming.ts'
+import { moduleCatalog } from '../../modules/moduleCatalog.ts'
+import { installationOrder } from '../../modules/moduleSelection.ts'
+import { describeCodeSource } from '../../projects/codeSources.ts'
+import type { ProjectSettings } from '../../projects/ProjectSettings.ts'
+import { describePorts, describeTools } from '../../projects/projectSummary.ts'
+import { joinInProse, pluralize } from '../../text/prose.ts'
+import { Question } from '../components/Question.tsx'
+import { SelectList, type SelectOption } from '../components/SelectList.tsx'
+import type { StepControls } from '../components/Wizard.tsx'
+import { colorOrTerminalDefault, colors, symbols } from '../theme.ts'
+import { type ProjectDraft, settingsFromDraft } from './ProjectDraft.ts'
 
 export type ProjectFormAction = 'create' | 'save' | 'save-and-rebuild'
 
@@ -40,7 +40,7 @@ function SummaryRow({
       <Box width={10}>
         <Text color={colors.muted}>{label}</Text>
       </Box>
-      <Text color={changed ? colors.warning : undefined}>
+      <Text {...colorOrTerminalDefault(changed ? colors.warning : undefined)}>
         {value}
         {changed ? '  (changed)' : ''}
       </Text>
@@ -104,6 +104,14 @@ function hasChanged(
   return original !== undefined && describe(original) !== describe(current)
 }
 
+function codeSourceText(settings: ProjectSettings): string {
+  return describeCodeSource(settings.codeSource)
+}
+
+function portsText(settings: ProjectSettings): string {
+  return describePorts(settings.ports)
+}
+
 export function ReviewStep({
   draft,
   jumpTo,
@@ -113,8 +121,6 @@ export function ReviewStep({
   const [choosingAnswer, setChoosingAnswer] = useState(false)
   const project = settingsFromDraft(draft)
   const original = context.originalSettings
-  const codeSourceText = (settings: ProjectSettings) => describeCodeSource(settings.codeSource)
-  const portsText = (settings: ProjectSettings) => describePorts(settings.ports)
 
   if (choosingAnswer) {
     return (
@@ -179,9 +185,9 @@ export function ReviewStep({
         <SelectList<ReviewChoice>
           options={reviewChoices(context.mode)}
           onSelect={(choice) => {
-            if (choice === 'change') return setChoosingAnswer(true)
-            if (choice === 'cancel') return cancel()
-            context.onAction(choice, draft)
+            if (choice === 'change') setChoosingAnswer(true)
+            else if (choice === 'cancel') cancel()
+            else context.onAction(choice, draft)
           }}
           onCancel={() => setChoosingAnswer(true)}
           cancelLabel="change an answer"

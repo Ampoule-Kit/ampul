@@ -1,23 +1,23 @@
 import { Box, Text } from 'ink'
 import { useState } from 'react'
-import { presetRanges } from '../../projects/portPresets.js'
+import { presetRanges } from '../../projects/portPresets.ts'
 import {
   combinePorts,
   formatPortList,
   formatPortRange,
+  type PortRange,
   parsePortEntry,
   portsInRange,
-  tooManyPortsProblem,
-  type PortRange,
-} from '../../projects/ports.js'
-import { pluralize } from '../formatting.js'
-import { KeyHints } from '../components/KeyHints.js'
-import { Question } from '../components/Question.js'
-import { TextField } from '../components/TextField.js'
-import type { StepControls } from '../components/Wizard.js'
-import { colors, symbols } from '../theme.js'
-import { PortWarnings } from './PortWarnings.js'
-import type { ProjectDraft } from './ProjectDraft.js'
+} from '../../projects/ports.ts'
+import { pluralize } from '../../text/prose.ts'
+import { KeyHints } from '../components/KeyHints.tsx'
+import { Question } from '../components/Question.tsx'
+import { TextField } from '../components/TextField.tsx'
+import type { StepControls } from '../components/Wizard.tsx'
+import { colors, symbols } from '../theme.ts'
+import { PortWarnings } from './PortWarnings.tsx'
+import type { ProjectDraft } from './ProjectDraft.ts'
+import { evaluatePortEntry } from './portEntry.ts'
 
 function describeRange(range: PortRange): string {
   const count = portsInRange(range).length
@@ -33,22 +33,23 @@ export function OtherPortsStep({ draft, submit, back }: StepControls<ProjectDraf
   const chosenRanges = presetRanges(draft.portPresetIds)
 
   const add = (enteredText: string) => {
-    if (!enteredText.trim()) {
-      if (ranges.length === 0) {
-        return setProblem('Add a port or a range, or press esc and unselect other ports.')
-      }
-      return submit({ otherPortRanges: ranges })
+    const outcome = evaluatePortEntry(enteredText, chosenRanges, ranges)
+    switch (outcome.kind) {
+      case 'finish':
+        submit({ otherPortRanges: ranges })
+        break
+      case 'problem':
+        setProblem(outcome.message)
+        break
+      case 'nothing':
+        setEntry('')
+        break
+      case 'add':
+        setRanges([...ranges, ...outcome.items])
+        setEntry('')
+        setProblem(undefined)
+        break
     }
-    const parsed = parsePortEntry(enteredText, [...chosenRanges, ...ranges])
-    if (parsed.problem !== undefined) return setProblem(parsed.problem)
-    if (parsed.ranges.length === 0) return setEntry('')
-    const tooMany = tooManyPortsProblem(
-      combinePorts([...chosenRanges, ...ranges, ...parsed.ranges]),
-    )
-    if (tooMany) return setProblem(tooMany)
-    setRanges([...ranges, ...parsed.ranges])
-    setEntry('')
-    setProblem(undefined)
   }
 
   const typedRanges = entry.trim() ? parsePortEntry(entry, [...chosenRanges, ...ranges]) : undefined

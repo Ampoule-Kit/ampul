@@ -22,15 +22,23 @@ export function portsInRange(range: PortRange): number[] {
   return Array.from({ length: range.last - range.first + 1 }, (_, offset) => range.first + offset)
 }
 
+function ascending(first: number, second: number): number {
+  return first - second
+}
+
+function uniqueAscending(ports: number[]): number[] {
+  return [...new Set(ports)].toSorted(ascending)
+}
+
 export function combinePorts(ranges: PortRange[]): number[] {
-  return [...new Set(ranges.flatMap(portsInRange))].sort((a, b) => a - b)
+  return uniqueAscending(ranges.flatMap(portsInRange))
 }
 
 export function portRanges(ports: number[]): PortRange[] {
   const ranges: PortRange[] = []
-  for (const port of [...new Set(ports)].sort((a, b) => a - b)) {
-    const current = ranges.at(-1)
-    if (current && port === current.last + 1) current.last = port
+  for (const port of uniqueAscending(ports)) {
+    const currentRange = ranges.at(-1)
+    if (currentRange && port === currentRange.last + 1) currentRange.last = port
     else ranges.push({ first: port, last: port })
   }
   return ranges
@@ -76,7 +84,7 @@ function parseRange(entry: string): PortRange | string {
 
 export function parsePortEntry(text: string, alreadyAdded: PortRange[]): PortEntryResult {
   const entries = text
-    .replace(/\s*[-–]\s*/g, '-')
+    .replaceAll(/\s*[-–]\s*/g, '-')
     .split(/[\s,]+/)
     .filter(Boolean)
   const ranges: PortRange[] = []

@@ -1,15 +1,15 @@
-import { moduleCatalog } from '../../modules/moduleCatalog.js'
+import type { ModuleCatalog } from '../../modules/ModuleDefinition.ts'
+import { moduleCatalog } from '../../modules/moduleCatalog.ts'
 import {
   describeModuleSelection,
-  joinInProse,
   moduleVersionText,
-  requiringModules,
-} from '../../modules/moduleSelection.js'
-import type { ModuleCatalog } from '../../modules/ModuleDefinition.js'
-import { MultiSelectList, type MultiSelectOption } from '../components/MultiSelectList.js'
-import { Question } from '../components/Question.js'
-import type { StepControls } from '../components/Wizard.js'
-import type { ProjectDraft } from './ProjectDraft.js'
+  requiringModuleLabels,
+} from '../../modules/moduleSelection.ts'
+import { joinInProse } from '../../text/prose.ts'
+import { MultiSelectList, type MultiSelectOption } from '../components/MultiSelectList.tsx'
+import { Question } from '../components/Question.tsx'
+import type { StepControls } from '../components/Wizard.tsx'
+import type { ProjectDraft } from './ProjectDraft.ts'
 
 const alwaysIncluded = 'git, curl, ssh, sudo, jq and the Ubuntu basics'
 
@@ -26,7 +26,7 @@ function moduleOptions(catalog: ModuleCatalog): MultiSelectOption<string>[] {
 
 function requiredModuleReasons(selection: string[], catalog: ModuleCatalog): Map<string, string> {
   const reasons = new Map<string, string>()
-  for (const [id, requiredBy] of requiringModules(selection, catalog)) {
+  for (const [id, requiredBy] of requiringModuleLabels(selection, catalog)) {
     reasons.set(id, `needed by ${joinInProse(requiredBy)}`)
   }
   return reasons

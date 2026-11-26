@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { devenvPaths } from '../system/platform.js'
+import { devenvPaths } from '../system/platform.ts'
 
 const logsKeptPerProject = 10
 
@@ -11,7 +11,11 @@ export class LogFile {
     const directory = path.join(devenvPaths.logs, scope)
     fs.mkdirSync(directory, { recursive: true })
     removeOldLogs(directory)
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 19)
+    const timestamp = new Date()
+      .toISOString()
+      .replaceAll(/[:.]/g, '-')
+      .replace('T', '_')
+      .slice(0, 19)
     this.path = path.join(directory, `${timestamp}-${purpose}.log`)
     fs.writeFileSync(this.path, '')
   }
@@ -29,7 +33,7 @@ function removeOldLogs(directory: string): void {
   const logs = fs
     .readdirSync(directory)
     .filter((entry) => entry.endsWith('.log'))
-    .sort()
+    .toSorted()
   for (const oldLog of logs.slice(0, Math.max(0, logs.length - logsKeptPerProject + 1))) {
     fs.rmSync(path.join(directory, oldLog), { force: true })
   }

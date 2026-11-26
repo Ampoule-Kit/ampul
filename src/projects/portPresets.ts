@@ -1,4 +1,4 @@
-import { combinePorts, portsInRange, type PortRange } from './ports.js'
+import { combinePorts, type PortRange, portsInRange } from './ports.ts'
 
 export interface PortPreset {
   id: string

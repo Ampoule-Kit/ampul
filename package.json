@@ -11,23 +11,37 @@
   },
   "scripts": {
     "dev": "tsx src/main.tsx",
-    "check": "tsc --noEmit",
-    "build": "node scripts/build.mjs",
-    "format": "prettier --write src scripts"
+    "build": "node scripts/build/buildBinary.ts",
+    "cli:install": "node scripts/require-supported-node.mjs && node scripts/installer/install.ts",
+    "cli:uninstall": "node scripts/require-supported-node.mjs && node scripts/installer/uninstall.ts",
+    "modules:update-version": "node scripts/modules/updateVersion.ts",
+    "modules:add": "node scripts/modules/addModule.ts",
+    "typecheck": "tsc",
+    "lint": "oxlint --type-aware --deny-warnings",
+    "format": "biome check --write",
+    "format:check": "biome check",
+    "test": "node --test \"src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
+    "validate": "npm run typecheck && npm run lint && npm run format:check && npm run test"
   },
   "dependencies": {
     "chalk": "^6.0.1",
     "ink": "^8.0.0",
     "react": "^19.3.1",
-    "tar": "^7.5.23"
+    "tar": "^7.5.23",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.9",
     "@types/node": "^26.6.11",
     "@types/react": "^19.3.3",
     "esbuild": "^0.28.2",
-    "postject": "^1.0.0-alpha.6",
-    "prettier": "^3.10.1",
+    "oxlint": "^1.95.0",
+    "oxlint-tsgolint": "^7.0.2008",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "esbuild": false,
+    "fsevents": false
   }
 }

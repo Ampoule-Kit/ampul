@@ -1,15 +1,15 @@
 import { Box, Text, useInput } from 'ink'
-import { useState } from 'react'
-import type { ContainerState } from '../../containers/containerState.js'
-import { describeCodeSource } from '../../projects/codeSources.js'
-import { describePorts, describeTools } from '../../projects/projectSummary.js'
-import type { ProjectSettings } from '../../projects/ProjectSettings.js'
-import { Description } from '../components/Description.js'
-import { Header } from '../components/Header.js'
-import { KeyHints, type KeyHint } from '../components/KeyHints.js'
-import type { Finish } from '../terminal.js'
-import { colors, symbols } from '../theme.js'
-import { stateMarker } from './ProjectPicker.js'
+import type { ContainerState } from '../../containers/containerState.ts'
+import { describeCodeSource } from '../../projects/codeSources.ts'
+import type { ProjectSettings } from '../../projects/ProjectSettings.ts'
+import { describePorts, describeTools } from '../../projects/projectSummary.ts'
+import { Description } from '../components/Description.tsx'
+import { Header } from '../components/Header.tsx'
+import { hintWhen, type KeyHint, KeyHints } from '../components/KeyHints.tsx'
+import { useListNavigation } from '../components/useListNavigation.ts'
+import { containerStateMarker } from '../containerStateDisplay.ts'
+import type { Finish } from '../terminal.tsx'
+import { colorOrTerminalDefault, colors, symbols } from '../theme.ts'
 
 export type HomeAction = 'start' | 'stop' | 'rebuild' | 'config' | 'rm' | 'new' | 'quit'
 
@@ -25,7 +25,7 @@ interface HomeScreenProps {
   finish: Finish<HomeChoice>
 }
 
-const actionKeys: Record<string, HomeAction> = {
+const actionKeys: Partial<Record<string, HomeAction>> = {
   s: 'stop',
   r: 'rebuild',
   e: 'config',
@@ -53,32 +53,32 @@ function EmptyState({ finish }: { finish: Finish<HomeChoice> }) {
   )
 }
 
+const stopKey = 's'
+const stateColumnWidth = 16
+
 function ProjectList({ projects, states, finish }: Omit<HomeScreenProps, 'runtimeDescription'>) {
-  const [focusedIndex, setFocusedIndex] = useState(0)
-  const focused = projects[focusedIndex]!
-  const focusedIsRunning = states.get(focused.name) === 'running'
+  const navigation = useListNavigation(projects.length)
+  const focusedProject = projects[navigation.focusedIndex]
+  const focusedIsRunning =
+    focusedProject !== undefined && states.get(focusedProject.name) === 'running'
 
   useInput((input, key) => {
-    if (key.upArrow || input === 'k') {
-      setFocusedIndex((index) => (index - 1 + projects.length) % projects.length)
-    } else if (key.downArrow || input === 'j') {
-      setFocusedIndex((index) => (index + 1) % projects.length)
-    } else if (key.return) {
-      finish({ action: 'start', projectName: focused.name })
-    } else if (input === 'n') {
-      finish({ action: 'new' })
-    } else if (key.escape || input === 'q') {
-      finish({ action: 'quit' })
-    } else if (actionKeys[input] && (input !== 's' || focusedIsRunning)) {
-      finish({ action: actionKeys[input], projectName: focused.name })
+    if (navigation.handleNavigationKey(input, key) || !focusedProject) return
+    const action = actionKeys[input]
+    if (key.return) finish({ action: 'start', projectName: focusedProject.name })
+    else if (input === 'n') finish({ action: 'new' })
+    else if (key.escape || input === 'q') finish({ action: 'quit' })
+    else if (action && (input !== stopKey || focusedIsRunning)) {
+      finish({ action, projectName: focusedProject.name })
     }
   })
 
+  if (!focusedProject) return null
   const nameWidth = Math.max(...projects.map((project) => project.name.length)) + 3
   const hints: KeyHint[] = [
     ['↑↓', 'move'],
     ['enter', 'connect'],
-    ...(focusedIsRunning ? ([['s', 'stop']] as KeyHint[]) : []),
+    ...hintWhen(focusedIsRunning, [stopKey, 'stop']),
     ['e', 'configure'],
     ['r', 'rebuild'],
     ['x', 'remove'],
@@ -88,19 +88,22 @@ function ProjectList({ projects, states, finish }: Omit<HomeScreenProps, 'runtim
   return (
     <Box flexDirection="column">
       {projects.map((project, index) => {
-        const isFocused = index === focusedIndex
+        const isFocused = index === navigation.focusedIndex
         const state = states.get(project.name) ?? 'missing'
         return (
           <Box key={project.name}>
             <Text color={colors.accent}>{isFocused ? symbols.pointer : ' '} </Text>
             <Box width={nameWidth}>
-              <Text bold={isFocused} color={isFocused ? colors.accent : undefined}>
+              <Text
+                bold={isFocused}
+                {...colorOrTerminalDefault(isFocused ? colors.accent : undefined)}
+              >
                 {project.name}
               </Text>
             </Box>
-            <Box width={16}>
+            <Box width={stateColumnWidth}>
               <Text color={state === 'running' ? colors.success : colors.muted}>
-                {stateMarker(state)}
+                {containerStateMarker(state)}
               </Text>
             </Box>
             <Text color={colors.muted} wrap="truncate-end">
@@ -110,7 +113,7 @@ function ProjectList({ projects, states, finish }: Omit<HomeScreenProps, 'runtim
         )
       })}
       <Description>
-        {`Tools: ${describeTools(focused)}\nPorts: ${describePorts(focused.ports)}`}
+        {`Tools: ${describeTools(focusedProject)}\nPorts: ${describePorts(focusedProject.ports)}`}
       </Description>
       <KeyHints hints={hints} />
     </Box>

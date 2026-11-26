@@ -1,8 +1,8 @@
-import { moduleCatalog } from '../../modules/moduleCatalog.js'
-import { defaultModuleIds, withRequiredModules } from '../../modules/moduleSelection.js'
-import { presetRanges, presetsCoveredBy } from '../../projects/portPresets.js'
-import { combinePorts, portRanges, type PortRange } from '../../projects/ports.js'
-import type { ProjectSettings } from '../../projects/ProjectSettings.js'
+import { moduleCatalog } from '../../modules/moduleCatalog.ts'
+import { defaultModuleIds, withRequiredModules } from '../../modules/moduleSelection.ts'
+import type { ProjectSettings } from '../../projects/ProjectSettings.ts'
+import { presetRanges, presetsCoveredBy } from '../../projects/portPresets.ts'
+import { combinePorts, type PortRange, portRanges } from '../../projects/ports.ts'
 
 export interface ProjectDraft {
   codeSourceKind: 'repositories' | 'folder'

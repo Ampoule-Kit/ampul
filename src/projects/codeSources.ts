@@ -1,6 +1,6 @@
 import path from 'node:path'
-import { displayPath } from '../system/platform.js'
-import type { CodeSource } from './ProjectSettings.js'
+import { displayPath } from '../system/platform.ts'
+import type { CodeSource } from './ProjectSettings.ts'
 
 export function repositoryFolderName(url: string): string {
   const withoutTrailingSlash = url.replace(/\/+$/, '')

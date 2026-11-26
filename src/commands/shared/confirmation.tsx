@@ -1,10 +1,11 @@
 import { Box, Text } from 'ink'
-import type { Invocation } from '../../cli/CommandDefinition.js'
-import { Problem, UserCancelled } from '../../problems/Problem.js'
-import { Bullet, Callout } from '../../ui/components/Callout.js'
-import { ConfirmPrompt } from '../../ui/components/ConfirmPrompt.js'
-import { showInteractiveScreen } from '../../ui/terminal.js'
-import { colors } from '../../ui/theme.js'
+import type { Invocation } from '../../cli/CommandDefinition.ts'
+import { Problem } from '../../problems/Problem.ts'
+import { UserCancelled } from '../../problems/UserCancelled.ts'
+import { Bullet, Callout } from '../../ui/components/Callout.tsx'
+import { ConfirmPrompt } from '../../ui/components/ConfirmPrompt.tsx'
+import { showInteractiveScreen } from '../../ui/terminal.tsx'
+import { colors } from '../../ui/theme.ts'
 
 interface ConfirmationRequest {
   invocation: Invocation

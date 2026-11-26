@@ -1,6 +1,6 @@
 import { Box, Text } from 'ink'
 import type { ReactNode } from 'react'
-import { colors } from '../theme.js'
+import { colors } from '../theme.ts'
 
 export function Description({
   children,

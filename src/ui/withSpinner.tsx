@@ -1,7 +1,7 @@
 import { render, Text } from 'ink'
-import { Spinner } from './components/Spinner.js'
-import { isInteractiveTerminal } from './terminal.js'
-import { colors } from './theme.js'
+import { Spinner } from './components/Spinner.tsx'
+import { isInteractiveTerminal } from './terminal.tsx'
+import { colors } from './theme.ts'
 
 function WorkInProgress({ message, isWorking }: { message: string; isWorking: boolean }) {
   if (!isWorking) return null

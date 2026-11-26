@@ -1,12 +1,12 @@
-import { yesFlag, type CommandDefinition, type Invocation } from '../cli/CommandDefinition.js'
-import { containerState } from '../containers/containerState.js'
-import { usesInnerContainerEngine } from '../containers/containerCreation.js'
-import type { ContainerEngine } from '../engine/ContainerEngine.js'
-import type { ProjectSettings } from '../projects/ProjectSettings.js'
-import { confirmDestructiveAction } from './shared/confirmation.js'
-import { connectToEngine } from './shared/engineConnection.js'
-import { buildProject } from './shared/projectBuild.js'
-import { selectProject } from './shared/projectSelection.js'
+import { type CommandDefinition, type Invocation, yesFlag } from '../cli/CommandDefinition.ts'
+import { usesInnerContainerEngine } from '../containers/containerRunArguments.ts'
+import { containerState } from '../containers/containerState.ts'
+import type { ContainerEngine } from '../engine/ContainerEngine.ts'
+import type { ProjectSettings } from '../projects/ProjectSettings.ts'
+import { confirmDestructiveAction } from './shared/confirmation.tsx'
+import { connectToEngine } from './shared/engineConnection.tsx'
+import { buildProject } from './shared/projectBuild/buildProject.tsx'
+import { selectProject } from './shared/projectSelection.tsx'
 
 export async function confirmAndRebuild(
   engine: ContainerEngine,

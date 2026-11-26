@@ -1,17 +1,17 @@
 import { Box, Text } from 'ink'
-import { useState, type ReactNode } from 'react'
-import { colors, symbols } from '../theme.js'
-import { KeyHints, type KeyHint } from './KeyHints.js'
-import { TextField } from './TextField.js'
+import { type ReactNode, useState } from 'react'
+import { colors, symbols } from '../theme.ts'
+import { hintWhen, type KeyHint, KeyHints, noExtraHints } from './KeyHints.tsx'
+import { TextField } from './TextField.tsx'
 
 interface TextPromptProps {
   initialValue?: string
-  placeholder?: string
-  validate?: (value: string) => string | undefined
-  preview?: (value: string) => ReactNode
-  complete?: (value: string) => string
+  placeholder?: string | undefined
+  validate?: ((value: string) => string | undefined) | undefined
+  preview?: ((value: string) => ReactNode) | undefined
+  complete?: ((value: string) => string) | undefined
   onSubmit: (value: string) => void
-  onCancel?: () => void
+  onCancel?: (() => void) | undefined
   extraHints?: KeyHint[]
 }
 
@@ -23,16 +23,17 @@ export function TextPrompt({
   complete,
   onSubmit,
   onCancel,
-  extraHints = [],
+  extraHints = noExtraHints,
 }: TextPromptProps) {
   const [value, setValue] = useState(initialValue)
   const [submittedProblem, setSubmittedProblem] = useState<string>()
   const liveProblem = submittedProblem ? validate?.(value) : undefined
 
   const submit = (submitted: string) => {
-    const problem = validate?.(submitted.trim())
-    if (problem) return setSubmittedProblem(problem)
-    onSubmit(submitted.trim())
+    const trimmed = submitted.trim()
+    const problem = validate?.(trimmed)
+    if (problem) setSubmittedProblem(problem)
+    else onSubmit(trimmed)
   }
 
   return (
@@ -57,9 +58,9 @@ export function TextPrompt({
       <KeyHints
         hints={[
           ['enter', 'continue'],
-          ...(complete ? ([['tab', 'complete']] as KeyHint[]) : []),
+          ...hintWhen(complete !== undefined, ['tab', 'complete']),
           ...extraHints,
-          ...(onCancel ? ([['esc', 'back']] as KeyHint[]) : []),
+          ...hintWhen(onCancel !== undefined, ['esc', 'back']),
         ]}
       />
     </Box>

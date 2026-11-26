@@ -1,6 +1,6 @@
 import { Box, Text } from 'ink'
 import type { ReactNode } from 'react'
-import { colors, symbols } from '../theme.js'
+import { colors, symbols } from '../theme.ts'
 
 type CalloutTone = 'info' | 'warning' | 'danger' | 'success'
 
@@ -24,7 +24,7 @@ export function Callout({ tone, title, children }: CalloutProps) {
       <Text color={color} bold>
         {symbol} {title}
       </Text>
-      {children && <Box flexDirection="column">{children}</Box>}
+      {children !== undefined && <Box flexDirection="column">{children}</Box>}
     </Box>
   )
 }

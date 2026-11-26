@@ -1,26 +1,13 @@
-export interface ModuleDownload {
-  name?: string
-  version?: string
-}
+import type { ModuleFile } from './moduleSchema.ts'
 
-export interface ModuleDefinition {
+export interface ModuleDefinition extends Omit<ModuleFile, '$schema' | 'check'> {
   id: string
-  label: string
-  description: string
   section: string
-  version?: string
-  selectedByDefault: boolean
-  requires: string[]
-  group?: string
-  packages: string[]
-  downloads: ModuleDownload[]
-  environment: Record<string, string>
-  path: string[]
   hasConfig: boolean
   hasSetup: boolean
 }
 
 export interface ModuleCatalog {
   modules: ModuleDefinition[]
-  byId: Map<string, ModuleDefinition>
+  byId: ReadonlyMap<string, ModuleDefinition>
 }

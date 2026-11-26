@@ -13,7 +13,7 @@ export function projectNameFormatProblem(name: string): string | undefined {
 export function toProjectName(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
+    .replaceAll(/[^a-z0-9-]/g, '-')
+    .replaceAll(/-+/g, '-')
+    .replaceAll(/^-|-$/g, '')
 }

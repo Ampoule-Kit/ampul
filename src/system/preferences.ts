@@ -1,13 +1,14 @@
 import fs from 'node:fs'
-import { Problem } from '../problems/Problem.js'
-import { devenvPaths, displayPath } from './platform.js'
+import { z } from 'zod'
+import { Problem } from '../problems/Problem.ts'
+import { devenvPaths, displayPath } from './platform.ts'
 
-export interface Preferences {
-  runtime?: string
-  containerUser: string
-}
+const preferencesSchema = z.object({
+  runtime: z.string().optional(),
+  containerUser: z.string().min(1).default('dev'),
+})
 
-const defaultPreferences: Preferences = { containerUser: 'dev' }
+export type Preferences = z.infer<typeof preferencesSchema>
 
 let cachedPreferences: Preferences | undefined
 
@@ -16,22 +17,28 @@ export function preferences(): Preferences {
   return cachedPreferences
 }
 
+function invalidPreferences(reason: string): Problem {
+  const preferencesFile = displayPath(devenvPaths.preferences)
+  return new Problem(`${preferencesFile} is not valid`, {
+    explanation: reason,
+    fixes: [
+      {
+        description: 'Fix the file, or delete it to go back to the defaults',
+        command: `rm ${preferencesFile}`,
+      },
+    ],
+  })
+}
+
 function loadPreferences(): Preferences {
-  if (!fs.existsSync(devenvPaths.preferences)) return defaultPreferences
+  if (!fs.existsSync(devenvPaths.preferences)) return preferencesSchema.parse({})
+  let storedPreferences: unknown
   try {
-    const stored = JSON.parse(
-      fs.readFileSync(devenvPaths.preferences, 'utf8'),
-    ) as Partial<Preferences>
-    return { ...defaultPreferences, ...stored }
+    storedPreferences = JSON.parse(fs.readFileSync(devenvPaths.preferences, 'utf8'))
   } catch (error) {
-    throw new Problem(`${displayPath(devenvPaths.preferences)} is not valid JSON`, {
-      explanation: error instanceof Error ? error.message : String(error),
-      fixes: [
-        {
-          description: 'Fix the file, or delete it to go back to the defaults',
-          command: `rm ${displayPath(devenvPaths.preferences)}`,
-        },
-      ],
-    })
+    throw invalidPreferences(error instanceof Error ? error.message : String(error))
   }
+  const parsed = preferencesSchema.safeParse(storedPreferences)
+  if (!parsed.success) throw invalidPreferences(z.prettifyError(parsed.error))
+  return parsed.data
 }

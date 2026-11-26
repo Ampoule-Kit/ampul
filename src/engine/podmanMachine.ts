@@ -1,5 +1,6 @@
-import { isLinux } from '../system/platform.js'
-import type { ContainerEngine } from './ContainerEngine.js'
+import { z } from 'zod'
+import { isLinux } from '../system/platform.ts'
+import type { ContainerEngine } from './ContainerEngine.ts'
 
 export interface PodmanMachine {
   name: string
@@ -10,17 +11,25 @@ export interface PodmanMachine {
   cpus: number
 }
 
-interface PodmanMachineListEntry {
-  Name: string
-  Default: boolean
-  Running: boolean
-  Starting: boolean
-  Memory: string
-  CPUs: number
-}
+const podmanMachineListSchema = z.array(
+  z.object({
+    Name: z.string(),
+    Default: z.boolean(),
+    Running: z.boolean(),
+    Starting: z.boolean(),
+    Memory: z.coerce.number(),
+    CPUs: z.number(),
+  }),
+)
 
 export const recommendedMachineMemoryMebibytes = 4096
 const bytesPerMebibyte = 1024 * 1024
+const mebibytesPerGibibyte = 1024
+const defaultMachineMarker = /\*$/
+
+export function mebibytesAsGigabytes(mebibytes: number): string {
+  return `${Math.round((mebibytes / mebibytesPerGibibyte) * 10) / 10} GB`
+}
 
 export function usesPodmanMachine(engine: ContainerEngine): boolean {
   return engine.runtime === 'podman' && !isLinux
@@ -29,13 +38,14 @@ export function usesPodmanMachine(engine: ContainerEngine): boolean {
 export async function listPodmanMachines(engine: ContainerEngine): Promise<PodmanMachine[]> {
   const { exitCode, stdout } = await engine.capture(['machine', 'list', '--format', 'json'])
   if (exitCode !== 0 || !stdout.trim()) return []
-  const entries = JSON.parse(stdout) as PodmanMachineListEntry[]
-  return entries.map((entry) => ({
-    name: entry.Name.replace(/\*$/, ''),
+  const parsed = podmanMachineListSchema.safeParse(JSON.parse(stdout))
+  if (!parsed.success) return []
+  return parsed.data.map((entry) => ({
+    name: entry.Name.replace(defaultMachineMarker, ''),
     isDefault: entry.Default,
     isRunning: entry.Running,
     isStarting: entry.Starting,
-    memoryMebibytes: Math.round(Number(entry.Memory) / bytesPerMebibyte),
+    memoryMebibytes: Math.round(entry.Memory / bytesPerMebibyte),
     cpus: entry.CPUs,
   }))
 }

@@ -1,22 +1,19 @@
 import { Box, Text } from 'ink'
-import type { CommandDefinition, Invocation } from '../cli/CommandDefinition.js'
-import {
-  allContainerStates,
-  containerStateLabels,
-  type ContainerState,
-} from '../containers/containerState.js'
-import { createEngine, diagnoseEngine } from '../engine/engineReadiness.js'
-import { moduleCatalog } from '../modules/moduleCatalog.js'
-import { moduleLabels } from '../modules/moduleSelection.js'
-import type { Problem } from '../problems/Problem.js'
-import { describeCodeSource } from '../projects/codeSources.js'
-import { formatPortList } from '../projects/ports.js'
-import { listProjects } from '../projects/projectStore.js'
-import type { ProjectSettings } from '../projects/ProjectSettings.js'
-import { ProblemView } from '../ui/components/ProblemView.js'
-import { printElement } from '../ui/terminal.js'
-import { colors, symbols } from '../ui/theme.js'
-import { withSpinner } from '../ui/withSpinner.js'
+import type { CommandDefinition, Invocation } from '../cli/CommandDefinition.ts'
+import { allContainerStates, type ContainerState } from '../containers/containerState.ts'
+import { createEngine, diagnoseEngine } from '../engine/engineReadiness.ts'
+import { moduleCatalog } from '../modules/moduleCatalog.ts'
+import { moduleLabels } from '../modules/moduleSelection.ts'
+import type { Problem } from '../problems/Problem.ts'
+import { describeCodeSource } from '../projects/codeSources.ts'
+import type { ProjectSettings } from '../projects/ProjectSettings.ts'
+import { formatPortList } from '../projects/ports.ts'
+import { listProjects } from '../projects/projectStore.ts'
+import { ProblemView } from '../ui/components/ProblemView.tsx'
+import { containerStateColor, containerStateMarker } from '../ui/containerStateDisplay.ts'
+import { printElement } from '../ui/terminal.tsx'
+import { colors } from '../ui/theme.ts'
+import { withSpinner } from '../ui/withSpinner.tsx'
 
 interface ProjectRow {
   project: ProjectSettings
@@ -37,21 +34,14 @@ async function loadRows(): Promise<{ rows: ProjectRow[]; engineProblem?: Problem
   }
 }
 
-function stateColor(state: ContainerState | undefined): string {
-  if (state === 'running') return colors.success
-  if (state === 'missing') return colors.warning
-  return colors.muted
-}
-
-function stateText(state: ContainerState | undefined): string {
-  if (!state) return `${symbols.stopped} unknown`
-  return `${state === 'running' ? symbols.running : symbols.stopped} ${containerStateLabels[state]}`
+function portsText(project: ProjectSettings): string {
+  return formatPortList(project.ports) || '–'
 }
 
 function ProjectTable({ rows }: { rows: ProjectRow[] }) {
   const nameWidth = Math.max(7, ...rows.map((row) => row.project.name.length)) + columnGap
-  const stateWidth = Math.max(...rows.map((row) => stateText(row.state).length)) + columnGap
-  const portsText = (project: ProjectSettings) => formatPortList(project.ports) || '–'
+  const stateWidth =
+    Math.max(...rows.map((row) => containerStateMarker(row.state).length)) + columnGap
   const portsWidth = Math.max(5, ...rows.map((row) => portsText(row.project).length)) + columnGap
   return (
     <Box flexDirection="column">
@@ -73,7 +63,7 @@ function ProjectTable({ rows }: { rows: ProjectRow[] }) {
             <Text color={colors.accent}>{project.name}</Text>
           </Box>
           <Box width={stateWidth}>
-            <Text color={stateColor(state)}>{stateText(state)}</Text>
+            <Text color={containerStateColor(state)}>{containerStateMarker(state)}</Text>
           </Box>
           <Box width={portsWidth}>
             <Text>{portsText(project)}</Text>

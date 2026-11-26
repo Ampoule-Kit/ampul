@@ -1,10 +1,10 @@
 import { Text } from 'ink'
-import type { CommandDefinition, Invocation } from '../cli/CommandDefinition.js'
-import { printElement } from '../ui/terminal.js'
-import { colors, symbols } from '../ui/theme.js'
-import { ensureContainerRunning, openShell } from './shared/containerAccess.js'
-import { connectToEngine } from './shared/engineConnection.js'
-import { selectProject } from './shared/projectSelection.js'
+import type { CommandDefinition, Invocation } from '../cli/CommandDefinition.ts'
+import { printElement } from '../ui/terminal.tsx'
+import { colors, symbols } from '../ui/theme.ts'
+import { ensureContainerRunning, openShell } from './shared/containerAccess.tsx'
+import { connectToEngine } from './shared/engineConnection.tsx'
+import { selectProject } from './shared/projectSelection.tsx'
 
 async function run(invocation: Invocation): Promise<number> {
   const engine = await connectToEngine(invocation.interactive)

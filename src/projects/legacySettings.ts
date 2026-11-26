@@ -1,6 +1,7 @@
-import type { SettingsBeforeModules } from './settingsMigration.js'
+import { type SettingsBeforeModules, settingsBeforeModulesSchema } from './ProjectSettings.ts'
 
-const nonDependencySettings = new Set([
+const assignmentPattern = /^([A-Z0-9_]+)=(.*)$/
+const settingsThatAreNotDependencies = new Set([
   'PROJECT_NAME',
   'CODE_SOURCE',
   'REPOSITORIES',
@@ -10,51 +11,69 @@ const nonDependencySettings = new Set([
   'PORTS',
 ])
 
-export function parseLegacySettings(fileContent: string): SettingsBeforeModules {
-  const values = new Map<string, string>()
-  for (const line of fileContent.split('\n')) {
-    const assignment = line.match(/^([A-Z0-9_]+)=(.*)$/)
-    if (assignment) values.set(assignment[1]!, unquoteBashValue(assignment[2]!))
-  }
-
-  const words = (name: string) => (values.get(name) ?? '').split(/\s+/).filter(Boolean)
-  const optionalDependencies: Record<string, string> = {}
-  for (const [name, value] of values) {
-    if (!nonDependencySettings.has(name) && value) optionalDependencies[name] = value
-  }
-
-  return {
-    name: values.get('PROJECT_NAME') ?? '',
-    codeSource:
-      values.get('CODE_SOURCE') === 'copy'
-        ? {
-            kind: 'folder',
-            folder: values.get('COPY_FOLDER') ?? '',
-            onlyGitFiles: Boolean(values.get('COPY_GIT_FILES_ONLY')),
-          }
-        : { kind: 'repositories', repositories: words('REPOSITORIES') },
-    dotnetSdks: words('DOTNET_SDKS'),
-    optionalDependencies,
-    ports: words('PORTS').map(Number),
-  }
+function unquoteAnsiCQuotedValue(rawValue: string): string {
+  return rawValue
+    .slice(2, -1)
+    .replaceAll(String.raw`\n`, '\n')
+    .replaceAll(String.raw`\t`, '\t')
+    .replaceAll(/\\(.)/g, '$1')
 }
 
 function unquoteBashValue(rawValue: string): string {
-  if (rawValue.startsWith("$'") && rawValue.endsWith("'")) {
-    return rawValue.slice(2, -1).replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\(.)/g, '$1')
-  }
+  if (rawValue.startsWith("$'") && rawValue.endsWith("'")) return unquoteAnsiCQuotedValue(rawValue)
   let value = ''
-  let insideSingleQuotes = false
+  let isInsideSingleQuotes = false
   for (let index = 0; index < rawValue.length; index++) {
-    const character = rawValue[index]!
+    const character = rawValue.charAt(index)
     if (character === "'") {
-      insideSingleQuotes = !insideSingleQuotes
-    } else if (character === '\\' && !insideSingleQuotes && index + 1 < rawValue.length) {
+      isInsideSingleQuotes = !isInsideSingleQuotes
+    } else if (character === '\\' && !isInsideSingleQuotes && index + 1 < rawValue.length) {
       index++
-      value += rawValue[index]
+      value += rawValue.charAt(index)
     } else {
       value += character
     }
   }
   return value
+}
+
+function bashAssignments(fileContent: string): Map<string, string> {
+  const assignments = new Map<string, string>()
+  for (const line of fileContent.split('\n')) {
+    const match = assignmentPattern.exec(line)
+    const [, name, rawValue] = match ?? []
+    if (name !== undefined && rawValue !== undefined) {
+      assignments.set(name, unquoteBashValue(rawValue))
+    }
+  }
+  return assignments
+}
+
+export function parseLegacySettings(
+  fileContent: string,
+  projectName: string,
+): SettingsBeforeModules {
+  const assignments = bashAssignments(fileContent)
+  const words = (name: string) => (assignments.get(name) ?? '').split(/\s+/).filter(Boolean)
+  const optionalDependencies = Object.fromEntries(
+    [...assignments].filter(
+      ([name, value]) => !settingsThatAreNotDependencies.has(name) && value !== '',
+    ),
+  )
+  const codeSource =
+    assignments.get('CODE_SOURCE') === 'copy'
+      ? {
+          kind: 'folder',
+          folder: assignments.get('COPY_FOLDER') ?? '',
+          onlyGitFiles: Boolean(assignments.get('COPY_GIT_FILES_ONLY')),
+        }
+      : { kind: 'repositories', repositories: words('REPOSITORIES') }
+
+  return settingsBeforeModulesSchema.parse({
+    name: projectName,
+    codeSource,
+    dotnetSdks: words('DOTNET_SDKS'),
+    optionalDependencies,
+    ports: words('PORTS').map(Number),
+  })
 }

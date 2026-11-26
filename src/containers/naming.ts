@@ -1,4 +1,4 @@
-import { preferences } from '../system/preferences.js'
+import { preferences } from '../system/preferences.ts'
 
 export const projectLabel = 'devenv.project'
 export const cacheLabel = 'devenv.cache'

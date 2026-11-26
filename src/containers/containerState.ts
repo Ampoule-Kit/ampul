@@ -1,5 +1,5 @@
-import type { ContainerEngine } from '../engine/ContainerEngine.js'
-import { containerName, projectLabel, projectNameFromContainerName } from './naming.js'
+import type { ContainerEngine } from '../engine/ContainerEngine.ts'
+import { containerName, projectLabel, projectNameFromContainerName } from './naming.ts'
 
 export type ContainerState = 'running' | 'stopped' | 'paused' | 'missing'
 

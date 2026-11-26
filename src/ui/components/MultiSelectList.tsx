@@ -1,27 +1,76 @@
 import { Box, Text, useInput } from 'ink'
-import { Fragment, useState, type ReactNode } from 'react'
-import { colors, symbols } from '../theme.js'
-import { Description } from './Description.js'
-import { KeyHints } from './KeyHints.js'
-import { visibleWindow } from './visibleWindow.js'
+import { Fragment, type ReactNode, useState } from 'react'
+import { colorOrTerminalDefault, colors, symbols } from '../theme.ts'
+import { Description } from './Description.tsx'
+import { hintWhen, type KeyHint, KeyHints } from './KeyHints.tsx'
+import { toggleSelection } from './multiSelection.ts'
+import { useListNavigation } from './useListNavigation.ts'
+import { visibleWindow } from './visibleWindow.ts'
 
 export interface MultiSelectOption<Value> {
   value: Value
   label: string
-  hint?: string
-  description?: string
-  section?: string
-  exclusiveGroup?: string
+  hint?: string | undefined
+  description?: string | undefined
+  section?: string | undefined
+  exclusiveGroup?: string | undefined
 }
 
 interface MultiSelectListProps<Value> {
   options: MultiSelectOption<Value>[]
   initialSelection: Value[]
   onSubmit: (selection: Value[]) => void
-  onCancel?: () => void
-  footer?: (selection: Value[]) => ReactNode
-  requiredOptions?: (selection: Value[]) => Map<Value, string>
+  onCancel?: (() => void) | undefined
+  footer?: ((selection: Value[]) => ReactNode) | undefined
+  requiredOptions?: ((selection: Value[]) => Map<Value, string>) | undefined
   maxVisible?: number
+}
+
+interface MultiSelectRowProps {
+  label: string
+  hint: string | undefined
+  requiredReason: string | undefined
+  isFocused: boolean
+  isSelected: boolean
+  isExclusive: boolean
+}
+
+function selectionMark(isSelected: boolean, isExclusive: boolean): string {
+  if (isExclusive) return isSelected ? symbols.radioSelected : symbols.radioUnselected
+  return isSelected ? symbols.selected : symbols.unselected
+}
+
+function MultiSelectRow({
+  label,
+  hint,
+  requiredReason,
+  isFocused,
+  isSelected,
+  isExclusive,
+}: MultiSelectRowProps) {
+  return (
+    <Text>
+      <Text color={colors.accent}>{isFocused ? symbols.pointer : ' '}</Text>{' '}
+      <Text color={isSelected ? colors.success : colors.muted}>
+        {selectionMark(isSelected, isExclusive)}
+      </Text>{' '}
+      <Text {...colorOrTerminalDefault(isFocused ? colors.accent : undefined)} bold={isFocused}>
+        {label}
+      </Text>
+      {hint && <Text color={colors.muted}> {hint}</Text>}
+      {requiredReason && <Text color={colors.muted}> · {requiredReason}</Text>}
+    </Text>
+  )
+}
+
+function SectionHeading({ title, isFirstVisible }: { title: string; isFirstVisible: boolean }) {
+  return (
+    <Box marginTop={isFirstVisible ? 0 : 1}>
+      <Text color={colors.muted} bold>
+        {title}
+      </Text>
+    </Box>
+  )
 }
 
 export function MultiSelectList<Value>({
@@ -33,105 +82,76 @@ export function MultiSelectList<Value>({
   requiredOptions,
   maxVisible = 12,
 }: MultiSelectListProps<Value>) {
-  const [focusedIndex, setFocusedIndex] = useState(0)
+  const navigation = useListNavigation(options.length)
   const [selection, setSelection] = useState<Value[]>(initialSelection)
   const [lockedNotice, setLockedNotice] = useState<string>()
-  const visible = visibleWindow(options.length, focusedIndex, maxVisible)
-  const required = requiredOptions?.(selection) ?? new Map<Value, string>()
+  const visible = visibleWindow(options.length, navigation.focusedIndex, maxVisible)
+  const requiredReasons = requiredOptions?.(selection) ?? new Map<Value, string>()
   const effectiveSelection = options
     .map((option) => option.value)
-    .filter((value) => selection.includes(value) || required.has(value))
+    .filter((value) => selection.includes(value) || requiredReasons.has(value))
+  const focusedOption = options[navigation.focusedIndex]
 
-  const toggle = (option: MultiSelectOption<Value>) => {
-    const requiredReason = required.get(option.value)
+  const toggleFocusedOption = () => {
+    if (!focusedOption) return
+    const requiredReason = requiredReasons.get(focusedOption.value)
     if (requiredReason) {
-      setLockedNotice(`${option.label} stays selected: ${requiredReason}.`)
+      setLockedNotice(`${focusedOption.label} stays selected: ${requiredReason}.`)
       return
     }
     setLockedNotice(undefined)
-    setSelection((current) => {
-      if (current.includes(option.value)) return current.filter((value) => value !== option.value)
-      const othersInGroup = options
-        .filter((other) => option.exclusiveGroup && other.exclusiveGroup === option.exclusiveGroup)
-        .map((other) => other.value)
-      return [...current.filter((value) => !othersInGroup.includes(value)), option.value]
-    })
-  }
-
-  const moveFocus = (step: number) => {
-    setLockedNotice(undefined)
-    setFocusedIndex((index) => (index + step + options.length) % options.length)
+    setSelection((current) => toggleSelection(current, focusedOption, options))
   }
 
   useInput((input, key) => {
-    if (key.upArrow || input === 'k') {
-      moveFocus(-1)
-    } else if (key.downArrow || input === 'j') {
-      moveFocus(1)
-    } else if (input === ' ') {
-      const focused = options[focusedIndex]
-      if (focused) toggle(focused)
-    } else if (key.return) {
-      onSubmit(effectiveSelection)
-    } else if (key.escape && onCancel) {
-      onCancel()
-    }
+    if (navigation.handleNavigationKey(input, key)) setLockedNotice(undefined)
+    else if (input === ' ') toggleFocusedOption()
+    else if (key.return) onSubmit(effectiveSelection)
+    else if (key.escape && onCancel) onCancel()
   })
 
-  const focused = options[focusedIndex]
+  const keyHints: KeyHint[] = [
+    ['↑↓', 'move'],
+    ['space', 'select'],
+    ['enter', `continue (${effectiveSelection.length} selected)`],
+    ...hintWhen(onCancel !== undefined, ['esc', 'back']),
+  ]
+
   return (
     <Box flexDirection="column">
       {visible.hasAbove && <Text color={colors.muted}> ↑ more</Text>}
       {options.slice(visible.start, visible.end).map((option, offset) => {
         const index = visible.start + offset
-        const isFocused = index === focusedIndex
-        const isSelected = effectiveSelection.includes(option.value)
-        const requiredReason = required.get(option.value)
-        const startsSection = option.section && option.section !== options[index - 1]?.section
-        const mark = option.exclusiveGroup
-          ? isSelected
-            ? symbols.radioSelected
-            : symbols.radioUnselected
-          : isSelected
-            ? symbols.selected
-            : symbols.unselected
+        const startsSection =
+          option.section !== undefined && option.section !== options[index - 1]?.section
         return (
           <Fragment key={option.label}>
             {startsSection && (
-              <Box marginTop={index === visible.start ? 0 : 1}>
-                <Text color={colors.muted} bold>
-                  {option.section}
-                </Text>
-              </Box>
+              <SectionHeading
+                title={option.section ?? ''}
+                isFirstVisible={index === visible.start}
+              />
             )}
-            <Text>
-              <Text color={colors.accent}>{isFocused ? symbols.pointer : ' '}</Text>{' '}
-              <Text color={isSelected ? colors.success : colors.muted}>{mark}</Text>{' '}
-              <Text color={isFocused ? colors.accent : undefined} bold={isFocused}>
-                {option.label}
-              </Text>
-              {option.hint && <Text color={colors.muted}> {option.hint}</Text>}
-              {requiredReason && <Text color={colors.muted}> · {requiredReason}</Text>}
-            </Text>
+            <MultiSelectRow
+              label={option.label}
+              hint={option.hint}
+              requiredReason={requiredReasons.get(option.value)}
+              isFocused={index === navigation.focusedIndex}
+              isSelected={effectiveSelection.includes(option.value)}
+              isExclusive={option.exclusiveGroup !== undefined}
+            />
           </Fragment>
         )
       })}
       {visible.hasBelow && <Text color={colors.muted}> ↓ more</Text>}
-      {focused?.description && <Description>{focused.description}</Description>}
+      {focusedOption?.description && <Description>{focusedOption.description}</Description>}
       {lockedNotice && (
         <Text color={colors.warning}>
           {symbols.warning} {lockedNotice}
         </Text>
       )}
       {footer?.(effectiveSelection)}
-      <KeyHints
-        hints={[
-          ['↑↓', 'move'],
-          ['space', 'select'],
-          ['enter', `continue (${effectiveSelection.length} selected)`],
-          ...(onCancel ? ([['esc', 'back']] as [string, string][]) : []),
-        ]}
-      />
+      <KeyHints hints={keyHints} />
     </Box>
   )
 }

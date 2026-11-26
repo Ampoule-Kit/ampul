@@ -1,20 +1,21 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import sea from 'node:sea'
-import { ContainerEngine } from '../../engine/ContainerEngine.js'
-import { diagnoseEngine } from '../../engine/engineReadiness.js'
+import { ContainerEngine } from '../../engine/ContainerEngine.ts'
+import { diagnoseEngine } from '../../engine/engineReadiness.ts'
 import {
   listPodmanMachines,
   machineMemoryCommand,
+  mebibytesAsGigabytes,
   preferredMachine,
   recommendedMachineMemoryMebibytes,
   usesPodmanMachine,
-} from '../../engine/podmanMachine.js'
-import { selectRuntime } from '../../engine/runtimeSelection.js'
-import { asProblem, type ProblemFix } from '../../problems/Problem.js'
-import { findExecutable } from '../../system/executables.js'
-import { displayPath, homeDirectory, isRunningAsRoot } from '../../system/platform.js'
-import { captureCommand } from '../../system/processes.js'
+} from '../../engine/podmanMachine.ts'
+import { selectRuntime } from '../../engine/runtimeSelection.ts'
+import { asProblem, type ProblemFix } from '../../problems/Problem.ts'
+import { findExecutable } from '../../system/executables.ts'
+import { displayPath, homeDirectory, isRunningAsRoot } from '../../system/platform.ts'
+import { captureCommand } from '../../system/processes.ts'
 
 export type HealthStatus = 'pass' | 'warn' | 'fail'
 
@@ -22,10 +23,8 @@ export interface HealthCheck {
   title: string
   status: HealthStatus
   detail: string
-  fixes?: ProblemFix[]
+  fixes?: ProblemFix[] | undefined
 }
-
-const mebibytesPerGigabyte = 1024
 
 function failureFrom(title: string, error: unknown): HealthCheck {
   const problem = asProblem(error)
@@ -72,14 +71,14 @@ async function runtimeChecks(): Promise<HealthCheck[]> {
 }
 
 function machineMemoryCheck(machineName: string, memoryMebibytes: number): HealthCheck {
-  const gigabytes = (memoryMebibytes / mebibytesPerGigabyte).toFixed(1)
+  const memory = mebibytesAsGigabytes(memoryMebibytes)
   if (memoryMebibytes >= recommendedMachineMemoryMebibytes) {
-    return { title: 'Podman machine memory', status: 'pass', detail: `${gigabytes} GB` }
+    return { title: 'Podman machine memory', status: 'pass', detail: memory }
   }
   return {
     title: 'Podman machine memory',
     status: 'warn',
-    detail: `${gigabytes} GB. Building .NET or Node projects and running containers inside them needs at least ${recommendedMachineMemoryMebibytes / mebibytesPerGigabyte} GB; 6–8 GB for larger projects.`,
+    detail: `${memory}. Building .NET or Node projects and running containers inside them needs at least ${mebibytesAsGigabytes(recommendedMachineMemoryMebibytes)}; 6–8 GB for larger projects.`,
     fixes: [{ description: 'Give it more memory', command: machineMemoryCommand(machineName) }],
   }
 }

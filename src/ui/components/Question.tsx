@@ -1,10 +1,10 @@
 import { Box, Text } from 'ink'
 import type { ReactNode } from 'react'
-import { colors, symbols } from '../theme.js'
+import { colors, symbols } from '../theme.ts'
 
 interface QuestionProps {
   title: string
-  explanation?: ReactNode
+  explanation?: ReactNode | undefined
   children: ReactNode
 }
 
@@ -14,7 +14,7 @@ export function Question({ title, explanation, children }: QuestionProps) {
       <Text>
         <Text color={colors.accent}>{symbols.prompt}</Text> <Text bold>{title}</Text>
       </Text>
-      {explanation && (
+      {explanation !== undefined && (
         <Box marginLeft={2}>
           <Text color={colors.muted}>{explanation}</Text>
         </Box>

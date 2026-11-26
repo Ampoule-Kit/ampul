@@ -1,8 +1,8 @@
 import { Box, Text } from 'ink'
 import { useMemo } from 'react'
-import { formatPortList, privilegedPorts } from '../../projects/ports.js'
-import { listProjects } from '../../projects/projectStore.js'
-import { colors, symbols } from '../theme.js'
+import { formatPortList, privilegedPorts } from '../../projects/ports.ts'
+import { listProjects } from '../../projects/projectStore.ts'
+import { colors, symbols } from '../theme.ts'
 
 interface PortWarningsProps {
   ports: number[]

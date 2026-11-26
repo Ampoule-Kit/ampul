@@ -1,18 +1,41 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ES2023",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "target": "es2025",
+    "lib": [
+      "es2025"
+    ],
+    "module": "nodenext",
+    "moduleDetection": "force",
+    "types": [
+      "node"
+    ],
     "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": false,
+    "noEmit": true,
     "strict": true,
+    "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
     "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "resolveJsonModule": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "noUncheckedSideEffectImports": true,
     "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "libReplacement": false,
     "skipLibCheck": true,
-    "types": ["node"]
+    "allowJs": true,
+    "checkJs": true
   },
-  "include": ["src"]
+  "include": [
+    "src",
+    "scripts"
+  ]
 }

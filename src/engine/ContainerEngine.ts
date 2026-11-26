@@ -1,19 +1,24 @@
 import {
-  captureCommand,
-  runAttachedToTerminal,
-  streamCommand,
   type CapturedOutput,
+  captureCommand,
   type ProcessOptions,
+  runAttachedToTerminal,
   type StreamingOptions,
-} from '../system/processes.js'
-import { runtimeDisplayNames, type RuntimeName, type RuntimeSelection } from './runtimeSelection.js'
+  streamCommand,
+} from '../system/processes.ts'
+import { type RuntimeName, type RuntimeSelection, runtimeDisplayNames } from './runtimeSelection.ts'
 
 const reachabilityTimeoutMilliseconds = 20_000
 
+const versionPattern = /version ([\w.+-]+)/i
+
 export class ContainerEngine {
+  readonly selection: RuntimeSelection
   private rootlessPodman: boolean | undefined
 
-  constructor(readonly selection: RuntimeSelection) {}
+  constructor(selection: RuntimeSelection) {
+    this.selection = selection
+  }
 
   get runtime(): RuntimeName {
     return this.selection.name
@@ -37,7 +42,7 @@ export class ContainerEngine {
 
   async clientVersion(): Promise<string> {
     const { stdout } = await this.capture(['--version'])
-    return stdout.match(/version ([\w.+-]+)/i)?.[1] ?? 'unknown version'
+    return versionPattern.exec(stdout)?.[1] ?? 'unknown version'
   }
 
   async reachability(): Promise<{ reachable: boolean; errorOutput: string }> {

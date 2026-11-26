@@ -1,7 +1,8 @@
-import { Problem, type ProblemFix } from '../problems/Problem.js'
-import { findExecutable } from '../system/executables.js'
-import { devenvPaths, displayPath, isLinux, isMacOS } from '../system/platform.js'
-import { preferences } from '../system/preferences.js'
+import { Problem, type ProblemFix } from '../problems/Problem.ts'
+import { environmentVariable } from '../system/environment.ts'
+import { findExecutable } from '../system/executables.ts'
+import { devenvPaths, displayPath, isLinux, isMacOS } from '../system/platform.ts'
+import { preferences } from '../system/preferences.ts'
 
 export type RuntimeName = 'podman' | 'docker'
 
@@ -11,7 +12,8 @@ export interface RuntimeSelection {
   reason: string
 }
 
-const runtimeNames: RuntimeName[] = ['podman', 'docker']
+const runtimeNames: readonly RuntimeName[] = ['podman', 'docker']
+const runtimeEnvironmentVariable = 'DEVENV_RUNTIME'
 
 export const runtimeDisplayNames: Record<RuntimeName, string> = {
   podman: 'Podman',
@@ -19,12 +21,16 @@ export const runtimeDisplayNames: Record<RuntimeName, string> = {
 }
 
 function isRuntimeName(value: string): value is RuntimeName {
-  return (runtimeNames as string[]).includes(value)
+  return runtimeNames.some((runtimeName) => runtimeName === value)
 }
 
 function requestedRuntime(): { name: string; origin: string } | undefined {
-  if (process.env.DEVENV_RUNTIME) {
-    return { name: process.env.DEVENV_RUNTIME, origin: 'the DEVENV_RUNTIME environment variable' }
+  const fromEnvironment = environmentVariable(runtimeEnvironmentVariable)
+  if (fromEnvironment) {
+    return {
+      name: fromEnvironment,
+      origin: `the ${runtimeEnvironmentVariable} environment variable`,
+    }
   }
   const configured = preferences().runtime
   if (configured) return { name: configured, origin: displayPath(devenvPaths.preferences) }

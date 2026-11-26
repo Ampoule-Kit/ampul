@@ -1,7 +1,7 @@
 import { Box, Text, useInput } from 'ink'
 import { useState } from 'react'
-import { colors } from '../theme.js'
-import { KeyHints } from './KeyHints.js'
+import { colors } from '../theme.ts'
+import { KeyHints } from './KeyHints.tsx'
 
 interface ConfirmPromptProps {
   yesLabel?: string

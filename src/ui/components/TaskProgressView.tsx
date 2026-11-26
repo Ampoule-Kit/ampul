@@ -1,9 +1,9 @@
 import { Box, Text, useAnimation } from 'ink'
 import { useEffect, useState } from 'react'
-import type { TaskRunner, TaskRunSnapshot, TaskState } from '../../tasks/TaskRunner.js'
-import { formatDuration } from '../formatting.js'
-import { colors, symbols } from '../theme.js'
-import { Spinner } from './Spinner.js'
+import type { TaskRunner, TaskRunSnapshot, TaskState } from '../../tasks/TaskRunner.ts'
+import { formatDuration } from '../formatting.ts'
+import { colorOrTerminalDefault, colors, symbols } from '../theme.ts'
+import { Spinner } from './Spinner.tsx'
 
 const visibleOutputLines = 5
 const progressBarWidth = 24
@@ -41,9 +41,16 @@ function ProgressBar({ completed, total }: { completed: number; total: number })
   )
 }
 
-function ElapsedTime({ since }: { since: number }) {
-  useAnimation({ interval: 1000 })
-  return <Text color={colors.muted}>{formatDuration(Date.now() - since)}</Text>
+const elapsedTimeRefreshMilliseconds = 1000
+
+function ElapsedTime() {
+  const { time: elapsedMilliseconds } = useAnimation({ interval: elapsedTimeRefreshMilliseconds })
+  return <Text color={colors.muted}>{formatDuration(elapsedMilliseconds)}</Text>
+}
+
+function finishedDuration(task: TaskState): string | undefined {
+  if (task.startedAt === undefined || task.finishedAt === undefined) return undefined
+  return formatDuration(task.finishedAt - task.startedAt)
 }
 
 function StatusIcon({ status }: { status: TaskState['status'] }) {
@@ -55,19 +62,21 @@ function StatusIcon({ status }: { status: TaskState['status'] }) {
 
 function TaskRow({ task }: { task: TaskState }) {
   const isRunning = task.status === 'running'
-  const duration =
-    task.startedAt && task.finishedAt ? formatDuration(task.finishedAt - task.startedAt) : undefined
+  const duration = finishedDuration(task)
   return (
     <Box flexDirection="column">
       <Box gap={1}>
         <StatusIcon status={task.status} />
-        <Text color={task.status === 'pending' ? colors.muted : undefined} bold={isRunning}>
+        <Text
+          {...colorOrTerminalDefault(task.status === 'pending' ? colors.muted : undefined)}
+          bold={isRunning}
+        >
           {task.title}
         </Text>
-        {isRunning && task.startedAt && <ElapsedTime since={task.startedAt} />}
+        {isRunning && <ElapsedTime />}
         {duration && <Text color={colors.muted}>{duration}</Text>}
       </Box>
-      {isRunning && (task.progress || task.detail) && (
+      {isRunning && (task.progress !== undefined || task.detail !== undefined) && (
         <Box marginLeft={2} gap={2}>
           {task.progress && <ProgressBar {...task.progress} />}
           {task.detail && <Text color={colors.accent}>{task.detail}</Text>}

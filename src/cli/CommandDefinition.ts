@@ -1,6 +1,6 @@
 export interface FlagDefinition {
   name: string
-  short?: string
+  short?: string | undefined
   description: string
 }
 
@@ -23,14 +23,14 @@ export interface Invocation {
 
 export interface CommandDefinition {
   name: string
-  aliases?: string[]
+  aliases?: string[] | undefined
   summary: string
   arguments: ArgumentDefinition[]
   flags: FlagDefinition[]
   description: string[]
   examples: Example[]
   seeAlso: string[]
-  run(invocation: Invocation): Promise<number | void>
+  run: (invocation: Invocation) => Promise<number> | number
 }
 
 export const helpFlag: FlagDefinition = {

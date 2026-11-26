@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { expandHomeDirectory } from './platform.js'
+import { expandHomeDirectory } from './platform.ts'
 
 export function resolveFolder(enteredPath: string): string | undefined {
   const absolute = path.resolve(expandHomeDirectory(enteredPath.trim() || '.'))
@@ -37,7 +37,7 @@ export function matchingSubfolders(enteredPath: string): string[] {
       .map((entry) => entry.name)
       .filter((name) => name.startsWith(partialName))
       .filter((name) => partialName.startsWith('.') || !name.startsWith('.'))
-      .sort()
+      .toSorted()
   } catch {
     return []
   }

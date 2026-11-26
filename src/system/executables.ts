@@ -1,10 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { isWindows } from './platform.js'
+import { environmentVariable } from './environment.ts'
+import { isWindows } from './platform.ts'
 
 function executableExtensions(): string[] {
   if (!isWindows) return ['']
-  const extensions = (process.env.PATHEXT ?? '.EXE;.CMD;.BAT;.COM').split(';')
+  const extensions = (environmentVariable('PATHEXT') ?? '.EXE;.CMD;.BAT;.COM').split(';')
   return ['', ...extensions.map((extension) => extension.toLowerCase())]
 }
 
@@ -19,7 +20,9 @@ function isExecutableFile(candidate: string): boolean {
 }
 
 export function findExecutable(name: string): string | undefined {
-  const searchDirectories = (process.env.PATH ?? '').split(path.delimiter).filter(Boolean)
+  const searchDirectories = (environmentVariable('PATH') ?? '')
+    .split(path.delimiter)
+    .filter(Boolean)
   for (const directory of searchDirectories) {
     for (const extension of executableExtensions()) {
       const candidate = path.join(directory, name + extension)

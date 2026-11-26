@@ -1,18 +1,19 @@
-import type { ContainerEngine } from '../../engine/ContainerEngine.js'
+import type { ContainerEngine } from '../../engine/ContainerEngine.ts'
 import {
   createEngine,
   diagnoseEngine,
   type EngineDiagnosis,
   type EngineRepair,
-} from '../../engine/engineReadiness.js'
-import { Problem, UserCancelled } from '../../problems/Problem.js'
-import { LogFile } from '../../tasks/LogFile.js'
-import { ProblemView } from '../../ui/components/ProblemView.js'
-import { Question } from '../../ui/components/Question.js'
-import { SelectList } from '../../ui/components/SelectList.js'
-import { runTasks } from '../../ui/runTasks.js'
-import { showInteractiveScreen } from '../../ui/terminal.js'
-import { withSpinner } from '../../ui/withSpinner.js'
+} from '../../engine/engineReadiness.ts'
+import { Problem } from '../../problems/Problem.ts'
+import { UserCancelled } from '../../problems/UserCancelled.ts'
+import { LogFile } from '../../tasks/LogFile.ts'
+import { ProblemView } from '../../ui/components/ProblemView.tsx'
+import { Question } from '../../ui/components/Question.tsx'
+import { SelectList } from '../../ui/components/SelectList.tsx'
+import { runTasks } from '../../ui/runTasks.tsx'
+import { showInteractiveScreen } from '../../ui/terminal.tsx'
+import { withSpinner } from '../../ui/withSpinner.tsx'
 
 const repairAttempts = 2
 
@@ -67,7 +68,7 @@ async function runRepair(engine: ContainerEngine, repair: EngineRepair): Promise
     ],
     new LogFile('engine', 'repair'),
   )
-  if (!result.succeeded && result.problem) throw result.problem
+  if (!result.succeeded) throw result.problem
 }
 
 export async function connectToEngine(interactive: boolean): Promise<ContainerEngine> {

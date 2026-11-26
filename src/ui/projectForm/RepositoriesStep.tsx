@@ -1,12 +1,13 @@
 import { Box, Text } from 'ink'
 import { useState } from 'react'
-import { repositoryFolderName, repositoryUrlProblem } from '../../projects/codeSources.js'
-import { KeyHints } from '../components/KeyHints.js'
-import { Question } from '../components/Question.js'
-import { TextField } from '../components/TextField.js'
-import type { StepControls } from '../components/Wizard.js'
-import { colors, symbols } from '../theme.js'
-import type { ProjectDraft } from './ProjectDraft.js'
+import { repositoryFolderName } from '../../projects/codeSources.ts'
+import { KeyHints } from '../components/KeyHints.tsx'
+import { Question } from '../components/Question.tsx'
+import { TextField } from '../components/TextField.tsx'
+import type { StepControls } from '../components/Wizard.tsx'
+import { colors, symbols } from '../theme.ts'
+import type { ProjectDraft } from './ProjectDraft.ts'
+import { evaluateRepositoryEntry } from './repositoryEntry.ts'
 
 export function RepositoriesStep({ draft, submit, back }: StepControls<ProjectDraft>) {
   const [repositories, setRepositories] = useState(draft.repositories)
@@ -14,16 +15,22 @@ export function RepositoriesStep({ draft, submit, back }: StepControls<ProjectDr
   const [problem, setProblem] = useState<string>()
 
   const add = (enteredUrl: string) => {
-    const trimmed = enteredUrl.trim()
-    if (!trimmed) {
-      if (repositories.length === 0) return setProblem('Enter at least one repository URL.')
-      return submit({ repositories })
+    const outcome = evaluateRepositoryEntry(enteredUrl, repositories)
+    switch (outcome.kind) {
+      case 'finish':
+        submit({ repositories })
+        break
+      case 'problem':
+        setProblem(outcome.message)
+        break
+      case 'nothing':
+        break
+      case 'add':
+        setRepositories([...repositories, ...outcome.items])
+        setUrl('')
+        setProblem(undefined)
+        break
     }
-    const urlProblem = repositoryUrlProblem(trimmed, repositories)
-    if (urlProblem) return setProblem(urlProblem)
-    setRepositories([...repositories, trimmed])
-    setUrl('')
-    setProblem(undefined)
   }
 
   return (

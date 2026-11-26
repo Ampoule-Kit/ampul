@@ -1,14 +1,15 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { Problem } from '../problems/Problem.js'
-import { devenvPaths } from '../system/platform.js'
-import { parseLegacySettings } from './legacySettings.js'
-import type { ProjectSettings } from './ProjectSettings.js'
+import { z } from 'zod'
+import { Problem } from '../problems/Problem.ts'
+import { devenvPaths, displayPath } from '../system/platform.ts'
+import { parseLegacySettings } from './legacySettings.ts'
 import {
-  isFromBeforeModules,
-  migrateToModules,
-  type StoredProjectSettings,
-} from './settingsMigration.js'
+  type ProjectSettings,
+  projectSettingsSchema,
+  settingsBeforeModulesSchema,
+} from './ProjectSettings.ts'
+import { migrateToModules } from './settingsMigration.ts'
 
 const settingsExtension = '.json'
 const legacySettingsExtension = '.env'
@@ -34,26 +35,48 @@ export function listProjectNames(): string[] {
       names.add(path.basename(entry, extension))
     }
   }
-  return [...names].sort()
+  return [...names].toSorted()
 }
 
 export function listProjects(): ProjectSettings[] {
   return listProjectNames().map(loadProject)
 }
 
+function unreadableSettings(name: string, reason: string): Problem {
+  const settingsFile = displayPath(projectSettingsFile(name))
+  return new Problem(`The settings of '${name}' are not valid`, {
+    explanation: `${settingsFile}: ${reason}`,
+    fixes: [
+      {
+        description: 'Fix the file by hand, or set the project up again',
+        command: `dev config ${name}`,
+      },
+    ],
+  })
+}
+
+function readStoredSettings(name: string): unknown {
+  try {
+    return JSON.parse(fs.readFileSync(projectSettingsFile(name), 'utf8'))
+  } catch (error) {
+    throw unreadableSettings(name, error instanceof Error ? error.message : String(error))
+  }
+}
+
+function loadCurrentSettings(name: string): ProjectSettings {
+  const storedSettings = readStoredSettings(name)
+  const current = projectSettingsSchema.safeParse(storedSettings)
+  if (current.success) return current.data
+  const beforeModules = settingsBeforeModulesSchema.safeParse(storedSettings)
+  if (!beforeModules.success) throw unreadableSettings(name, z.prettifyError(current.error))
+  const migrated = migrateToModules(beforeModules.data)
+  saveProject(migrated)
+  return migrated
+}
+
 export function loadProject(name: string): ProjectSettings {
-  if (fs.existsSync(projectSettingsFile(name))) {
-    const stored = JSON.parse(
-      fs.readFileSync(projectSettingsFile(name), 'utf8'),
-    ) as StoredProjectSettings
-    if (!isFromBeforeModules(stored)) return stored
-    const migrated = migrateToModules(stored)
-    saveProject(migrated)
-    return migrated
-  }
-  if (fs.existsSync(legacySettingsFile(name))) {
-    return migrateLegacySettings(name)
-  }
+  if (fs.existsSync(projectSettingsFile(name))) return loadCurrentSettings(name)
+  if (fs.existsSync(legacySettingsFile(name))) return migrateLegacySettings(name)
   throw projectNotFound(name)
 }
 
@@ -72,10 +95,8 @@ export function deleteAllProjectSettings(): void {
 }
 
 function migrateLegacySettings(name: string): ProjectSettings {
-  const settings = migrateToModules({
-    ...parseLegacySettings(fs.readFileSync(legacySettingsFile(name), 'utf8')),
-    name,
-  })
+  const legacyContent = fs.readFileSync(legacySettingsFile(name), 'utf8')
+  const settings = migrateToModules(parseLegacySettings(legacyContent, name))
   saveProject(settings)
   fs.rmSync(legacySettingsFile(name))
   return settings

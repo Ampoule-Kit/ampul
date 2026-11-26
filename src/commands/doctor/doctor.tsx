@@ -1,10 +1,10 @@
 import { Box, Text } from 'ink'
-import type { CommandDefinition } from '../../cli/CommandDefinition.js'
-import { Header } from '../../ui/components/Header.js'
-import { printElement } from '../../ui/terminal.js'
-import { withSpinner } from '../../ui/withSpinner.js'
-import { colors, symbols } from '../../ui/theme.js'
-import { runHealthChecks, type HealthCheck, type HealthStatus } from './healthChecks.js'
+import type { CommandDefinition } from '../../cli/CommandDefinition.ts'
+import { Header } from '../../ui/components/Header.tsx'
+import { printElement } from '../../ui/terminal.tsx'
+import { colorOrTerminalDefault, colors, symbols } from '../../ui/theme.ts'
+import { withSpinner } from '../../ui/withSpinner.tsx'
+import { type HealthCheck, type HealthStatus, runHealthChecks } from './healthChecks.ts'
 
 const statusStyles: Record<HealthStatus, { symbol: string; color: string }> = {
   pass: { symbol: symbols.success, color: colors.success },
@@ -15,7 +15,7 @@ const statusStyles: Record<HealthStatus, { symbol: string; color: string }> = {
 function HealthCheckRow({ check, titleWidth }: { check: HealthCheck; titleWidth: number }) {
   const { symbol, color } = statusStyles[check.status]
   return (
-    <Box flexDirection="column" marginBottom={check.fixes?.length ? 1 : 0}>
+    <Box flexDirection="column" marginBottom={(check.fixes ?? []).length > 0 ? 1 : 0}>
       <Box>
         <Box width={2} flexShrink={0}>
           <Text color={color}>{symbol}</Text>
@@ -23,7 +23,9 @@ function HealthCheckRow({ check, titleWidth }: { check: HealthCheck; titleWidth:
         <Box width={titleWidth} flexShrink={0}>
           <Text bold>{check.title}</Text>
         </Box>
-        <Text color={check.status === 'pass' ? colors.muted : undefined}>{check.detail}</Text>
+        <Text {...colorOrTerminalDefault(check.status === 'pass' ? colors.muted : undefined)}>
+          {check.detail}
+        </Text>
       </Box>
       {check.fixes?.map((fix) => (
         <Box key={fix.description} marginLeft={2 + titleWidth} flexDirection="column">

@@ -1,7 +1,7 @@
-import { Question } from '../components/Question.js'
-import { SelectList } from '../components/SelectList.js'
-import type { StepControls } from '../components/Wizard.js'
-import type { ProjectDraft } from './ProjectDraft.js'
+import { Question } from '../components/Question.tsx'
+import { SelectList } from '../components/SelectList.tsx'
+import type { StepControls } from '../components/Wizard.tsx'
+import type { ProjectDraft } from './ProjectDraft.ts'
 
 export function CodeSourceStep({ draft, submit, back }: StepControls<ProjectDraft>) {
   return (

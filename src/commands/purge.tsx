@@ -1,18 +1,18 @@
 import { Text } from 'ink'
-import { yesFlag, type CommandDefinition, type Invocation } from '../cli/CommandDefinition.js'
+import { type CommandDefinition, type Invocation, yesFlag } from '../cli/CommandDefinition.ts'
 import {
   removeEveryDevenvContainer,
   removeEveryDevenvImage,
   removeEveryDevenvVolume,
-} from '../containers/projectLifecycle.js'
-import { deleteAllProjectSettings, listProjectNames } from '../projects/projectStore.js'
-import { devenvPaths, displayPath } from '../system/platform.js'
-import { LogFile } from '../tasks/LogFile.js'
-import { runTasks } from '../ui/runTasks.js'
-import { printElement } from '../ui/terminal.js'
-import { colors, symbols } from '../ui/theme.js'
-import { confirmDestructiveAction } from './shared/confirmation.js'
-import { connectToEngine } from './shared/engineConnection.js'
+} from '../containers/removal.ts'
+import { deleteAllProjectSettings, listProjectNames } from '../projects/projectStore.ts'
+import { devenvPaths, displayPath } from '../system/platform.ts'
+import { LogFile } from '../tasks/LogFile.ts'
+import { runTasks } from '../ui/runTasks.tsx'
+import { printElement } from '../ui/terminal.tsx'
+import { colors, symbols } from '../ui/theme.ts'
+import { confirmDestructiveAction } from './shared/confirmation.tsx'
+import { connectToEngine } from './shared/engineConnection.tsx'
 
 async function run(invocation: Invocation): Promise<number> {
   const engine = await connectToEngine(invocation.interactive)
@@ -37,11 +37,11 @@ async function run(invocation: Invocation): Promise<number> {
       { title: 'Remove every devenv container', run: () => removeEveryDevenvContainer(engine) },
       { title: 'Remove every devenv image', run: () => removeEveryDevenvImage(engine) },
       { title: 'Remove every devenv volume', run: () => removeEveryDevenvVolume(engine) },
-      { title: 'Remove the project settings', run: async () => deleteAllProjectSettings() },
+      { title: 'Remove the project settings', run: deleteAllProjectSettings },
     ],
     new LogFile('engine', 'purge'),
   )
-  if (!result.succeeded && result.problem) throw result.problem
+  if (!result.succeeded) throw result.problem
   printElement(
     <Text>
       <Text color={colors.success}>{symbols.success}</Text> Removed every devenv container, image,

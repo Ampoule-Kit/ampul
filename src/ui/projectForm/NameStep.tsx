@@ -1,13 +1,13 @@
 import { Text } from 'ink'
-import { containerName } from '../../containers/naming.js'
-import { projectNameFormatProblem, toProjectName } from '../../projects/projectNames.js'
-import { projectExists } from '../../projects/projectStore.js'
-import { suggestedProjectName } from '../../projects/codeSources.js'
-import { Question } from '../components/Question.js'
-import { TextPrompt } from '../components/TextPrompt.js'
-import type { StepControls } from '../components/Wizard.js'
-import { colors } from '../theme.js'
-import { settingsFromDraft, type ProjectDraft } from './ProjectDraft.js'
+import { containerName } from '../../containers/naming.ts'
+import { suggestedProjectName } from '../../projects/codeSources.ts'
+import { projectNameFormatProblem, toProjectName } from '../../projects/projectNames.ts'
+import { projectExists } from '../../projects/projectStore.ts'
+import { Question } from '../components/Question.tsx'
+import { TextPrompt } from '../components/TextPrompt.tsx'
+import type { StepControls } from '../components/Wizard.tsx'
+import { colors } from '../theme.ts'
+import { type ProjectDraft, settingsFromDraft } from './ProjectDraft.ts'
 
 function projectNameProblem(name: string): string | undefined {
   const formatProblem = projectNameFormatProblem(name)
