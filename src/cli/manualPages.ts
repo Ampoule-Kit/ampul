@@ -77,11 +77,11 @@ export function commandManualPage(command: CommandDefinition): string {
       body: [indent + command.seeAlso.map((name) => `ampul ${name}`).join(', ')],
     })
   }
-  return renderPage(`DEV-${command.name.toUpperCase()}(1)`, sections)
+  return renderPage(`AMPUL-${command.name.toUpperCase()}(1)`, sections)
 }
 
 export function overviewManualPage(commands: CommandDefinition[]): string {
-  return renderPage('DEV(1)', [
+  return renderPage('AMPUL(1)', [
     { heading: 'NAME', body: [`${indent}ampul — portable, containerized developer environments`] },
     {
       heading: 'SYNOPSIS',
