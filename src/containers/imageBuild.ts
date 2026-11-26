@@ -17,7 +17,7 @@ const podmanStepPattern = /STEP (\d+)\/(\d+): (.*)$/
 const dockerStepPattern = /^#\d+ \[[\w-]*\s+(\d+)\/(\d+)\] (.*)$/
 const toolInstallPattern = /\/opt\/devenv\/tools\/([\w-]+)\.sh/
 
-export function imageBuildArguments(engine: ContainerEngine, project: ProjectSettings): string[] {
+function imageBuildArguments(engine: ContainerEngine, project: ProjectSettings): string[] {
   const optionalBuildArguments = dependencyCatalog().optionalDependencies.flatMap((dependency) => [
     '--build-arg',
     `WITH_${dependency.setting}=${project.optionalDependencies[dependency.setting] ?? ''}`,

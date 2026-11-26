@@ -114,7 +114,7 @@ export async function runAttachedToTerminal(
   return waitForExit(child, (message) => process.stderr.write(message + '\n'))
 }
 
-export class LineSplitter {
+class LineSplitter {
   private pending = ''
 
   constructor(private readonly onLine: (line: string) => void) {}

@@ -1,3 +1,4 @@
+import { isLinux } from '../system/platform.js'
 import type { ContainerEngine } from './ContainerEngine.js'
 
 export interface PodmanMachine {
@@ -22,7 +23,7 @@ export const recommendedMachineMemoryMebibytes = 4096
 const bytesPerMebibyte = 1024 * 1024
 
 export function usesPodmanMachine(engine: ContainerEngine): boolean {
-  return engine.runtime === 'podman' && process.platform !== 'linux'
+  return engine.runtime === 'podman' && !isLinux
 }
 
 export async function listPodmanMachines(engine: ContainerEngine): Promise<PodmanMachine[]> {

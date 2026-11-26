@@ -1,6 +1,6 @@
 const validProjectName = /^[a-z0-9][a-z0-9-]*$/
 
-export function isValidProjectName(name: string): boolean {
+function isValidProjectName(name: string): boolean {
   return validProjectName.test(name)
 }
 

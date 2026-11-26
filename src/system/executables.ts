@@ -28,7 +28,3 @@ export function findExecutable(name: string): string | undefined {
   }
   return undefined
 }
-
-export function isExecutableAvailable(name: string): boolean {
-  return findExecutable(name) !== undefined
-}

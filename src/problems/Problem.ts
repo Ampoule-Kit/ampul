@@ -26,15 +26,6 @@ export class Problem extends Error {
     this.outputTail = details.outputTail ?? []
     this.logFile = details.logFile
   }
-
-  withLogFile(logFile: string): Problem {
-    return new Problem(this.title, {
-      explanation: this.explanation,
-      fixes: this.fixes,
-      outputTail: this.outputTail,
-      logFile,
-    })
-  }
 }
 
 export class UserCancelled extends Error {

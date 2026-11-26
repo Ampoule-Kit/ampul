@@ -40,13 +40,9 @@ async function dispatch(args: string[]): Promise<number> {
   return (await command.run({ positionals, flags, interactive: isInteractiveTerminal() })) ?? 0
 }
 
-function commandLineArguments(): string[] {
-  return process.argv.slice(2)
-}
-
 async function main(): Promise<void> {
   try {
-    process.exitCode = await dispatch(commandLineArguments())
+    process.exitCode = await dispatch(process.argv.slice(2))
   } catch (error) {
     if (error instanceof UserCancelled) {
       printElement(<Text color={colors.muted}>Cancelled. Nothing was changed.</Text>)

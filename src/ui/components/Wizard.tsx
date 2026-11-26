@@ -23,6 +23,7 @@ export interface WizardStep<Draft> {
 interface WizardProps<Draft> {
   steps: WizardStep<Draft>[]
   initialDraft: Draft
+  initialStepId?: string
   onFinish: (draft: Draft) => void
   onCancel: () => void
 }
@@ -40,29 +41,51 @@ export function answeredSteps<Draft>(
     ))
 }
 
-export function Wizard<Draft>({ steps, initialDraft, onFinish, onCancel }: WizardProps<Draft>) {
+interface Detour {
+  jumpedToStepId: string
+  returnToStepId: string
+}
+
+export function Wizard<Draft>({
+  steps,
+  initialDraft,
+  initialStepId,
+  onFinish,
+  onCancel,
+}: WizardProps<Draft>) {
+  const indexOf = (stepId: string) => steps.findIndex((candidate) => candidate.id === stepId)
   const [draft, setDraft] = useState(initialDraft)
-  const [stepIndex, setStepIndex] = useState(() => firstActiveIndex(steps, initialDraft, 0, 1))
-  const [returnToStepId, setReturnToStepId] = useState<string>()
+  const [stepIndex, setStepIndex] = useState(() =>
+    initialStepId ? indexOf(initialStepId) : firstActiveIndex(steps, initialDraft, 0, 1),
+  )
+  const [detour, setDetour] = useState<Detour>()
+
+  const endDetour = (stepId: string) => {
+    setDetour(undefined)
+    setStepIndex(indexOf(stepId))
+  }
 
   const step = steps[stepIndex]!
   const controls: StepControls<Draft> = {
     draft,
     submit: (changes) => {
       const nextDraft = { ...draft, ...changes }
-      const nextIndex = nextStepIndex(steps, nextDraft, stepIndex, returnToStepId)
+      const nextIndex = nextStepIndex(steps, nextDraft, stepIndex, detour?.returnToStepId)
       if (nextIndex >= steps.length) return onFinish(nextDraft)
       setDraft(nextDraft)
+      if (detour && nextIndex === indexOf(detour.returnToStepId))
+        return endDetour(detour.returnToStepId)
       setStepIndex(nextIndex)
     },
     back: () => {
+      if (detour?.jumpedToStepId === step.id) return endDetour(detour.returnToStepId)
       const previous = firstActiveIndex(steps, draft, stepIndex - 1, -1)
       if (previous < 0) return onCancel()
       setStepIndex(previous)
     },
     jumpTo: (stepId) => {
-      setReturnToStepId(step.id)
-      setStepIndex(steps.findIndex((candidate) => candidate.id === stepId))
+      setDetour({ jumpedToStepId: stepId, returnToStepId: step.id })
+      setStepIndex(indexOf(stepId))
     },
     finish: () => onFinish(draft),
     cancel: onCancel,

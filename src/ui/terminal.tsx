@@ -15,7 +15,7 @@ export function isInteractiveTerminal(): boolean {
   return Boolean(process.stdin.isTTY && process.stdout.isTTY) && !process.env.CI
 }
 
-export function terminalWidth(): number {
+function terminalWidth(): number {
   return process.stdout.columns || defaultTerminalWidth
 }
 

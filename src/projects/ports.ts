@@ -1,4 +1,4 @@
-export const firstForwardedContainerPort = 61000
+const firstForwardedContainerPort = 61000
 const highestPort = 65535
 
 export type PortsParseResult = { ports: number[]; problem?: undefined } | { problem: string }

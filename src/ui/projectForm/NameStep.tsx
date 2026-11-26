@@ -9,7 +9,7 @@ import type { StepControls } from '../components/Wizard.js'
 import { colors } from '../theme.js'
 import { settingsFromDraft, type ProjectDraft } from './ProjectDraft.js'
 
-export function projectNameProblem(name: string): string | undefined {
+function projectNameProblem(name: string): string | undefined {
   const formatProblem = projectNameFormatProblem(name)
   if (formatProblem) return formatProblem
   if (projectExists(name)) return `A project named '${name}' already exists. Pick another name.`

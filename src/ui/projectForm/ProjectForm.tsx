@@ -101,11 +101,16 @@ export function ProjectForm({ initialDraft, askForName, review, finish }: Projec
     <Box flexDirection="column">
       <Header
         title={review.mode === 'new' ? 'New project' : `Configure ${initialDraft.name}`}
-        subtitle="Esc goes back a step. Ctrl+C quits without changing anything."
+        subtitle={
+          review.mode === 'new'
+            ? 'Esc goes back a step. Ctrl+C quits without changing anything.'
+            : 'Pick what to change. Ctrl+C quits without changing anything.'
+        }
       />
       <Wizard
         steps={[...questions, reviewStep]}
         initialDraft={initialDraft}
+        initialStepId={review.mode === 'config' ? reviewStep.id : undefined}
         onFinish={(draft) => finish({ action: review.mode === 'new' ? 'create' : 'save', draft })}
         onCancel={() => finish(undefined)}
       />

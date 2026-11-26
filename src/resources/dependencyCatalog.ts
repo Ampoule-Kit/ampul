@@ -37,7 +37,7 @@ export function dependencyCatalog(): DependencyCatalog {
   return cachedCatalog
 }
 
-export function pinnedVersions(): Map<string, string> {
+function pinnedVersions(): Map<string, string> {
   const versions = new Map<string, string>()
   const lines = fs.readFileSync(resourcePath('image', 'versions'), 'utf8').split('\n')
   for (const line of lines) {

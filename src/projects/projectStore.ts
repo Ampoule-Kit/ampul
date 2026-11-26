@@ -68,7 +68,7 @@ function migrateLegacySettings(name: string): ProjectSettings {
   return settings
 }
 
-export function projectNotFound(name: string): Problem {
+function projectNotFound(name: string): Problem {
   const knownProjects = listProjectNames()
   return new Problem(`There is no project named '${name}'`, {
     explanation:
