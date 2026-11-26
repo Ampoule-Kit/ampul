@@ -9,7 +9,7 @@ export interface PortPreset {
 }
 
 const webApps = 'Web apps'
-const debuggers = 'Debuggers'
+const debuggers = 'Debuggers and language servers'
 const services = 'Databases and services'
 
 function single(port: number): PortRange {
@@ -46,6 +46,14 @@ export const portPresets: PortPreset[] = [
     section: webApps,
     description:
       'Kestrel’s defaults: HTTP on 5000 and HTTPS on 5001. Projects made with dotnet new pick their own ports in Properties/launchSettings.json.',
+  },
+  {
+    id: 'aspire-dashboard',
+    label: '.NET Aspire dashboard',
+    range: { first: 18888, last: 18890 },
+    section: webApps,
+    description:
+      'The Aspire dashboard on 18888, and its OpenTelemetry endpoints on 18889 (gRPC) and 18890 (HTTP). An AppHost made with dotnet new picks its own dashboard port in Properties/launchSettings.json; add that one under other ports.',
   },
   {
     id: 'python-web',
@@ -89,6 +97,14 @@ export const portPresets: PortPreset[] = [
     section: debuggers,
     description:
       'Attach a debugger on this machine to a JVM started with -agentlib:jdwp, the port Gradle and Maven use for debugging.',
+  },
+  {
+    id: 'godot-language-server',
+    label: 'Godot language server',
+    range: single(6005),
+    section: debuggers,
+    description:
+      'The GDScript language server that the Godot editor runs, so an editor on this machine gets completion and errors from Godot in the container.',
   },
   {
     id: 'postgres',

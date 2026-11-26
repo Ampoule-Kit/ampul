@@ -54,7 +54,7 @@ dev              # see every project and act on it with single keys
 1. **The code.** Either git repositories (HTTPS or SSH), cloned side by side into `~/Project/<repo-name>`, or a folder on this machine, copied into `~/Project/<folder-name>` (tab completes folder names). For a git repository you can copy only what git tracks or doesn't ignore, which leaves out `node_modules`, `bin`, `obj`, `.env` and other ignored files.
 2. **The name**, suggested from the code.
 3. **Extra tools**, picked from a list that explains each one: .NET SDKs side by side, Java, Godot (standard or .NET), Python, and a container engine inside the container.
-4. **Ports** your apps listen on that this machine should reach at `localhost`: pick common ones from a list (Angular, Vite, ASP.NET Core, Spring Boot, the Node and Java debuggers, PostgreSQL, Redis and more), and add your own ports and ranges such as `3000-3009`.
+4. **Ports** your apps listen on that this machine should reach at `localhost`: pick common ones from a list (Angular, Vite, ASP.NET Core, the .NET Aspire dashboard, Spring Boot, the Node and Java debuggers, the Godot language server, PostgreSQL, Redis and more), and add your own ports and ranges such as `3000-3009`.
 
 A review then shows the choices, the container runtime in use, and what is about to happen. Esc goes back a step at any point. While the project builds, each step shows its progress (the image build with a progress bar and the tool being installed), the latest output and its duration. Repositories that need a password or SSH passphrase are cloned afterwards in the terminal, where git can ask for it. At the end, `dev new` offers to connect.
 
