@@ -1,5 +1,13 @@
 # ampul
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)
+![Node.js 26+](https://img.shields.io/badge/node-%3E%3D26-5FA04E?logo=nodedotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Podman](https://img.shields.io/badge/Podman-892CA0?logo=podman&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![Container: Ubuntu 24.04](https://img.shields.io/badge/container-Ubuntu%2024.04-E95420?logo=ubuntu&logoColor=white)
+
 Portable, containerized developer environments, one command away.
 
 ampul gives every project its own container with the tools it needs, your dotfiles, and your git and SSH setup already in place. Run `ampul new`, answer a few questions, and `ampul start` drops you into a ready-to-use shell. Nothing is installed on your machine and nothing is added to your projects, so you can rebuild, share or throw away an environment without a second thought.
@@ -10,33 +18,28 @@ That is the idea behind the name: each project lives in its own sealed container
 
 ## Why ampul
 
-- **Your machine stays clean.** Every tool, SDK and setting lives in the container. ampul's own settings live in `~/.config/ampul/`.
+- **Your machine stays clean.** Every tool, SDK and setting lives in the container. ampul keeps only its own settings in a single [config folder](#platform-notes).
 - **Rebuilds are repeatable.** Every tool is pinned to a version and checked against its checksum, so a rebuild months from now gives you the same environment.
 - **It feels like home.** Your dotfiles, git config, credentials and SSH keys come with you into every container.
 - **It guides you.** A terminal UI walks you through each step, shows progress as it builds, and tells you how to fix anything that goes wrong.
 
 ## Requirements
 
-- macOS or Linux. Windows builds but is not tested yet.
 - [Node.js](https://nodejs.org) 26 or newer, with npm 11 or newer. These are only needed to build ampul; the installed binary carries its own runtime.
 - git.
-- [Podman](https://podman.io) (recommended) or Docker. On macOS, ampul offers to create or start the Podman machine for you.
+- [Podman](https://podman.io) (recommended) or Docker.
 
-Building projects inside a container takes memory. On macOS, give the Podman machine at least 4 GB, or 6 to 8 GB for larger projects. `ampul doctor` checks this and tells you how to change it.
+ampul runs on macOS, Linux and Windows. See [platform notes](#platform-notes) for how to set up the container engine on yours and where ampul keeps its files.
 
 ## Install
 
 ```sh
-git clone git@github.com:MorneVenter/ampul.git
+git clone <repository-url> ampul
 cd ampul
 npm run cli:install
 ```
 
-This builds a single `ampul` binary and installs it to `~/.local/bin/ampul` (on Windows, `%LOCALAPPDATA%\Programs\ampul\ampul.exe`). To install somewhere else, set `AMPUL_BIN_DIR`:
-
-```sh
-AMPUL_BIN_DIR=/some/dir npm run cli:install
-```
+This builds a single `ampul` binary and installs it to your user's program folder (see [platform notes](#platform-notes)). To install it somewhere else, set the `AMPUL_BIN_DIR` environment variable to that folder before running the install.
 
 When it finishes, it runs `ampul doctor` to check that your machine is ready. To update ampul, pull the repo and run `npm run cli:install` again.
 
@@ -80,26 +83,41 @@ Leave out the project name and ampul lets you pick from a list. Before deleting 
 
 ## What's in the container
 
-Every container runs Ubuntu 24.04 with git, curl, ssh, sudo, jq and bash completion. You choose the rest:
+Every container runs Ubuntu 24.04 with git, curl, ssh, sudo, jq and bash completion, whatever system you run ampul on. You choose the rest:
 
-| Selected by default              | Optional                              |
-| -------------------------------- | ------------------------------------- |
-| Neovim and the tree-sitter CLI   | .NET 6, 8 and 10 SDKs, side by side   |
-| lazygit, yazi, zellij, lsd       | Java (Temurin JDK)                    |
-| ripgrep, fd, fzf                 | Godot, standard or .NET               |
-| Claude Code                      | Python with pip and venv              |
-| Node.js and npm, build-essential | Podman, docker CLI and docker compose |
+| Tool              | Category       | Version                          | Default | Notes                                                                                         |
+| ----------------- | -------------- | -------------------------------- | :-----: | --------------------------------------------------------------------------------------------- |
+| Neovim            | Editor         | 0.12.6                           |   Yes   | NvChad, with language servers for TypeScript, ESLint and C#. Brings Node.js, tree-sitter CLI, ripgrep, fd and build-essential. |
+| tree-sitter CLI   | Editor         | 0.27.2                           |   Yes   | Builds Neovim's syntax parsers. Brings build-essential.                                       |
+| lazygit           | Terminal tools | 0.66.3                           |   Yes   | Terminal UI for git. Start it with `lg`.                                                      |
+| Yazi              | Terminal tools | 26.9.1                           |   Yes   | Terminal file manager. Start it with `y`.                                                     |
+| Zellij            | Terminal tools | 0.46.1                           |   Yes   | Terminal multiplexer. `z` attaches to the `DEV` session.                                      |
+| lsd               | Terminal tools | 1.2.0                            |   Yes   | `ls` with colours and icons. `ls` runs `lsd -Alh`.                                            |
+| ripgrep           | Terminal tools | Ubuntu package                   |   Yes   | Fast recursive search, `rg`.                                                                  |
+| fd                | Terminal tools | Ubuntu package                   |   Yes   | A fast, friendly `find`.                                                                      |
+| fzf               | Terminal tools | Ubuntu package                   |   Yes   | Fuzzy finder.                                                                                 |
+| Claude Code       | AI             | 2.1.332                          |   Yes   | Coding agent for the terminal. Start it with `claude`.                                        |
+| Node.js           | Languages      | 26.13.1                          |   Yes   | With npm.                                                                                     |
+| build-essential   | Languages      | Ubuntu package                   |   Yes   | gcc, g++ and make, for native npm packages and Python wheels.                                 |
+| Python            | Languages      | Ubuntu package                   |   No    | Python 3 with pip, venv and development headers.                                              |
+| Java (Temurin)    | Languages      | 25.0.5.1+2                       |   No    | Eclipse Temurin JDK with `JAVA_HOME` set.                                                     |
+| .NET 10 SDK       | .NET           | 10.0.404                         |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                 |
+| .NET 8 SDK        | .NET           | 8.0.428                          |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                 |
+| .NET 6 SDK        | .NET           | 6.0.428                          |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                 |
+| Godot             | Game engines   | 4.7.2-stable                     |   No    | For GDScript projects. Pick this or Godot (.NET), not both.                                   |
+| Godot (.NET)      | Game engines   | 4.7.2-stable                     |   No    | C# scripting. Brings the .NET 8 SDK.                                                          |
+| Container engine  | Containers     | docker 29.10.1, compose 5.8.0    |   No    | Podman (Ubuntu package) with the docker CLI and compose. The container runs privileged.       |
 
-Tools that depend on each other are selected together. For example, Neovim brings Node.js, ripgrep and fd, and Godot .NET brings the .NET 8 SDK.
+Selecting a tool also selects the tools it brings, so they are installed together.
 
-You work as the user `dev`, with passwordless `sudo` and the same user ID as on your machine.
+You work as the user `dev`, with passwordless `sudo`.
 
 ### Git and SSH
 
-Containers use the git and SSH setup from your machine:
+Containers use the git and SSH setup from your home folder (`~`):
 
-- **git** uses your `~/.gitconfig`, global ignore file and stored credentials. A macOS-only credential helper, such as the keychain, is replaced with an in-memory cache that lasts 8 hours.
-- **SSH** uses your keys and config, read-only. Each container runs its own `ssh-agent`, so with `AddKeysToAgent yes` you enter a passphrase once per session.
+- **git** uses your `~/.gitconfig`, global ignore file and stored credentials. If your credential helper can't run inside the container, such as one tied to your system's keychain, it is replaced with an in-memory cache that lasts 8 hours.
+- **SSH** uses your keys and config from `~/.ssh`, read-only. Each container runs its own `ssh-agent`, so with `AddKeysToAgent yes` you enter a passphrase once per session.
 
 ### Ports
 
@@ -149,12 +167,48 @@ The new version is downloaded, verified and tested before anything changes. Run 
 
 ## Configuration
 
-| Setting                                | Meaning                                                                                                 |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `~/.config/ampul/config.json`          | Optional. Set `"runtime"` to `"podman"` or `"docker"` to choose a runtime, and `"containerUser"` to rename the `dev` user. |
-| `AMPUL_RUNTIME`                        | `podman` or `docker`, for a single command.                                                             |
-| `~/.config/ampul/projects/<name>.json` | A project's settings. Change them with `ampul config <name>`.                                           |
-| `~/.local/state/ampul/logs/<name>/`    | Full logs of the last ten builds, setups and removals for each project.                                 |
+ampul reads these settings from its [config folder](#platform-notes):
+
+| Setting                  | Meaning                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `config.json`            | Optional. Set `"runtime"` to `"podman"` or `"docker"` to choose a runtime, and `"containerUser"` to rename the `dev` user. |
+| `projects/<name>.json`   | A project's settings. Change them with `ampul config <name>`.                                           |
+
+To choose a runtime for a single command, set the `AMPUL_RUNTIME` environment variable to `podman` or `docker`.
+
+## Platform notes
+
+Everything above works the same on every system. The differences are in how you set up the container engine and where ampul keeps its files. Logs hold the last ten builds, setups and removals for each project.
+
+### macOS
+
+- **Podman** runs containers inside a Linux virtual machine, called the Podman machine. Install it with `brew install podman`; ampul offers to create and start the machine for you.
+- **Memory:** builds need it, so give the Podman machine at least 4 GB, or 6 to 8 GB for larger projects. `ampul doctor` checks this and shows the command to change it.
+- **Docker:** use Docker Desktop or Colima, and make sure it is running before you use ampul.
+
+| What          | Location                                                |
+| ------------- | ------------------------------------------------------- |
+| `ampul` binary | `~/.local/bin`                                         |
+| Config folder | `~/.config/ampul`, or `$XDG_CONFIG_HOME/ampul`           |
+| Logs          | `~/.local/state/ampul/logs/<name>`, or under `$XDG_STATE_HOME` |
+
+### Linux
+
+- **Podman** runs natively, with no virtual machine. Install it from your distribution, for example `sudo apt install podman`.
+- **Docker:** install [Docker Engine](https://docs.docker.com/engine/install/). If ampul says Docker refused the connection, add yourself to the `docker` group with `sudo usermod -aG docker $USER`, then log out and back in.
+
+File locations are the same as on macOS.
+
+### Windows
+
+- **Podman:** install [Podman Desktop](https://podman.io). Like on macOS, it runs containers inside a Podman machine, which ampul offers to create and start. The same memory advice applies.
+- **Docker:** use Docker Desktop, and make sure it is running before you use ampul.
+
+| What          | Location                             |
+| ------------- | ------------------------------------ |
+| `ampul` binary | `%LOCALAPPDATA%\Programs\ampul`     |
+| Config folder | `%APPDATA%\ampul`                    |
+| Logs          | `%LOCALAPPDATA%\ampul\logs\<name>`   |
 
 ## Troubleshooting
 
@@ -162,9 +216,9 @@ Start with `ampul doctor`. It checks everything ampul depends on and tells you h
 
 | Problem                               | Fix                                                                                                    |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| The installer says Node.js is too old | Install Node.js 26 or newer, for example with `nvm install 26`, then run `npm run cli:install` again.  |
-| The Podman machine is not running     | Let ampul start it when it offers, or run the command it shows.                                        |
-| Builds or containers get killed       | The Podman machine is out of memory. `ampul doctor` shows how to give it more.                         |
+| The installer says Node.js is too old | Install Node.js 26 or newer, for example with your Node.js version manager, then run `npm run cli:install` again. |
+| The container engine is not running   | Let ampul start the Podman machine when it offers, or run the command `ampul doctor` shows.            |
+| Builds or containers get killed       | The container engine is out of memory. `ampul doctor` shows how to give the Podman machine more.       |
 | A port is already in use              | Another program or project is using it. Stop it, or change the project's ports with `ampul config`.    |
 | A forwarded port doesn't answer       | Check that your app is running, then read `/tmp/ampul/port-forwards.log` in the container.             |
 | A Neovim tool didn't install          | Read `/tmp/ampul/setup.log` in the container, then run `:Mason` or `:Lazy restore`, or `ampul setup <name>`. |
