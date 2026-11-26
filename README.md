@@ -12,7 +12,7 @@ Portable, containerized developer environments, one command away.
 
 ampul gives every project its own container with the tools it needs, your dotfiles, and your git and SSH setup already in place. Run `ampul new`, answer a few questions, and `ampul start` drops you into a ready-to-use shell. Nothing is installed on your machine and nothing is added to your projects, so you can rebuild, share or throw away an environment without a second thought.
 
-> **ampul** *(noun)*: a variant spelling of *ampoule*, a small sealed vessel that holds exactly one dose, clean and kept apart from everything around it.
+> **ampul** _(noun)_: a variant spelling of _ampoule_, a small sealed vessel that holds exactly one dose, clean and kept apart from everything around it.
 
 That is the idea behind the name: each project lives in its own sealed container, with exactly what it needs and nothing it doesn't.
 
@@ -64,20 +64,20 @@ You can review everything before it builds, and press Esc to go back a step at a
 
 ## Commands
 
-| Command                | What it does                                                                                     |
-| ---------------------- | ------------------------------------------------------------------------------------------------ |
+| Command                | What it does                                                                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `ampul`                | Shows every project and its status. Enter connects; `s` stops, `e` configures, `r` rebuilds, `x` removes, `n` creates. |
-| `ampul new [name]`     | Creates a project.                                                                               |
-| `ampul start [name]`   | Starts a project if needed and opens a shell in `~/Project`. Use `-d` to only start it.          |
-| `ampul stop [name]`    | Stops a project. Use `--all` to stop every project.                                              |
-| `ampul ls`             | Lists your projects, their status, ports and code. Use `--json` for scripts.                     |
-| `ampul config [name]`  | Changes a project's code, tools or ports.                                                        |
-| `ampul rebuild [name]` | Rebuilds a project with fresh code and config.                                                   |
-| `ampul setup [name]`   | Reapplies your dotfiles, tool config, git and SSH without rebuilding.                            |
-| `ampul rm [name]`      | Removes a project and everything that belongs to it.                                             |
-| `ampul purge`          | Removes every ampul project, container, image and volume.                                        |
-| `ampul doctor`         | Checks that your machine is ready and explains how to fix anything that isn't.                   |
-| `ampul help [command]` | Shows the manual for ampul or for one command.                                                   |
+| `ampul new [name]`     | Creates a project.                                                                                                     |
+| `ampul start [name]`   | Starts a project if needed and opens a shell in `~/Project`. Use `-d` to only start it.                                |
+| `ampul stop [name]`    | Stops a project. Use `--all` to stop every project.                                                                    |
+| `ampul ls`             | Lists your projects, their status, ports and code. Use `--json` for scripts.                                           |
+| `ampul config [name]`  | Changes a project's code, tools or ports.                                                                              |
+| `ampul rebuild [name]` | Rebuilds a project with fresh code and config.                                                                         |
+| `ampul setup [name]`   | Reapplies your dotfiles, tool config, git and SSH without rebuilding.                                                  |
+| `ampul rm [name]`      | Removes a project and everything that belongs to it.                                                                   |
+| `ampul purge`          | Removes every ampul project, container, image and volume.                                                              |
+| `ampul doctor`         | Checks that your machine is ready and explains how to fix anything that isn't.                                         |
+| `ampul help [command]` | Shows the manual for ampul or for one command.                                                                         |
 
 Leave out the project name and ampul lets you pick from a list. Before deleting anything, ampul shows what will go and asks first. In scripts, pass `--yes` to skip the question.
 
@@ -85,28 +85,28 @@ Leave out the project name and ampul lets you pick from a list. Before deleting 
 
 Every container runs Ubuntu 24.04 with git, curl, ssh, sudo, jq and bash completion, whatever system you run ampul on. You choose the rest:
 
-| Tool              | Category       | Version                          | Default | Notes                                                                                         |
-| ----------------- | -------------- | -------------------------------- | :-----: | --------------------------------------------------------------------------------------------- |
-| Neovim            | Editor         | 0.12.6                           |   Yes   | NvChad, with language servers for TypeScript, ESLint and C#. Brings Node.js, tree-sitter CLI, ripgrep, fd and build-essential. |
-| tree-sitter CLI   | Editor         | 0.27.2                           |   Yes   | Builds Neovim's syntax parsers. Brings build-essential.                                       |
-| lazygit           | Terminal tools | 0.66.3                           |   Yes   | Terminal UI for git. Start it with `lg`.                                                      |
-| Yazi              | Terminal tools | 26.9.1                           |   Yes   | Terminal file manager. Start it with `y`.                                                     |
-| Zellij            | Terminal tools | 0.46.1                           |   Yes   | Terminal multiplexer. `z` attaches to the `DEV` session.                                      |
-| lsd               | Terminal tools | 1.2.0                            |   Yes   | `ls` with colours and icons. `ls` runs `lsd -Alh`.                                            |
-| ripgrep           | Terminal tools | Ubuntu package                   |   Yes   | Fast recursive search, `rg`.                                                                  |
-| fd                | Terminal tools | Ubuntu package                   |   Yes   | A fast, friendly `find`.                                                                      |
-| fzf               | Terminal tools | Ubuntu package                   |   Yes   | Fuzzy finder.                                                                                 |
-| Claude Code       | AI             | 2.1.332                          |   Yes   | Coding agent for the terminal. Start it with `claude`.                                        |
-| Node.js           | Languages      | 26.13.1                          |   Yes   | With npm.                                                                                     |
-| build-essential   | Languages      | Ubuntu package                   |   Yes   | gcc, g++ and make, for native npm packages and Python wheels.                                 |
-| Python            | Languages      | Ubuntu package                   |   No    | Python 3 with pip, venv and development headers.                                              |
-| Java (Temurin)    | Languages      | 25.0.5.1+2                       |   No    | Eclipse Temurin JDK with `JAVA_HOME` set.                                                     |
-| .NET 10 SDK       | .NET           | 10.0.404                         |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                 |
-| .NET 8 SDK        | .NET           | 8.0.428                          |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                 |
-| .NET 6 SDK        | .NET           | 6.0.428                          |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                 |
-| Godot             | Game engines   | 4.7.2-stable                     |   No    | For GDScript projects. Pick this or Godot (.NET), not both.                                   |
-| Godot (.NET)      | Game engines   | 4.7.2-stable                     |   No    | C# scripting. Brings the .NET 8 SDK.                                                          |
-| Container engine  | Containers     | docker 29.10.1, compose 5.8.0    |   No    | Podman (Ubuntu package) with the docker CLI and compose. The container runs privileged.       |
+| Tool             | Category       | Version                       | Default | Notes                                                                                                                          |
+| ---------------- | -------------- | ----------------------------- | :-----: | ------------------------------------------------------------------------------------------------------------------------------ |
+| Neovim           | Editor         | 0.12.6                        |   Yes   | NvChad, with language servers for TypeScript, ESLint and C#. Brings Node.js, tree-sitter CLI, ripgrep, fd and build-essential. |
+| tree-sitter CLI  | Editor         | 0.27.2                        |   Yes   | Builds Neovim's syntax parsers. Brings build-essential.                                                                        |
+| lazygit          | Terminal tools | 0.66.3                        |   Yes   | Terminal UI for git. Start it with `lg`.                                                                                       |
+| Yazi             | Terminal tools | 26.9.1                        |   Yes   | Terminal file manager. Start it with `y`.                                                                                      |
+| Zellij           | Terminal tools | 0.46.1                        |   Yes   | Terminal multiplexer. `z` attaches to the `DEV` session.                                                                       |
+| lsd              | Terminal tools | 1.2.0                         |   Yes   | `ls` with colours and icons. `ls` runs `lsd -Alh`.                                                                             |
+| ripgrep          | Terminal tools | Ubuntu package                |   Yes   | Fast recursive search, `rg`.                                                                                                   |
+| fd               | Terminal tools | Ubuntu package                |   Yes   | A fast, friendly `find`.                                                                                                       |
+| fzf              | Terminal tools | Ubuntu package                |   Yes   | Fuzzy finder.                                                                                                                  |
+| Claude Code      | AI             | 2.1.332                       |   Yes   | Coding agent for the terminal. Start it with `claude`.                                                                         |
+| Node.js          | Languages      | 26.13.1                       |   Yes   | With npm.                                                                                                                      |
+| build-essential  | Languages      | Ubuntu package                |   Yes   | gcc, g++ and make, for native npm packages and Python wheels.                                                                  |
+| Python           | Languages      | Ubuntu package                |   No    | Python 3 with pip, venv and development headers.                                                                               |
+| Java (Temurin)   | Languages      | 25.0.5.1+2                    |   No    | Eclipse Temurin JDK with `JAVA_HOME` set.                                                                                      |
+| .NET 10 SDK      | .NET           | 10.0.404                      |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                                                  |
+| .NET 8 SDK       | .NET           | 8.0.428                       |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                                                  |
+| .NET 6 SDK       | .NET           | 6.0.428                       |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                                                  |
+| Godot            | Game engines   | 4.7.2-stable                  |   No    | For GDScript projects. Pick this or Godot (.NET), not both.                                                                    |
+| Godot (.NET)     | Game engines   | 4.7.2-stable                  |   No    | C# scripting. Brings the .NET 8 SDK.                                                                                           |
+| Container engine | Containers     | docker 29.10.1, compose 5.8.0 |   No    | Podman (Ubuntu package) with the docker CLI and compose. The container runs privileged.                                        |
 
 Selecting a tool also selects the tools it brings, so they are installed together.
 
@@ -131,11 +131,11 @@ Select the container engine to run Podman, docker and docker compose inside your
 
 ### What survives a rebuild
 
-| Kept                                                   | Replaced                                    |
-| ------------------------------------------------------ | ------------------------------------------- |
-| Package caches, such as NuGet and npm                  | `~/Project`, with freshly cloned or copied code |
-| Images and data of containers run inside the project   | Dotfiles, tool config and installed tools   |
-| Project settings                                       | Everything else in the container            |
+| Kept                                                 | Replaced                                        |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| Package caches, such as NuGet and npm                | `~/Project`, with freshly cloned or copied code |
+| Images and data of containers run inside the project | Dotfiles, tool config and installed tools       |
+| Project settings                                     | Everything else in the container                |
 
 ## Make it yours
 
@@ -169,10 +169,10 @@ The new version is downloaded, verified and tested before anything changes. Run 
 
 ampul reads these settings from its [config folder](#platform-notes):
 
-| Setting                  | Meaning                                                                                                 |
-| ------------------------ | ------------------------------------------------------------------------------------------------------- |
-| `config.json`            | Optional. Set `"runtime"` to `"podman"` or `"docker"` to choose a runtime, and `"containerUser"` to rename the `dev` user. |
-| `projects/<name>.json`   | A project's settings. Change them with `ampul config <name>`.                                           |
+| Setting                | Meaning                                                                                                                    |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `config.json`          | Optional. Set `"runtime"` to `"podman"` or `"docker"` to choose a runtime, and `"containerUser"` to rename the `dev` user. |
+| `projects/<name>.json` | A project's settings. Change them with `ampul config <name>`.                                                              |
 
 To choose a runtime for a single command, set the `AMPUL_RUNTIME` environment variable to `podman` or `docker`.
 
@@ -186,11 +186,11 @@ Everything above works the same on every system. The differences are in how you 
 - **Memory:** builds need it, so give the Podman machine at least 4 GB, or 6 to 8 GB for larger projects. `ampul doctor` checks this and shows the command to change it.
 - **Docker:** use Docker Desktop or Colima, and make sure it is running before you use ampul.
 
-| What          | Location                                                |
-| ------------- | ------------------------------------------------------- |
-| `ampul` binary | `~/.local/bin`                                         |
-| Config folder | `~/.config/ampul`, or `$XDG_CONFIG_HOME/ampul`           |
-| Logs          | `~/.local/state/ampul/logs/<name>`, or under `$XDG_STATE_HOME` |
+| What           | Location                                                       |
+| -------------- | -------------------------------------------------------------- |
+| `ampul` binary | `~/.local/bin`                                                 |
+| Config folder  | `~/.config/ampul`, or `$XDG_CONFIG_HOME/ampul`                 |
+| Logs           | `~/.local/state/ampul/logs/<name>`, or under `$XDG_STATE_HOME` |
 
 ### Linux
 
@@ -204,25 +204,25 @@ File locations are the same as on macOS.
 - **Podman:** install [Podman Desktop](https://podman.io). Like on macOS, it runs containers inside a Podman machine, which ampul offers to create and start. The same memory advice applies.
 - **Docker:** use Docker Desktop, and make sure it is running before you use ampul.
 
-| What          | Location                             |
-| ------------- | ------------------------------------ |
-| `ampul` binary | `%LOCALAPPDATA%\Programs\ampul`     |
-| Config folder | `%APPDATA%\ampul`                    |
-| Logs          | `%LOCALAPPDATA%\ampul\logs\<name>`   |
+| What           | Location                           |
+| -------------- | ---------------------------------- |
+| `ampul` binary | `%LOCALAPPDATA%\Programs\ampul`    |
+| Config folder  | `%APPDATA%\ampul`                  |
+| Logs           | `%LOCALAPPDATA%\ampul\logs\<name>` |
 
 ## Troubleshooting
 
 Start with `ampul doctor`. It checks everything ampul depends on and tells you how to fix each problem. When a step fails, ampul shows the end of its output and where to find the full log.
 
-| Problem                               | Fix                                                                                                    |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Problem                               | Fix                                                                                                               |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | The installer says Node.js is too old | Install Node.js 26 or newer, for example with your Node.js version manager, then run `npm run cli:install` again. |
-| The container engine is not running   | Let ampul start the Podman machine when it offers, or run the command `ampul doctor` shows.            |
-| Builds or containers get killed       | The container engine is out of memory. `ampul doctor` shows how to give the Podman machine more.       |
-| A port is already in use              | Another program or project is using it. Stop it, or change the project's ports with `ampul config`.    |
-| A forwarded port doesn't answer       | Check that your app is running, then read `/tmp/ampul/port-forwards.log` in the container.             |
-| A Neovim tool didn't install          | Read `/tmp/ampul/setup.log` in the container, then run `:Mason` or `:Lazy restore`, or `ampul setup <name>`. |
-| The inner container engine misbehaves | Read `/tmp/ampul/container-engine.log` in the container.                                               |
+| The container engine is not running   | Let ampul start the Podman machine when it offers, or run the command `ampul doctor` shows.                       |
+| Builds or containers get killed       | The container engine is out of memory. `ampul doctor` shows how to give the Podman machine more.                  |
+| A port is already in use              | Another program or project is using it. Stop it, or change the project's ports with `ampul config`.               |
+| A forwarded port doesn't answer       | Check that your app is running, then read `/tmp/ampul/port-forwards.log` in the container.                        |
+| A Neovim tool didn't install          | Read `/tmp/ampul/setup.log` in the container, then run `:Mason` or `:Lazy restore`, or `ampul setup <name>`.      |
+| The inner container engine misbehaves | Read `/tmp/ampul/container-engine.log` in the container.                                                          |
 
 ## Uninstall
 
