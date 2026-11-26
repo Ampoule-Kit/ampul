@@ -13,7 +13,7 @@ import {
 
 const innerContainerEngineModule = 'container-engine'
 const innerEngineStorage = '/var/lib/containers'
-const portForwardsVariable = 'DEVENV_PORT_FORWARDS'
+const portForwardsVariable = 'AMPUL_PORT_FORWARDS'
 
 export interface ContainerRunContext {
   isRootlessPodman: boolean

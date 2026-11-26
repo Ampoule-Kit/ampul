@@ -4,12 +4,15 @@ import { isPortAlreadyInUse, outputLines } from './containerErrors.ts'
 import { containerName, containerProjectDirectory, containerUser } from './naming.ts'
 
 function startFailureFixes(projectName: string, portInUse: boolean): ProblemFix[] {
-  const recreate = { description: 'Recreate the container', command: `dev rebuild ${projectName}` }
+  const recreate = {
+    description: 'Recreate the container',
+    command: `ampul rebuild ${projectName}`,
+  }
   if (!portInUse) return [recreate]
   return [
     {
       description: 'Stop the program that uses the port, or change the ports',
-      command: `dev config ${projectName}`,
+      command: `ampul config ${projectName}`,
     },
     { ...recreate, description: 'Then recreate the container' },
   ]

@@ -18,7 +18,7 @@ interface ProjectSelectionRequest {
 
 function noProjectsYet(): Problem {
   return new Problem('There are no projects yet', {
-    fixes: [{ description: 'Create your first one', command: 'dev new' }],
+    fixes: [{ description: 'Create your first one', command: 'ampul new' }],
   })
 }
 
@@ -35,10 +35,10 @@ export async function selectProject({
   const [firstProject] = projects
   if (!firstProject) throw noProjectsYet()
   if (!invocation.interactive) {
-    throw new Problem(`dev ${commandName} needs a project name`, {
+    throw new Problem(`ampul ${commandName} needs a project name`, {
       explanation: `The projects are: ${projects.map((project) => project.name).join(', ')}.`,
       fixes: [
-        { description: 'Name the project', command: `dev ${commandName} ${firstProject.name}` },
+        { description: 'Name the project', command: `ampul ${commandName} ${firstProject.name}` },
       ],
     })
   }

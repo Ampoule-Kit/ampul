@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { z } from 'zod'
 import { Problem } from '../problems/Problem.ts'
-import { devenvPaths, displayPath } from '../system/platform.ts'
+import { ampulPaths, displayPath } from '../system/platform.ts'
 import { parseLegacySettings } from './legacySettings.ts'
 import {
   type ProjectSettings,
@@ -15,11 +15,11 @@ const settingsExtension = '.json'
 const legacySettingsExtension = '.env'
 
 export function projectSettingsFile(name: string): string {
-  return path.join(devenvPaths.projects, name + settingsExtension)
+  return path.join(ampulPaths.projects, name + settingsExtension)
 }
 
 function legacySettingsFile(name: string): string {
-  return path.join(devenvPaths.projects, name + legacySettingsExtension)
+  return path.join(ampulPaths.projects, name + legacySettingsExtension)
 }
 
 export function projectExists(name: string): boolean {
@@ -27,9 +27,9 @@ export function projectExists(name: string): boolean {
 }
 
 export function listProjectNames(): string[] {
-  if (!fs.existsSync(devenvPaths.projects)) return []
+  if (!fs.existsSync(ampulPaths.projects)) return []
   const names = new Set<string>()
-  for (const entry of fs.readdirSync(devenvPaths.projects)) {
+  for (const entry of fs.readdirSync(ampulPaths.projects)) {
     const extension = path.extname(entry)
     if (extension === settingsExtension || extension === legacySettingsExtension) {
       names.add(path.basename(entry, extension))
@@ -49,7 +49,7 @@ function unreadableSettings(name: string, reason: string): Problem {
     fixes: [
       {
         description: 'Fix the file by hand, or set the project up again',
-        command: `dev config ${name}`,
+        command: `ampul config ${name}`,
       },
     ],
   })
@@ -81,7 +81,7 @@ export function loadProject(name: string): ProjectSettings {
 }
 
 export function saveProject(settings: ProjectSettings): void {
-  fs.mkdirSync(devenvPaths.projects, { recursive: true })
+  fs.mkdirSync(ampulPaths.projects, { recursive: true })
   fs.writeFileSync(projectSettingsFile(settings.name), JSON.stringify(settings, null, 2) + '\n')
 }
 
@@ -91,7 +91,7 @@ export function deleteProjectSettings(name: string): void {
 }
 
 export function deleteAllProjectSettings(): void {
-  fs.rmSync(devenvPaths.projects, { recursive: true, force: true })
+  fs.rmSync(ampulPaths.projects, { recursive: true, force: true })
 }
 
 function migrateLegacySettings(name: string): ProjectSettings {
@@ -111,7 +111,7 @@ function projectNotFound(name: string): Problem {
         : 'No projects exist on this machine yet.',
     fixes:
       knownProjects.length > 0
-        ? [{ description: 'See every project and its status', command: 'dev ls' }]
-        : [{ description: 'Create your first project', command: 'dev new' }],
+        ? [{ description: 'See every project and its status', command: 'ampul ls' }]
+        : [{ description: 'Create your first project', command: 'ampul new' }],
   })
 }

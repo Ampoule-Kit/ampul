@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-. /opt/devenv/install-helpers.sh
+. /opt/ampul/install-helpers.sh
 
 MODULE_ID=$1
-MODULE_DIR=/opt/devenv/modules/$MODULE_ID
+MODULE_DIR=/opt/ampul/modules/$MODULE_ID
 MODULE_FILE=$MODULE_DIR/module.json
 
 install_packages() {

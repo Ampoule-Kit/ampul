@@ -77,7 +77,7 @@ function parseRange(entry: string): PortRange | string {
   if (last < first) return `${entry} runs backwards. Write it as ${last}-${first}.`
   const range = { first, last }
   if (rangesOverlap(range, forwardingPorts)) {
-    return `Ports ${formatPortRange(forwardingPorts)} are taken by devenv itself to forward ports into the container.`
+    return `Ports ${formatPortRange(forwardingPorts)} are taken by ampul itself to forward ports into the container.`
   }
   return range
 }
@@ -109,7 +109,7 @@ export function parsePortEntry(text: string, alreadyAdded: PortRange[]): PortEnt
 
 export function tooManyPortsProblem(ports: number[]): string | undefined {
   if (ports.length <= maximumForwardedPorts) return undefined
-  return `That is ${ports.length} ports, and devenv forwards at most ${maximumForwardedPorts}. Use smaller ranges.`
+  return `That is ${ports.length} ports, and ampul forwards at most ${maximumForwardedPorts}. Use smaller ranges.`
 }
 
 export function privilegedPorts(ports: number[]): number[] {

@@ -17,7 +17,7 @@ function containerMissing(project: ProjectSettings): Problem {
     fixes: [
       {
         description: 'Build the image and create the container',
-        command: `dev rebuild ${project.name}`,
+        command: `ampul rebuild ${project.name}`,
       },
     ],
   })
@@ -70,7 +70,7 @@ export async function openShell(
   printElement(
     <Text color={colors.muted}>
       Left {project.name}. Its container keeps running; stop it with{' '}
-      <Text color={colors.accent}>dev stop {project.name}</Text>
+      <Text color={colors.accent}>ampul stop {project.name}</Text>
     </Text>,
   )
   return exitCode

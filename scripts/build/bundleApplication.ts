@@ -23,7 +23,7 @@ const requireForBundledCommonJs =
   "import { createRequire as createRequireForBundle } from 'node:module'; const require = createRequireForBundle(process.execPath);"
 
 export async function bundleApplication(outputDirectory: string): Promise<string> {
-  const bundleFile = path.join(outputDirectory, 'devenv.mjs')
+  const bundleFile = path.join(outputDirectory, 'ampul.mjs')
   await esbuild.build({
     entryPoints: [path.join(repositoryRoot, 'src', 'main.tsx')],
     outfile: bundleFile,

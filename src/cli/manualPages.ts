@@ -1,6 +1,6 @@
 import chalk from 'chalk'
-import { devenvPaths, displayPath } from '../system/platform.ts'
-import { devenvVersion } from '../version.ts'
+import { ampulPaths, displayPath } from '../system/platform.ts'
+import { ampulVersion } from '../version.ts'
 import { type CommandDefinition, type FlagDefinition, helpFlag } from './CommandDefinition.ts'
 import { definitionList, indent, pageWidth, paragraphs, wrap } from './textLayout.ts'
 
@@ -18,13 +18,13 @@ function usageLine(command: CommandDefinition): string {
   const commandArguments = command.arguments
     .map((argument) => (argument.required ? `<${argument.name}>` : `[${argument.name}]`))
     .join(' ')
-  return `dev ${command.name}${options}${commandArguments ? ` ${commandArguments}` : ''}`
+  return `ampul ${command.name}${options}${commandArguments ? ` ${commandArguments}` : ''}`
 }
 
 function renderPage(title: string, sections: Section[]): string {
   const left = chalk.bold(title)
-  const right = chalk.dim(`devenv ${devenvVersion}`)
-  const gap = Math.max(2, pageWidth() - title.length - `devenv ${devenvVersion}`.length)
+  const right = chalk.dim(`ampul ${ampulVersion}`)
+  const gap = Math.max(2, pageWidth() - title.length - `ampul ${ampulVersion}`.length)
   const header = left + ' '.repeat(gap) + right
   const body = sections.flatMap((section) => [
     '',
@@ -36,7 +36,7 @@ function renderPage(title: string, sections: Section[]): string {
 
 export function commandManualPage(command: CommandDefinition): string {
   const sections: Section[] = [
-    { heading: 'NAME', body: wrap(`dev ${command.name} — ${command.summary}`, indent) },
+    { heading: 'NAME', body: wrap(`ampul ${command.name} — ${command.summary}`, indent) },
     { heading: 'SYNOPSIS', body: [indent + usageLine(command)] },
     { heading: 'DESCRIPTION', body: paragraphs(command.description) },
   ]
@@ -58,7 +58,7 @@ export function commandManualPage(command: CommandDefinition): string {
   if (aliases.length > 0) {
     sections.push({
       heading: 'ALIASES',
-      body: [indent + aliases.map((alias) => `dev ${alias}`).join(', ')],
+      body: [indent + aliases.map((alias) => `ampul ${alias}`).join(', ')],
     })
   }
   if (command.examples.length > 0) {
@@ -74,7 +74,7 @@ export function commandManualPage(command: CommandDefinition): string {
   if (command.seeAlso.length > 0) {
     sections.push({
       heading: 'SEE ALSO',
-      body: [indent + command.seeAlso.map((name) => `dev ${name}`).join(', ')],
+      body: [indent + command.seeAlso.map((name) => `ampul ${name}`).join(', ')],
     })
   }
   return renderPage(`DEV-${command.name.toUpperCase()}(1)`, sections)
@@ -82,20 +82,20 @@ export function commandManualPage(command: CommandDefinition): string {
 
 export function overviewManualPage(commands: CommandDefinition[]): string {
   return renderPage('DEV(1)', [
-    { heading: 'NAME', body: [`${indent}dev — portable, containerized developer environments`] },
+    { heading: 'NAME', body: [`${indent}ampul — portable, containerized developer environments`] },
     {
       heading: 'SYNOPSIS',
       body: [
-        `${indent}dev`,
-        `${indent}dev <command> [options] [project]`,
-        `${indent}dev <command> --help`,
+        `${indent}ampul`,
+        `${indent}ampul <command> [options] [project]`,
+        `${indent}ampul <command> --help`,
       ],
     },
     {
       heading: 'DESCRIPTION',
       body: paragraphs([
-        'dev creates a container for each of your projects, with the tools you pick, your dotfiles and their config, git and SSH already in place, and the code cloned or copied inside it.',
-        'Run dev on its own to see your projects and act on them, or run one of the commands below. Commands that need a project ask you to pick one when you leave the name out.',
+        'ampul creates a container for each of your projects, with the tools you pick, your dotfiles and their config, git and SSH already in place, and the code cloned or copied inside it.',
+        'Run ampul on its own to see your projects and act on them, or run one of the commands below. Commands that need a project ask you to pick one when you leave the name out.',
       ]),
     },
     {
@@ -108,27 +108,27 @@ export function overviewManualPage(commands: CommandDefinition[]): string {
       heading: 'GLOBAL OPTIONS',
       body: definitionList([
         ['-h, --help', 'Show this manual, or a command’s manual after its name.'],
-        ['-v, --version', 'Print the installed version of devenv.'],
+        ['-v, --version', 'Print the installed version of ampul.'],
       ]),
     },
     {
       heading: 'FILES',
       body: definitionList([
-        [displayPath(devenvPaths.projects), 'One settings file per project.'],
+        [displayPath(ampulPaths.projects), 'One settings file per project.'],
         [
-          displayPath(devenvPaths.preferences),
+          displayPath(ampulPaths.preferences),
           'Optional: {"runtime": "podman" | "docker", "containerUser": "dev"}.',
         ],
-        [displayPath(devenvPaths.logs), 'Full output of every build and setup, per project.'],
+        [displayPath(ampulPaths.logs), 'Full output of every build and setup, per project.'],
       ]),
     },
     {
       heading: 'ENVIRONMENT',
       body: definitionList([
-        ['DEVENV_RUNTIME', 'podman or docker. Overrides the runtime devenv would pick.'],
+        ['AMPUL_RUNTIME', 'podman or docker. Overrides the runtime ampul would pick.'],
         ['NO_COLOR', 'Turns colors off.'],
       ]),
     },
-    { heading: 'SEE ALSO', body: [`${indent}dev help <command>, for example: dev help new`] },
+    { heading: 'SEE ALSO', body: [`${indent}ampul help <command>, for example: ampul help new`] },
   ])
 }

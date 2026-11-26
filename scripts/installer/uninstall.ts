@@ -9,18 +9,16 @@ import {
   commandsOnPath,
   installDirectory,
   installedCommandPath,
-  isDevenvBinary,
-  isLegacyScriptLink,
+  isAmpulBinary,
 } from './installedCommand.ts'
 
 const yesAnswer = /^y(es)?$/i
 
 function installedCopies(): string[] {
-  const candidates = [installedCommandPath(), ...commandsOnPath('dev')]
+  const candidates = [installedCommandPath(), ...commandsOnPath('ampul')]
   const uniqueCandidates = [...new Set(candidates.map((candidate) => path.resolve(candidate)))]
   return uniqueCandidates.filter(
-    (candidate) =>
-      isLegacyScriptLink(candidate) || (fs.existsSync(candidate) && isDevenvBinary(candidate)),
+    (candidate) => fs.existsSync(candidate) && isAmpulBinary(candidate),
   )
 }
 
@@ -34,30 +32,32 @@ async function askYesOrNo(question: string): Promise<boolean> {
 
 async function offerPurge(binary: string): Promise<void> {
   console.log('Your project containers, images, volumes and settings are not part of the binary.')
-  if (!(await askYesOrNo('Remove all of them first, with dev purge?'))) {
-    console.log(style.muted('Kept them. Run dev purge before uninstalling to remove them later.\n'))
+  if (!(await askYesOrNo('Remove all of them first, with ampul purge?'))) {
+    console.log(
+      style.muted('Kept them. Run ampul purge before uninstalling to remove them later.\n'),
+    )
     return
   }
   const purge = spawnSync(binary, ['purge', '--yes'], { stdio: 'inherit' })
   if (purge.status === 0) return
   console.log(
     style.warning(
-      '\nThe purge did not finish, so dev was kept. Fix the problem above and run the uninstaller again.',
+      '\nThe purge did not finish, so ampul was kept. Fix the problem above and run the uninstaller again.',
     ),
   )
   process.exit(1)
 }
 
 async function uninstall(): Promise<void> {
-  heading('Uninstalling devenv')
+  heading('Uninstalling ampul')
   const copies = installedCopies()
   if (copies.length === 0) {
     note(
-      `devenv is not installed: there is no dev command from devenv at ${displayPath(installDirectory())} or on your PATH.`,
+      `ampul is not installed: there is no ampul command at ${displayPath(installDirectory())} or on your PATH.`,
     )
     return
   }
-  const binary = copies.find((copy) => !isLegacyScriptLink(copy))
+  const [binary] = copies
   if (binary) await offerPurge(binary)
 
   for (const copy of copies) {

@@ -22,7 +22,7 @@ async function run(invocation: Invocation): Promise<number> {
         <Text color={colors.success}>{symbols.success}</Text> {project.name} is{' '}
         {outcome === 'started' ? 'started' : 'already running'}.{' '}
         <Text color={colors.muted}>
-          Connect with <Text color={colors.accent}>dev start {project.name}</Text>
+          Connect with <Text color={colors.accent}>ampul start {project.name}</Text>
         </Text>
       </Text>,
     )
@@ -39,7 +39,7 @@ export const startCommand: CommandDefinition = {
     {
       name: 'project',
       required: false,
-      description: 'The project to start. When left out, dev start lets you pick one.',
+      description: 'The project to start. When left out, ampul start lets you pick one.',
     },
   ],
   flags: [
@@ -51,13 +51,19 @@ export const startCommand: CommandDefinition = {
   ],
   description: [
     'Starts the project’s container when it is stopped, then opens a bash login shell in ~/Project. Run it again from another terminal to open a second shell in the same container.',
-    'Leaving the shell (exit or ctrl+d) keeps the container running, so servers and builds you started in the background carry on. Stop it with dev stop.',
-    'When the container engine is not running, dev start offers to start it, for example the Podman machine on macOS.',
+    'Leaving the shell (exit or ctrl+d) keeps the container running, so servers and builds you started in the background carry on. Stop it with ampul stop.',
+    'When the container engine is not running, ampul start offers to start it, for example the Podman machine on macOS.',
   ],
   examples: [
-    { command: 'dev start api', explanation: 'Start api if needed and open a shell in it.' },
-    { command: 'dev start', explanation: 'Pick a project from the list, then open a shell in it.' },
-    { command: 'dev start -d api', explanation: 'Start api in the background without connecting.' },
+    { command: 'ampul start api', explanation: 'Start api if needed and open a shell in it.' },
+    {
+      command: 'ampul start',
+      explanation: 'Pick a project from the list, then open a shell in it.',
+    },
+    {
+      command: 'ampul start -d api',
+      explanation: 'Start api in the background without connecting.',
+    },
   ],
   seeAlso: ['stop', 'ls'],
   run,

@@ -1,5 +1,5 @@
 {
-  "name": "devenv",
+  "name": "ampul",
   "version": "1.0.0",
   "description": "Portable, containerized developer environments, one command away.",
   "license": "MIT",

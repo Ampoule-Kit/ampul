@@ -8,17 +8,17 @@ import {
 
 describe('image build output', () => {
   it('reads the step counter of Podman and Docker', () => {
-    assert.deepEqual(parseBuildStep('[2/2] STEP 7/46: RUN /opt/devenv/install-module.sh node'), {
+    assert.deepEqual(parseBuildStep('[2/2] STEP 7/46: RUN /opt/ampul/install-module.sh node'), {
       number: 7,
       total: 46,
-      instruction: 'RUN /opt/devenv/install-module.sh node',
+      instruction: 'RUN /opt/ampul/install-module.sh node',
     })
     assert.deepEqual(
-      parseBuildStep('#9 [devenv  4/40] COPY modules/node/ /opt/devenv/modules/node/'),
+      parseBuildStep('#9 [ampul  4/40] COPY modules/node/ /opt/ampul/modules/node/'),
       {
         number: 4,
         total: 40,
-        instruction: 'COPY modules/node/ /opt/devenv/modules/node/',
+        instruction: 'COPY modules/node/ /opt/ampul/modules/node/',
       },
     )
     assert.equal(parseBuildStep('Get:15 http://ports.ubuntu.com noble InRelease'), undefined)
@@ -27,10 +27,7 @@ describe('image build output', () => {
   it('names the module a step installs', () => {
     const modules = [{ id: 'node', label: 'Node.js' }]
     assert.equal(
-      describeBuildInstruction(
-        'RUN --mount=type=cache /opt/devenv/install-module.sh node',
-        modules,
-      ),
+      describeBuildInstruction('RUN --mount=type=cache /opt/ampul/install-module.sh node', modules),
       'Installing Node.js',
     )
     assert.equal(

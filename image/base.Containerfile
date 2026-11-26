@@ -11,4 +11,4 @@ RUN apt-get update \
       sudo unzip wget xz-utils \
  && rm -rf /var/lib/apt/lists/*
 
-COPY image/install-helpers.sh image/module-downloads.sh image/install-module.sh image/create-user.sh /opt/devenv/
+COPY image/install-helpers.sh image/module-downloads.sh image/install-module.sh image/create-user.sh /opt/ampul/

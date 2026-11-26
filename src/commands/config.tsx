@@ -18,7 +18,7 @@ import { describeRuntime } from './shared/runtimeDescription.ts'
 
 async function run(invocation: Invocation): Promise<number> {
   if (!invocation.interactive) {
-    throw new Problem('dev config needs an interactive terminal', {
+    throw new Problem('ampul config needs an interactive terminal', {
       explanation:
         'It walks through the project’s settings, and no terminal is attached to answer.',
     })
@@ -54,7 +54,7 @@ async function run(invocation: Invocation): Promise<number> {
     <Text>
       <Text color={colors.success}>{symbols.success}</Text> Saved.{' '}
       <Text color={colors.muted}>
-        Apply the changes with <Text color={colors.accent}>dev rebuild {updated.name}</Text>
+        Apply the changes with <Text color={colors.accent}>ampul rebuild {updated.name}</Text>
       </Text>
     </Text>,
   )
@@ -68,16 +68,16 @@ export const configCommand: CommandDefinition = {
     {
       name: 'project',
       required: false,
-      description: 'The project to change. When left out, dev config lets you pick one.',
+      description: 'The project to change. When left out, ampul config lets you pick one.',
     },
   ],
   flags: [],
   description: [
-    'Opens the same form as dev new, filled in with the project’s current settings. The review at the end marks what changed.',
-    'Changes apply when the container is rebuilt. You can rebuild right away from the review, or later with dev rebuild.',
+    'Opens the same form as ampul new, filled in with the project’s current settings. The review at the end marks what changed.',
+    'Changes apply when the container is rebuilt. You can rebuild right away from the review, or later with ampul rebuild.',
   ],
   examples: [
-    { command: 'dev config api', explanation: 'Add a .NET SDK to api, or change its ports.' },
+    { command: 'ampul config api', explanation: 'Add a .NET SDK to api, or change its ports.' },
   ],
   seeAlso: ['rebuild', 'new'],
   run,

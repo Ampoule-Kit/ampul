@@ -18,15 +18,15 @@ export function createHelpCommand(availableCommands: () => CommandDefinition[]):
 
   return {
     name: 'help',
-    summary: 'Show the manual for dev, or for one command',
+    summary: 'Show the manual for ampul, or for one command',
     arguments: [{ name: 'command', required: false, description: 'The command to explain.' }],
     flags: [],
     description: [
-      'Without a command, shows the overview of every command, the files devenv uses and its environment variables. With a command, shows that command’s full manual. dev <command> --help does the same.',
+      'Without a command, shows the overview of every command, the files ampul uses and its environment variables. With a command, shows that command’s full manual. ampul <command> --help does the same.',
     ],
     examples: [
-      { command: 'dev help', explanation: 'The overview.' },
-      { command: 'dev help start', explanation: 'Everything about dev start.' },
+      { command: 'ampul help', explanation: 'The overview.' },
+      { command: 'ampul help start', explanation: 'Everything about ampul start.' },
     ],
     seeAlso: [],
     run: showManual,

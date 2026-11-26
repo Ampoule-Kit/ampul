@@ -74,8 +74,8 @@ function imageBuildFailed(
       explanation: `${engine.displayName} killed the build because it ran out of memory.`,
       fixes: [
         {
-          description: 'Give the container engine more memory (see dev doctor), then build again',
-          command: `dev rebuild ${project.name}`,
+          description: 'Give the container engine more memory (see ampul doctor), then build again',
+          command: `ampul rebuild ${project.name}`,
         },
       ],
     })
@@ -85,7 +85,7 @@ function imageBuildFailed(
       'A step of the image build failed. The most common causes are a network problem while downloading a tool, or a checksum that no longer matches.',
     fixes: [
       { description: 'Read the output above, or the full log, to see which step failed' },
-      { description: 'Build again once it is fixed', command: `dev rebuild ${project.name}` },
+      { description: 'Build again once it is fixed', command: `ampul rebuild ${project.name}` },
     ],
   })
 }

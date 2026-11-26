@@ -3,10 +3,10 @@ import path from 'node:path'
 import { z } from 'zod'
 import type { ModuleDefinition } from '../modules/ModuleDefinition.ts'
 import { resourcePath } from '../resources/resourceDirectory.ts'
-import { devenvPaths } from '../system/platform.ts'
+import { ampulPaths } from '../system/platform.ts'
 import { containerHome } from './naming.ts'
 
-const downloadCacheMount = '--mount=type=cache,target=/var/cache/devenv'
+const downloadCacheMount = '--mount=type=cache,target=/var/cache/ampul'
 const homePlaceholder = '{home}'
 
 const baseImageFileSchema = z.strictObject({ image: z.string().min(1) })
@@ -22,8 +22,8 @@ function readImageFile(name: string): string {
 
 function moduleInstructions(module: ModuleDefinition): string {
   return [
-    `COPY modules/${module.id}/ /opt/devenv/modules/${module.id}/`,
-    `RUN ${downloadCacheMount} /opt/devenv/install-module.sh ${module.id}`,
+    `COPY modules/${module.id}/ /opt/ampul/modules/${module.id}/`,
+    `RUN ${downloadCacheMount} /opt/ampul/install-module.sh ${module.id}`,
   ].join('\n')
 }
 
@@ -48,7 +48,7 @@ function environmentInstruction(modules: ModuleDefinition[]): string | undefined
 export function containerfileFor(modules: ModuleDefinition[]): string {
   const sections = [
     readImageFile('base.Containerfile'),
-    'FROM base AS devenv',
+    'FROM base AS ampul',
     ...modules.map(moduleInstructions),
     environmentInstruction(modules),
     readImageFile('user.Containerfile'),
@@ -57,7 +57,7 @@ export function containerfileFor(modules: ModuleDefinition[]): string {
 }
 
 export function writeContainerfile(projectName: string, modules: ModuleDefinition[]): string {
-  const file = path.join(devenvPaths.cache, 'builds', `${projectName}.Containerfile`)
+  const file = path.join(ampulPaths.cache, 'builds', `${projectName}.Containerfile`)
   fs.mkdirSync(path.dirname(file), { recursive: true })
   fs.writeFileSync(file, containerfileFor(modules))
   return file

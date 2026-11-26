@@ -4,7 +4,7 @@ import path from 'node:path'
 export const repositoryRoot = path.resolve(import.meta.dirname, '..', '..')
 export const isWindows = process.platform === 'win32'
 export const isMacOS = process.platform === 'darwin'
-export const binaryFileName = isWindows ? 'dev.exe' : 'dev'
+export const binaryFileName = isWindows ? 'ampul.exe' : 'ampul'
 export const builtBinaryPath = path.join(repositoryRoot, 'dist', binaryFileName)
 
 interface PackageManifest {
@@ -25,7 +25,7 @@ function isPackageManifest(value: unknown): value is PackageManifest {
 }
 
 export interface MinimumVersions {
-  devenv: string
+  ampul: string
   node: string
   npm: string
 }
@@ -41,7 +41,7 @@ export function minimumVersions(): MinimumVersions {
     throw new Error('package.json needs a version and engines.node and engines.npm')
   }
   return {
-    devenv: manifest.version,
+    ampul: manifest.version,
     node: withoutRangeOperator(manifest.engines.node),
     npm: withoutRangeOperator(manifest.engines.npm),
   }

@@ -9,11 +9,11 @@ fi
 HOST_HOME=$1
 shift
 MODULES=("$@")
-DEVENV_DIR=$HOME/.devenv
+AMPUL_DIR=$HOME/.ampul
 LEGACY_DOTFILES_DIR=$HOME/dotfiles
 HOST_DIR=$HOME/.host
 GIT_CONFIG_FILE=$HOME/.config/git/config
-LOG_FILE=/tmp/devenv/setup.log
+LOG_FILE=/tmp/ampul/setup.log
 FALLBACK_CREDENTIAL_HELPER="cache --timeout=28800"
 warnings=()
 
@@ -28,8 +28,8 @@ warn() {
 
 remove_links_to_deleted_config() {
   local link
-  find "$HOME" \( -path "$DEVENV_DIR" -o -path "$HOST_DIR" -o -path "$HOME/Project" -o -path "$HOME/.cache" -o -path "$HOME/.local" \) -prune \
-    -o -xtype l \( -lname '*.devenv/*' -o -lname '*dotfiles/*' \) -print0 |
+  find "$HOME" \( -path "$AMPUL_DIR" -o -path "$HOST_DIR" -o -path "$HOME/Project" -o -path "$HOME/.cache" -o -path "$HOME/.local" \) -prune \
+    -o -xtype l \( -lname '*.ampul/*' -o -lname '*dotfiles/*' \) -print0 |
     while IFS= read -r -d '' link; do
       rm "$link"
       rmdir --parents --ignore-fail-on-non-empty "$(dirname "$link")" 2>/dev/null
@@ -37,27 +37,27 @@ remove_links_to_deleted_config() {
 }
 
 module_config_dir() {
-  echo "$DEVENV_DIR/modules/$1/config"
+  echo "$AMPUL_DIR/modules/$1/config"
 }
 
 link_config() {
   local module
-  [ -d "$DEVENV_DIR/dotfiles" ] || return 1
+  [ -d "$AMPUL_DIR/dotfiles" ] || return 1
   step "Linking your dotfiles and the tools' config into $HOME"
   rm -rf "$LEGACY_DOTFILES_DIR"
   rm -f "$HOME/.bashrc" "$HOME/.profile" "$HOME/.bash_logout"
   remove_links_to_deleted_config
-  stow --no-folding --dir "$DEVENV_DIR" --target "$HOME" dotfiles || return 1
+  stow --no-folding --dir "$AMPUL_DIR" --target "$HOME" dotfiles || return 1
   for module in "${MODULES[@]}"; do
     [ -d "$(module_config_dir "$module")" ] || continue
-    stow --no-folding --dir "$DEVENV_DIR/modules/$module" --target "$HOME" config || return 1
+    stow --no-folding --dir "$AMPUL_DIR/modules/$module" --target "$HOME" config || return 1
   done
 }
 
 run_module_setups() {
   local module script
   for module in "${MODULES[@]}"; do
-    script=$DEVENV_DIR/modules/$module/setup.sh
+    script=$AMPUL_DIR/modules/$module/setup.sh
     [ -f "$script" ] && . "$script"
   done
 }

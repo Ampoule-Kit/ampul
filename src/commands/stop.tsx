@@ -35,7 +35,7 @@ async function projectsToStop(engine: ContainerEngine, invocation: Invocation): 
 
 async function run(invocation: Invocation): Promise<number> {
   if (invocation.flags.has('all') && invocation.positionals.length > 0) {
-    throw new Problem('dev stop takes a project name or --all, not both')
+    throw new Problem('ampul stop takes a project name or --all, not both')
   }
   const engine = await connectToEngine(invocation.interactive)
   const names = await projectsToStop(engine, invocation)
@@ -52,7 +52,7 @@ async function run(invocation: Invocation): Promise<number> {
   printElement(
     <Text>
       <Text color={colors.success}>{symbols.success}</Text> Stopped {names.join(', ')}.{' '}
-      <Text color={colors.muted}>Its code and settings are kept; dev start brings it back.</Text>
+      <Text color={colors.muted}>Its code and settings are kept; ampul start brings it back.</Text>
     </Text>,
   )
   return 0
@@ -65,17 +65,17 @@ export const stopCommand: CommandDefinition = {
     {
       name: 'project',
       required: false,
-      description: 'The project to stop. When left out, dev stop lets you pick one.',
+      description: 'The project to stop. When left out, ampul stop lets you pick one.',
     },
   ],
   flags: [{ name: 'all', short: 'a', description: 'Stop every running project.' }],
   description: [
-    'Stops the container, which ends every shell and process in it. Nothing is deleted: the code in ~/Project and everything else in the container is still there after dev start.',
+    'Stops the container, which ends every shell and process in it. Nothing is deleted: the code in ~/Project and everything else in the container is still there after ampul start.',
   ],
   examples: [
-    { command: 'dev stop api', explanation: 'Stop the api project.' },
+    { command: 'ampul stop api', explanation: 'Stop the api project.' },
     {
-      command: 'dev stop --all',
+      command: 'ampul stop --all',
       explanation: 'Stop every running project, for example before shutting down.',
     },
   ],

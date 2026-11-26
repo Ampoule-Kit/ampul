@@ -26,7 +26,7 @@ function readValidatedJson<Schema extends z.ZodType>(
   if (!fs.existsSync(absolutePath)) {
     throw brokenCatalog(
       `${relativePath} does not exist`,
-      `devenv expects a file at ${relativePath}.`,
+      `ampul expects a file at ${relativePath}.`,
     )
   }
   let content: unknown

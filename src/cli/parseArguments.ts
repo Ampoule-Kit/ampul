@@ -14,16 +14,16 @@ function knownFlags(command: CommandDefinition): FlagDefinition[] {
 function unknownFlag(command: CommandDefinition, written: string): Problem {
   const flagNames = knownFlags(command).map((flag) => `--${flag.name}`)
   const suggestion = closestMatch(written, flagNames)
-  return new Problem(`dev ${command.name} has no option ${written}`, {
+  return new Problem(`ampul ${command.name} has no option ${written}`, {
     explanation: suggestion ? `Did you mean ${suggestion}?` : undefined,
-    fixes: [{ description: 'See what it accepts', command: `dev ${command.name} --help` }],
+    fixes: [{ description: 'See what it accepts', command: `ampul ${command.name} --help` }],
   })
 }
 
 function tooManyArguments(command: CommandDefinition, extra: string[]): Problem {
-  return new Problem(`dev ${command.name} got more arguments than it takes`, {
+  return new Problem(`ampul ${command.name} got more arguments than it takes`, {
     explanation: `It does not know what to do with: ${extra.join(' ')}`,
-    fixes: [{ description: 'See how to use it', command: `dev ${command.name} --help` }],
+    fixes: [{ description: 'See how to use it', command: `ampul ${command.name} --help` }],
   })
 }
 

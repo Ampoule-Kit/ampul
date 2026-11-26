@@ -58,7 +58,7 @@ function Verdict({ checks }: { checks: HealthCheck[] }) {
   }
   return (
     <Text color={colors.success}>
-      Everything is ready. Create a project with <Text color={colors.accent}>dev new</Text>
+      Everything is ready. Create a project with <Text color={colors.accent}>ampul new</Text>
     </Text>
   )
 }
@@ -82,14 +82,14 @@ async function run(): Promise<number> {
 
 export const doctorCommand: CommandDefinition = {
   name: 'doctor',
-  summary: 'Check that this machine is ready for devenv, and say how to fix what is not',
+  summary: 'Check that this machine is ready for ampul, and say how to fix what is not',
   arguments: [],
   flags: [],
   description: [
-    'Checks the container runtime and whether its engine is running, the Podman machine’s memory on macOS and Windows, git and your git identity, SSH keys, and that this dev command is the one on your PATH.',
+    'Checks the container runtime and whether its engine is running, the Podman machine’s memory on macOS and Windows, git and your git identity, SSH keys, and that this ampul command is the one on your PATH.',
     'Every problem comes with the command that fixes it. The installer runs it at the end, and it exits with status 1 when something must be fixed.',
   ],
-  examples: [{ command: 'dev doctor', explanation: 'Check everything.' }],
+  examples: [{ command: 'ampul doctor', explanation: 'Check everything.' }],
   seeAlso: ['new'],
   run,
 }

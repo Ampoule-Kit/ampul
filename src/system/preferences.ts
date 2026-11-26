@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import { z } from 'zod'
 import { Problem } from '../problems/Problem.ts'
-import { devenvPaths, displayPath } from './platform.ts'
+import { ampulPaths, displayPath } from './platform.ts'
 
 const preferencesSchema = z.object({
   runtime: z.string().optional(),
@@ -18,7 +18,7 @@ export function preferences(): Preferences {
 }
 
 function invalidPreferences(reason: string): Problem {
-  const preferencesFile = displayPath(devenvPaths.preferences)
+  const preferencesFile = displayPath(ampulPaths.preferences)
   return new Problem(`${preferencesFile} is not valid`, {
     explanation: reason,
     fixes: [
@@ -31,10 +31,10 @@ function invalidPreferences(reason: string): Problem {
 }
 
 function loadPreferences(): Preferences {
-  if (!fs.existsSync(devenvPaths.preferences)) return preferencesSchema.parse({})
+  if (!fs.existsSync(ampulPaths.preferences)) return preferencesSchema.parse({})
   let storedPreferences: unknown
   try {
-    storedPreferences = JSON.parse(fs.readFileSync(devenvPaths.preferences, 'utf8'))
+    storedPreferences = JSON.parse(fs.readFileSync(ampulPaths.preferences, 'utf8'))
   } catch (error) {
     throw invalidPreferences(error instanceof Error ? error.message : String(error))
   }

@@ -34,12 +34,12 @@ function cacheRoot(): string {
   return isWindows ? windowsLocalAppData() : xdgDirectory('XDG_CACHE_HOME', '.cache')
 }
 
-export const devenvPaths = {
-  config: path.join(configRoot(), 'devenv'),
-  projects: path.join(configRoot(), 'devenv', 'projects'),
-  preferences: path.join(configRoot(), 'devenv', 'config.json'),
-  logs: path.join(stateRoot(), 'devenv', 'logs'),
-  cache: path.join(cacheRoot(), 'devenv'),
+export const ampulPaths = {
+  config: path.join(configRoot(), 'ampul'),
+  projects: path.join(configRoot(), 'ampul', 'projects'),
+  preferences: path.join(configRoot(), 'ampul', 'config.json'),
+  logs: path.join(stateRoot(), 'ampul', 'logs'),
+  cache: path.join(cacheRoot(), 'ampul'),
 }
 
 export function hostUserId(): number {

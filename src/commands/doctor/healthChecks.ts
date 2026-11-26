@@ -133,15 +133,19 @@ function sshCheck(): HealthCheck {
 
 function installationCheck(): HealthCheck | undefined {
   if (!sea.isSea()) return undefined
-  const onPath = findExecutable('dev')
+  const onPath = findExecutable('ampul')
   if (onPath && fs.realpathSync(onPath) === fs.realpathSync(process.execPath)) {
-    return { title: 'dev command', status: 'pass', detail: `Installed at ${displayPath(onPath)}.` }
+    return {
+      title: 'ampul command',
+      status: 'pass',
+      detail: `Installed at ${displayPath(onPath)}.`,
+    }
   }
   return {
-    title: 'dev command',
+    title: 'ampul command',
     status: 'warn',
     detail: onPath
-      ? `Another dev at ${displayPath(onPath)} comes first on your PATH and hides this one.`
+      ? `Another ampul at ${displayPath(onPath)} comes first on your PATH and hides this one.`
       : `${displayPath(path.dirname(process.execPath))} is not on your PATH.`,
     fixes: [
       {
@@ -159,8 +163,8 @@ function userCheck(): HealthCheck {
     title: 'User',
     status: 'fail',
     detail:
-      'dev runs as root. Containers would be built for root and your files would end up owned by root.',
-    fixes: [{ description: 'Run dev as your normal user, without sudo' }],
+      'ampul runs as root. Containers would be built for root and your files would end up owned by root.',
+    fixes: [{ description: 'Run ampul as your normal user, without sudo' }],
   }
 }
 

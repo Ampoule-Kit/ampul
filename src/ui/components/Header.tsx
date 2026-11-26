@@ -1,5 +1,5 @@
 import { Box, Text } from 'ink'
-import { devenvVersion } from '../../version.ts'
+import { ampulVersion } from '../../version.ts'
 import { colors } from '../theme.ts'
 
 interface HeaderProps {
@@ -12,9 +12,9 @@ export function Header({ title, subtitle }: HeaderProps) {
     <Box flexDirection="column" marginBottom={1}>
       <Text>
         <Text backgroundColor={colors.brand} color="black" bold>
-          {' devenv '}
+          {' ampul '}
         </Text>{' '}
-        <Text bold>{title}</Text> <Text color={colors.muted}>v{devenvVersion}</Text>
+        <Text bold>{title}</Text> <Text color={colors.muted}>v{ampulVersion}</Text>
       </Text>
       {subtitle && <Text color={colors.muted}>{subtitle}</Text>}
     </Box>

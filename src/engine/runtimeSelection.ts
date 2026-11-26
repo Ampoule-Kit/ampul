@@ -1,7 +1,7 @@
 import { Problem, type ProblemFix } from '../problems/Problem.ts'
 import { environmentVariable } from '../system/environment.ts'
 import { findExecutable } from '../system/executables.ts'
-import { devenvPaths, displayPath, isLinux, isMacOS } from '../system/platform.ts'
+import { ampulPaths, displayPath, isLinux, isMacOS } from '../system/platform.ts'
 import { preferences } from '../system/preferences.ts'
 
 export type RuntimeName = 'podman' | 'docker'
@@ -13,7 +13,7 @@ export interface RuntimeSelection {
 }
 
 const runtimeNames: readonly RuntimeName[] = ['podman', 'docker']
-const runtimeEnvironmentVariable = 'DEVENV_RUNTIME'
+const runtimeEnvironmentVariable = 'AMPUL_RUNTIME'
 
 export const runtimeDisplayNames: Record<RuntimeName, string> = {
   podman: 'Podman',
@@ -33,7 +33,7 @@ function requestedRuntime(): { name: string; origin: string } | undefined {
     }
   }
   const configured = preferences().runtime
-  if (configured) return { name: configured, origin: displayPath(devenvPaths.preferences) }
+  if (configured) return { name: configured, origin: displayPath(ampulPaths.preferences) }
   return undefined
 }
 
@@ -45,7 +45,7 @@ export function selectRuntime(): RuntimeSelection {
   const docker = findExecutable('docker')
   if (podman) {
     const reason = docker
-      ? 'Podman and Docker are both installed; devenv prefers Podman.'
+      ? 'Podman and Docker are both installed; ampul prefers Podman.'
       : 'Podman is installed.'
     return { name: 'podman', executable: podman, reason }
   }
@@ -57,8 +57,8 @@ export function selectRuntime(): RuntimeSelection {
 
 function selectRequestedRuntime(name: string, origin: string): RuntimeSelection {
   if (!isRuntimeName(name)) {
-    throw new Problem(`'${name}' is not a container runtime devenv supports`, {
-      explanation: `${origin} asks for '${name}'. devenv works with podman or docker.`,
+    throw new Problem(`'${name}' is not a container runtime ampul supports`, {
+      explanation: `${origin} asks for '${name}'. ampul works with podman or docker.`,
       fixes: [{ description: `Set it to podman or docker in ${origin}` }],
     })
   }
@@ -97,7 +97,7 @@ function installFixes(runtime: RuntimeName): ProblemFix[] {
 function noRuntimeInstalled(): Problem {
   return new Problem('No container runtime is installed', {
     explanation:
-      'devenv runs every project in a container, so it needs Podman (preferred) or Docker on this machine.',
+      'ampul runs every project in a container, so it needs Podman (preferred) or Docker on this machine.',
     fixes: [...installFixes('podman'), ...installFixes('docker').map(asAlternative)],
   })
 }

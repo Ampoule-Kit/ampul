@@ -44,7 +44,7 @@ export function ReadySummary({ project, unclonedRepositories, warnings }: ReadyS
       )}
       <Box marginTop={1}>
         <Text color={colors.muted}>
-          Connect any time with <Text color={colors.accent}>dev start {project.name}</Text>
+          Connect any time with <Text color={colors.accent}>ampul start {project.name}</Text>
         </Text>
       </Box>
     </Callout>

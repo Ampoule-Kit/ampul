@@ -92,7 +92,7 @@ async function missingUbuntuPackages(
   const { stdout } = await engine.capture([
     'run',
     '--rm',
-    'devenv-install-test-base',
+    'ampul-install-test-base',
     'bash',
     '-c',
     'apt-get update -qq >/dev/null; for package in "$@"; do apt-cache show --no-all-versions "$package" >/dev/null 2>&1 || echo "$package"; done',
@@ -170,7 +170,7 @@ async function pinAndDescribeDownload(
   moduleId: string,
   requested: RequestedDownload,
 ): Promise<{ download: ModuleDownload; commandNames: string[] }> {
-  const downloadDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'devenv-add-module-'))
+  const downloadDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ampul-add-module-'))
   try {
     console.log(`==> Downloading ${moduleId} ${requested.version} for arm64 and amd64`)
     const { pinned, files } = await pinDownload(
@@ -261,7 +261,7 @@ To go further, add to modules/${moduleId}/:
   setup.sh    runs in the container after the config is linked, with step and warn available
   install.sh  runs at image build after the packages and downloads, for anything else
 
-Then run npm run cli:install so dev offers it. Add it to a project with: dev config <project>, then dev rebuild <project>`)
+Then run npm run cli:install so ampul offers it. Add it to a project with: ampul config <project>, then ampul rebuild <project>`)
 }
 
 async function addModule(): Promise<void> {
@@ -272,11 +272,11 @@ async function addModule(): Promise<void> {
     moduleIdProblem,
   )
   const label = await askUntilValid(
-    'Label shown by dev new (for example Rust toolchain)',
+    'Label shown by ampul new (for example Rust toolchain)',
     () => undefined,
   )
   const description = await askUntilValid(
-    'One sentence dev new shows to explain it (for example The Rust compiler, cargo and rustup)',
+    'One sentence ampul new shows to explain it (for example The Rust compiler, cargo and rustup)',
     () => undefined,
   )
   const section = await askSection()

@@ -23,9 +23,7 @@ const minimumMajor = Number(minimumVersion.split('.')[0])
 const currentMajor = Number(process.versions.node.split('.')[0])
 
 if (currentMajor < minimumMajor) {
-  console.error(
-    `devenv needs Node.js ${minimumVersion} or newer; this is ${process.versions.node}.`,
-  )
+  console.error(`ampul needs Node.js ${minimumVersion} or newer; this is ${process.versions.node}.`)
   console.error(
     process.env['NVM_DIR']
       ? `Install and use it with nvm:  nvm install ${minimumMajor}`

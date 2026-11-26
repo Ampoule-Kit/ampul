@@ -1,7 +1,7 @@
 import type { ContainerEngine } from '../engine/ContainerEngine.ts'
 import { cacheLabel, imageName, innerEngineVolumeName, projectLabel } from './naming.ts'
 
-const devenvLabels = [projectLabel, cacheLabel]
+const ampulLabels = [projectLabel, cacheLabel]
 
 export async function removeImage(engine: ContainerEngine, projectName: string): Promise<void> {
   await engine.capture(['rmi', '--force', imageName(projectName)])
@@ -29,20 +29,20 @@ async function identifiersWithLabel(
   return [...new Set(identifiers)]
 }
 
-export async function removeEveryDevenvContainer(engine: ContainerEngine): Promise<void> {
+export async function removeEveryAmpulContainer(engine: ContainerEngine): Promise<void> {
   const containerIds = await identifiersWithLabel(engine, ['ps', '--all'], projectLabel)
   if (containerIds.length > 0) await engine.capture(['rm', '--force', ...containerIds])
 }
 
-export async function removeEveryDevenvImage(engine: ContainerEngine): Promise<void> {
-  for (const label of devenvLabels) {
+export async function removeEveryAmpulImage(engine: ContainerEngine): Promise<void> {
+  for (const label of ampulLabels) {
     const imageIds = await identifiersWithLabel(engine, ['images'], label)
     if (imageIds.length > 0) await engine.capture(['rmi', '--force', ...imageIds])
   }
 }
 
-export async function removeEveryDevenvVolume(engine: ContainerEngine): Promise<void> {
-  for (const label of devenvLabels) {
+export async function removeEveryAmpulVolume(engine: ContainerEngine): Promise<void> {
+  for (const label of ampulLabels) {
     const volumeNames = await identifiersWithLabel(engine, ['volume', 'ls'], label)
     if (volumeNames.length > 0) await engine.capture(['volume', 'rm', '--force', ...volumeNames])
   }

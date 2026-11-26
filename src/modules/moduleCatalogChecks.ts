@@ -9,8 +9,8 @@ export function brokenCatalog(title: string, explanation: string): Problem {
   return new Problem(title, {
     explanation,
     fixes: [
-      { description: `Fix it in the ${modulesFolder}/ folder of the devenv repo` },
-      { description: 'Then build and install dev again', command: 'npm run cli:install' },
+      { description: `Fix it in the ${modulesFolder}/ folder of the ampul repo` },
+      { description: 'Then build and install ampul again', command: 'npm run cli:install' },
     ],
   })
 }

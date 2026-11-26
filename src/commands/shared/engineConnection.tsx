@@ -24,7 +24,7 @@ async function offerRepair(problem: Problem, repair: EngineRepair): Promise<bool
     (finish) => (
       <>
         <ProblemView problem={problem} />
-        <Question title="devenv can fix this for you">
+        <Question title="ampul can fix this for you">
           <SelectList<RepairChoice>
             options={[
               { value: 'repair', label: repair.offer, hint: `runs: ${repair.command.join(' ')}` },

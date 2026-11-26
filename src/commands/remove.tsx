@@ -23,7 +23,7 @@ async function run(invocation: Invocation): Promise<number> {
   })
   await confirmDestructiveAction({
     invocation,
-    commandLine: `dev rm ${project.name}`,
+    commandLine: `ampul rm ${project.name}`,
     title: `Removing ${project.name} cannot be undone.`,
     lost: [
       'The container, with everything in ~/Project, including unpushed work',
@@ -71,7 +71,7 @@ export const removeCommand: CommandDefinition = {
     {
       name: 'project',
       required: false,
-      description: 'The project to remove. When left out, dev rm lets you pick one.',
+      description: 'The project to remove. When left out, ampul rm lets you pick one.',
     },
   ],
   flags: [yesFlag],
@@ -80,8 +80,8 @@ export const removeCommand: CommandDefinition = {
     'It shows exactly what goes before asking you to confirm.',
   ],
   examples: [
-    { command: 'dev rm api', explanation: 'Remove api after confirming.' },
-    { command: 'dev rm api --yes', explanation: 'Remove api without asking.' },
+    { command: 'ampul rm api', explanation: 'Remove api after confirming.' },
+    { command: 'ampul rm api --yes', explanation: 'Remove api without asking.' },
   ],
   seeAlso: ['purge', 'ls'],
   run,

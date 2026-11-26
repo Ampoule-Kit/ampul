@@ -62,7 +62,7 @@ export function PortsStep({ draft, submit, back }: StepControls<ProjectDraft>) {
   return (
     <Question
       title="Which ports should this machine reach?"
-      explanation="Pick the ports your apps listen on. Apps can keep listening on localhost inside the container; devenv forwards each port to localhost on this machine."
+      explanation="Pick the ports your apps listen on. Apps can keep listening on localhost inside the container; ampul forwards each port to localhost on this machine."
     >
       <MultiSelectList
         options={portOptions}

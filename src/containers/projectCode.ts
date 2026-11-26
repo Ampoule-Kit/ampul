@@ -89,7 +89,7 @@ export async function copyFolderIntoContainer(
       fixes: [
         {
           description: 'Point the project at another folder',
-          command: `dev config ${project.name}`,
+          command: `ampul config ${project.name}`,
         },
       ],
     })
@@ -108,7 +108,7 @@ export async function copyFolderIntoContainer(
   if (exitCode !== 0) {
     throw new Problem(`Copying ${source.folder} did not finish`, {
       outputTail: errorOutput.trim().split('\n'),
-      fixes: [{ description: 'Try again', command: `dev rebuild ${project.name}` }],
+      fixes: [{ description: 'Try again', command: `ampul rebuild ${project.name}` }],
     })
   }
 }

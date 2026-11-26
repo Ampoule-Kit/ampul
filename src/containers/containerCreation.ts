@@ -57,14 +57,17 @@ function containerCreationFailed(project: ProjectSettings, errorOutput: string):
       fixes: [
         {
           description: 'Stop whatever uses it, or change the ports',
-          command: `dev config ${project.name}`,
+          command: `ampul config ${project.name}`,
         },
-        { description: 'Then create the container again', command: `dev rebuild ${project.name}` },
+        {
+          description: 'Then create the container again',
+          command: `ampul rebuild ${project.name}`,
+        },
       ],
     })
   }
   return new Problem('The container could not be created', {
     outputTail: outputLines(errorOutput),
-    fixes: [{ description: 'Try again', command: `dev rebuild ${project.name}` }],
+    fixes: [{ description: 'Try again', command: `ampul rebuild ${project.name}` }],
   })
 }

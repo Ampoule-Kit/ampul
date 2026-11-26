@@ -18,7 +18,7 @@ describe('containerRunArguments', () => {
     assert.ok(runArguments.includes('127.0.0.1:3000-3002:61000-61002'))
     assert.ok(runArguments.includes('127.0.0.1:4200:61003'))
     assert.ok(
-      runArguments.includes('DEVENV_PORT_FORWARDS=3000:61000 3001:61001 3002:61002 4200:61003'),
+      runArguments.includes('AMPUL_PORT_FORWARDS=3000:61000 3001:61001 3002:61002 4200:61003'),
     )
   })
 
@@ -29,7 +29,7 @@ describe('containerRunArguments', () => {
       noHostSetup,
     )
     assert.ok(withEngine.includes('--privileged'))
-    assert.ok(withEngine.includes('devenv-api-engine:/var/lib/containers'))
+    assert.ok(withEngine.includes('ampul-api-engine:/var/lib/containers'))
   })
 
   it('keeps the user id with rootless Podman', () => {

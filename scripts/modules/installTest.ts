@@ -6,9 +6,9 @@ import type { ModuleFileSource } from '../../src/modules/moduleSchema.ts'
 import { repositoryRoot } from '../shared/repository.ts'
 import { modulesDirectory, writeJsonFile } from './moduleSources.ts'
 
-const installTestImage = 'devenv-install-test-base'
-const installTestCacheVolume = 'devenv-install-test-cache'
-const cacheLabel = 'devenv.cache=true'
+const installTestImage = 'ampul-install-test-base'
+const installTestCacheVolume = 'ampul-install-test-cache'
+const cacheLabel = 'ampul.cache=true'
 const installHelpers = ['install-helpers.sh', 'module-downloads.sh', 'install-module.sh']
 const testHome = '/root'
 const failureOutputLines = 25
@@ -40,7 +40,7 @@ function stageModules(
   moduleIds: string[],
   overrides: ReadonlyMap<string, ModuleFileSource>,
 ): string {
-  const stagingDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'devenv-install-test-'))
+  const stagingDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ampul-install-test-'))
   for (const helper of installHelpers) {
     fs.copyFileSync(path.join(repositoryRoot, 'image', helper), path.join(stagingDirectory, helper))
     fs.chmodSync(path.join(stagingDirectory, helper), 0o755)
@@ -90,7 +90,7 @@ export async function runInstallTest(
     ...moduleIds.flatMap((moduleId) => {
       const module = overrides.get(moduleId) ?? modulesById.get(moduleId)
       return [
-        `/opt/devenv/install-module.sh ${moduleId}`,
+        `/opt/ampul/install-module.sh ${moduleId}`,
         ...(module ? environmentExports(module) : []),
       ]
     }),
@@ -106,9 +106,9 @@ export async function runInstallTest(
       '--security-opt',
       'label=disable',
       '--volume',
-      `${stagingDirectory}:/opt/devenv:ro`,
+      `${stagingDirectory}:/opt/ampul:ro`,
       '--volume',
-      `${installTestCacheVolume}:/var/cache/devenv`,
+      `${installTestCacheVolume}:/var/cache/ampul`,
       installTestImage,
       'bash',
       '-c',

@@ -6,7 +6,7 @@ export async function requireRunningEngine(): Promise<ContainerEngine> {
   const { reachable } = await engine.reachability()
   if (!reachable) {
     throw new Error(
-      `The ${engine.displayName} engine is not running. Run 'dev doctor' to see how to start it.`,
+      `The ${engine.displayName} engine is not running. Run 'ampul doctor' to see how to start it.`,
     )
   }
   return engine

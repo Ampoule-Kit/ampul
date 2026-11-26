@@ -1,9 +1,9 @@
 set -euo pipefail
 
-. /opt/devenv/module-downloads.sh
+. /opt/ampul/module-downloads.sh
 
 ARCH=$(dpkg --print-architecture)
-DOWNLOAD_CACHE=/var/cache/devenv
+DOWNLOAD_CACHE=/var/cache/ampul
 
 hash_matches() {
   local file=$1 algorithm=$2 expected=$3

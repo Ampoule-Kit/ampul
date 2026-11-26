@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import sea from 'node:sea'
-import { devenvPaths } from '../system/platform.ts'
+import { ampulPaths } from '../system/platform.ts'
 import { embeddedResourcesAssetName, embeddedResourcesSchema } from './embeddedResources.ts'
 
 const completionMarker = '.complete'
@@ -26,7 +26,7 @@ function extractEmbeddedResources(): string {
   const resources = embeddedResourcesSchema.parse(
     JSON.parse(sea.getAsset(embeddedResourcesAssetName, 'utf8')),
   )
-  const resourcesRoot = path.join(devenvPaths.cache, 'resources')
+  const resourcesRoot = path.join(ampulPaths.cache, 'resources')
   const destination = path.join(resourcesRoot, resources.fingerprint)
   if (fs.existsSync(path.join(destination, completionMarker))) return destination
 

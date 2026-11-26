@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { devenvPaths } from '../system/platform.ts'
+import { ampulPaths } from '../system/platform.ts'
 
 const logsKeptPerProject = 10
 
@@ -8,7 +8,7 @@ export class LogFile {
   readonly path: string
 
   constructor(scope: string, purpose: string) {
-    const directory = path.join(devenvPaths.logs, scope)
+    const directory = path.join(ampulPaths.logs, scope)
     fs.mkdirSync(directory, { recursive: true })
     removeOldLogs(directory)
     const timestamp = new Date()

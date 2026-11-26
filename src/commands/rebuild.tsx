@@ -16,7 +16,7 @@ export async function confirmAndRebuild(
   if ((await containerState(engine, project.name)) !== 'missing') {
     await confirmDestructiveAction({
       invocation,
-      commandLine: `dev rebuild ${project.name}`,
+      commandLine: `ampul rebuild ${project.name}`,
       title: `Rebuilding recreates ${project.name} from scratch.`,
       lost: [
         'Everything in ~/Project, including uncommitted and unpushed work',
@@ -53,19 +53,19 @@ export const rebuildCommand: CommandDefinition = {
     {
       name: 'project',
       required: false,
-      description: 'The project to rebuild. When left out, dev rebuild lets you pick one.',
+      description: 'The project to rebuild. When left out, ampul rebuild lets you pick one.',
     },
   ],
   flags: [yesFlag],
   description: [
-    'Builds the image again with the project’s current settings and pinned tool versions, replaces the container, sets it up and fetches the code again. Use it after dev config, after pinning a new tool version, or when a container is broken.',
+    'Builds the image again with the project’s current settings and pinned tool versions, replaces the container, sets it up and fetches the code again. Use it after ampul config, after pinning a new tool version, or when a container is broken.',
     'Image layers that did not change are reused, so a rebuild is much faster than the first build.',
     'The container is thrown away, and ~/Project with it: push your work first.',
   ],
   examples: [
-    { command: 'dev rebuild api', explanation: 'Rebuild api after confirming.' },
+    { command: 'ampul rebuild api', explanation: 'Rebuild api after confirming.' },
     {
-      command: 'dev rebuild api --yes',
+      command: 'ampul rebuild api --yes',
       explanation: 'Rebuild without asking, for example from a script.',
     },
   ],

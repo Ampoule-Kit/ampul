@@ -34,7 +34,7 @@ export const style = {
 }
 
 export function heading(text: string): void {
-  console.log(`\n${paint('46;30;1', ' devenv ')} ${style.bold(text)}\n`)
+  console.log(`\n${paint('46;30;1', ' ampul ')} ${style.bold(text)}\n`)
 }
 
 export function success(text: string): void {

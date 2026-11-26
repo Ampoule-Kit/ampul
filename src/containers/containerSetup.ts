@@ -41,14 +41,14 @@ export async function copyConfigIntoContainer(
   const { exitCode, errorOutput } = await replaceContainerFolder(
     engine,
     project.name,
-    `${containerHome()}/.devenv`,
+    `${containerHome()}/.ampul`,
     archiveOf(resourceDirectory(), configEntries(projectModules(project))),
   )
   context.output(errorOutput)
   if (exitCode !== 0) {
     throw new Problem('The dotfiles and tool config could not be copied into the container', {
       outputTail: errorOutput.trim().split('\n'),
-      fixes: [{ description: 'Try the setup again', command: `dev setup ${project.name}` }],
+      fixes: [{ description: 'Try the setup again', command: `ampul setup ${project.name}` }],
     })
   }
 }
@@ -95,7 +95,7 @@ export async function runContainerSetup(
       fixes: [
         {
           description: 'Read the log, then run the setup again',
-          command: `dev setup ${project.name}`,
+          command: `ampul setup ${project.name}`,
         },
       ],
     })

@@ -142,7 +142,7 @@ async function pinDownloads(
   module: ModuleFileSource,
   downloadIndexes: number[],
 ): Promise<ModuleFileSource> {
-  const downloadDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'devenv-pin-'))
+  const downloadDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ampul-pin-'))
   try {
     const downloads: ModuleDownload[] = [...(module.downloads ?? [])]
     for (const index of downloadIndexes) {
@@ -185,7 +185,7 @@ async function updateModule(
   if (!skipInstallTest) await testInstall(moduleId, pinned)
   writeJsonFile(moduleFilePath(moduleId), pinned)
   console.log(
-    `Pinned ${target} to ${version} in modules/${moduleId}/module.json. Build it into dev with npm run cli:install, then apply it with dev rebuild <project>.`,
+    `Pinned ${target} to ${version} in modules/${moduleId}/module.json. Build it into ampul with npm run cli:install, then apply it with ampul rebuild <project>.`,
   )
 }
 

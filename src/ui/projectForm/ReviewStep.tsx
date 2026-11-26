@@ -89,7 +89,7 @@ function reviewChoices(mode: ReviewContext['mode']): SelectOption<ReviewChoice>[
       value: 'save',
       label: 'Save, rebuild later',
       description:
-        'The changes apply the next time you run dev rebuild. The container keeps running as it is.',
+        'The changes apply the next time you run ampul rebuild. The container keeps running as it is.',
     },
     { value: 'change', label: 'Change an answer' },
     { value: 'cancel', label: 'Discard the changes', tone: 'danger' },

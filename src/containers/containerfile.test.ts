@@ -13,7 +13,7 @@ describe('containerfileFor', () => {
     const nodeStep = containerfile.indexOf('install-module.sh node')
     const neovimStep = containerfile.indexOf('install-module.sh neovim')
     assert.ok(nodeStep > 0 && neovimStep > nodeStep)
-    assert.match(containerfile, /COPY modules\/java\/ \/opt\/devenv\/modules\/java\//)
+    assert.match(containerfile, /COPY modules\/java\/ \/opt\/ampul\/modules\/java\//)
   })
 
   it('leaves out the modules that were not selected', () => {

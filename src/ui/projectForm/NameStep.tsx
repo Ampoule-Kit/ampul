@@ -22,7 +22,7 @@ export function NameStep({ draft, submit, back }: StepControls<ProjectDraft>) {
   return (
     <Question
       title="What should the project be called?"
-      explanation="You type it in every command, like dev start <name>, so short is good."
+      explanation="You type it in every command, like ampul start <name>, so short is good."
     >
       <TextPrompt
         initialValue={suggestion}

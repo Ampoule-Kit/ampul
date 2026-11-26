@@ -49,8 +49,8 @@ describe('parsePortEntry', () => {
     )
   })
 
-  it('keeps the ports devenv forwards through for itself', () => {
-    assert.match(parsePortEntry('61050', []).problem ?? '', /taken by devenv itself/)
+  it('keeps the ports ampul forwards through for itself', () => {
+    assert.match(parsePortEntry('61050', []).problem ?? '', /taken by ampul itself/)
   })
 })
 

@@ -8,7 +8,7 @@ import { UserCancelled } from './problems/UserCancelled.ts'
 import { ProblemView } from './ui/components/ProblemView.tsx'
 import { isInteractiveTerminal, printElement, printErrorElement } from './ui/terminal.tsx'
 import { colors } from './ui/theme.ts'
-import { devenvVersion } from './version.ts'
+import { ampulVersion } from './version.ts'
 
 const cancelledExitCode = 130
 const failureExitCode = 1
@@ -23,7 +23,7 @@ function dispatch(args: string[]): Promise<number> | number {
     return 0
   }
   if (versionFlags.has(commandName)) {
-    process.stdout.write(`devenv ${devenvVersion}\n`)
+    process.stdout.write(`ampul ${ampulVersion}\n`)
     return 0
   }
   if (helpFlags.has(commandName)) {

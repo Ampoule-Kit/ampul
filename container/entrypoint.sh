@@ -2,7 +2,7 @@
 set -u
 
 ENGINE_SOCKET=/run/podman/podman.sock
-LOG_DIR=/tmp/devenv
+LOG_DIR=/tmp/ampul
 
 delegate_cgroup_controllers() {
   [ -f /sys/fs/cgroup/cgroup.controllers ] || return 0
@@ -32,7 +32,7 @@ start_ssh_agent() {
 
 forward_published_ports() {
   local forward
-  for forward in ${DEVENV_PORT_FORWARDS:-}; do
+  for forward in ${AMPUL_PORT_FORWARDS:-}; do
     socat "TCP-LISTEN:${forward#*:},fork,reuseaddr" "TCP:127.0.0.1:${forward%%:*}" >>"$LOG_DIR/port-forwards.log" 2>&1 &
   done
 }

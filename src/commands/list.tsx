@@ -93,7 +93,7 @@ async function run(invocation: Invocation): Promise<number> {
   if (rows.length === 0) {
     printElement(
       <Text>
-        No projects yet. Create one with <Text color={colors.accent}>dev new</Text>
+        No projects yet. Create one with <Text color={colors.accent}>ampul new</Text>
       </Text>,
     )
     return 0
@@ -111,11 +111,11 @@ export const listCommand: CommandDefinition = {
   flags: [{ name: 'json', description: 'Print the projects as JSON, for scripts.' }],
   description: [
     'Shows one line per project: its status (running, stopped, or no container), the ports it forwards and where its code comes from.',
-    'When the container engine is not running, the statuses show as unknown and dev ls explains how to start it.',
+    'When the container engine is not running, the statuses show as unknown and ampul ls explains how to start it.',
   ],
   examples: [
-    { command: 'dev ls', explanation: 'See every project.' },
-    { command: 'dev ls --json | jq -r ".[].name"', explanation: 'Print just the project names.' },
+    { command: 'ampul ls', explanation: 'See every project.' },
+    { command: 'ampul ls --json | jq -r ".[].name"', explanation: 'Print just the project names.' },
   ],
   seeAlso: ['start', 'new'],
   run,

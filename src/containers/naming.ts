@@ -1,11 +1,11 @@
 import { preferences } from '../system/preferences.ts'
 
-export const projectLabel = 'devenv.project'
-export const cacheLabel = 'devenv.cache'
-export const sharedCacheVolume = 'devenv-cache'
+export const projectLabel = 'ampul.project'
+export const cacheLabel = 'ampul.cache'
+export const sharedCacheVolume = 'ampul-cache'
 export const innerEngineSocket = '/run/podman/podman.sock'
 
-const resourcePrefix = 'devenv-'
+const resourcePrefix = 'ampul-'
 
 export function containerName(projectName: string): string {
   return resourcePrefix + projectName
