@@ -19,7 +19,9 @@ export function preferences(): Preferences {
 function loadPreferences(): Preferences {
   if (!fs.existsSync(devenvPaths.preferences)) return defaultPreferences
   try {
-    const stored = JSON.parse(fs.readFileSync(devenvPaths.preferences, 'utf8')) as Partial<Preferences>
+    const stored = JSON.parse(
+      fs.readFileSync(devenvPaths.preferences, 'utf8'),
+    ) as Partial<Preferences>
     return { ...defaultPreferences, ...stored }
   } catch (error) {
     throw new Problem(`${displayPath(devenvPaths.preferences)} is not valid JSON`, {

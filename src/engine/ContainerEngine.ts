@@ -36,12 +36,13 @@ export class ContainerEngine {
   }
 
   async clientVersion(): Promise<string> {
-    const { exitCode, stdout } = await this.capture(['version', '--format', '{{.Client.Version}}'])
-    return exitCode === 0 ? stdout.trim() : 'unknown version'
+    const { stdout } = await this.capture(['--version'])
+    return stdout.match(/version ([\w.+-]+)/i)?.[1] ?? 'unknown version'
   }
 
   async reachability(): Promise<{ reachable: boolean; errorOutput: string }> {
-    const fieldThatNeedsTheEngine = this.runtime === 'podman' ? '{{.Host.Arch}}' : '{{.ServerVersion}}'
+    const fieldThatNeedsTheEngine =
+      this.runtime === 'podman' ? '{{.Host.Arch}}' : '{{.ServerVersion}}'
     const { exitCode, stderr } = await this.capture(['info', '--format', fieldThatNeedsTheEngine], {
       timeoutMilliseconds: reachabilityTimeoutMilliseconds,
     })

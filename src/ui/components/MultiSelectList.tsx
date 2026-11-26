@@ -63,7 +63,7 @@ export function MultiSelectList<Value>({
   const focused = options[focusedIndex]
   return (
     <Box flexDirection="column">
-      {visible.hasAbove && <Text color={colors.muted}>  ↑ more</Text>}
+      {visible.hasAbove && <Text color={colors.muted}> ↑ more</Text>}
       {options.slice(visible.start, visible.end).map((option, offset) => {
         const index = visible.start + offset
         const isFocused = index === focusedIndex
@@ -91,12 +91,12 @@ export function MultiSelectList<Value>({
               <Text color={isFocused ? colors.accent : undefined} bold={isFocused}>
                 {option.label}
               </Text>
-              {option.hint && <Text color={colors.muted}>  {option.hint}</Text>}
+              {option.hint && <Text color={colors.muted}> {option.hint}</Text>}
             </Text>
           </Fragment>
         )
       })}
-      {visible.hasBelow && <Text color={colors.muted}>  ↓ more</Text>}
+      {visible.hasBelow && <Text color={colors.muted}> ↓ more</Text>}
       {focused?.description && <Description>{focused.description}</Description>}
       {footer?.(selection)}
       <KeyHints

@@ -1,7 +1,12 @@
 import { render } from 'ink'
 import chalk from 'chalk'
 import type { LogFile } from '../tasks/LogFile.js'
-import { TaskRunner, type Task, type TaskObserver, type TaskRunResult } from '../tasks/TaskRunner.js'
+import {
+  TaskRunner,
+  type Task,
+  type TaskObserver,
+  type TaskRunResult,
+} from '../tasks/TaskRunner.js'
 import { TaskProgressView } from './components/TaskProgressView.js'
 import { isInteractiveTerminal } from './terminal.js'
 import { symbols } from './theme.js'

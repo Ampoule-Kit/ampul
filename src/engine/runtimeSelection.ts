@@ -68,16 +68,24 @@ function selectRequestedRuntime(name: string, origin: string): RuntimeSelection 
 
 function installFixes(runtime: RuntimeName): ProblemFix[] {
   if (runtime === 'podman') {
-    if (isMacOS) return [{ description: 'Install Podman with Homebrew', command: 'brew install podman' }]
+    if (isMacOS)
+      return [{ description: 'Install Podman with Homebrew', command: 'brew install podman' }]
     if (isLinux) {
-      return [{ description: 'Install Podman from your distribution', command: 'sudo apt install podman' }]
+      return [
+        {
+          description: 'Install Podman from your distribution',
+          command: 'sudo apt install podman',
+        },
+      ]
     }
     return [{ description: 'Install Podman Desktop from https://podman.io' }]
   }
   if (isLinux) {
     return [{ description: 'Install Docker Engine: https://docs.docker.com/engine/install/' }]
   }
-  return [{ description: 'Install Docker Desktop: https://www.docker.com/products/docker-desktop/' }]
+  return [
+    { description: 'Install Docker Desktop: https://www.docker.com/products/docker-desktop/' },
+  ]
 }
 
 function noRuntimeInstalled(): Problem {
@@ -89,5 +97,8 @@ function noRuntimeInstalled(): Problem {
 }
 
 function asAlternative(fix: ProblemFix): ProblemFix {
-  return { ...fix, description: `Or: ${fix.description.charAt(0).toLowerCase()}${fix.description.slice(1)}` }
+  return {
+    ...fix,
+    description: `Or: ${fix.description.charAt(0).toLowerCase()}${fix.description.slice(1)}`,
+  }
 }

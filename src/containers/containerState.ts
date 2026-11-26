@@ -25,7 +25,9 @@ export async function containerState(
   return exitCode === 0 ? toContainerState(stdout) : 'missing'
 }
 
-export async function allContainerStates(engine: ContainerEngine): Promise<Map<string, ContainerState>> {
+export async function allContainerStates(
+  engine: ContainerEngine,
+): Promise<Map<string, ContainerState>> {
   const { stdout } = await engine.capture([
     'ps',
     '--all',

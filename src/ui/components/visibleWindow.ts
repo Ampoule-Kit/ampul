@@ -5,7 +5,11 @@ export interface VisibleWindow {
   hasBelow: boolean
 }
 
-export function visibleWindow(itemCount: number, focusedIndex: number, maxVisible: number): VisibleWindow {
+export function visibleWindow(
+  itemCount: number,
+  focusedIndex: number,
+  maxVisible: number,
+): VisibleWindow {
   if (itemCount <= maxVisible) {
     return { start: 0, end: itemCount, hasAbove: false, hasBelow: false }
   }

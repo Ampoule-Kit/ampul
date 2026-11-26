@@ -29,8 +29,8 @@ export function Question({ title, explanation, children }: QuestionProps) {
 export function AnsweredQuestion({ title, answer }: { title: string; answer: string }) {
   return (
     <Text>
-      <Text color={colors.success}>{symbols.success}</Text> <Text color={colors.muted}>{title}</Text>{' '}
-      <Text>{answer}</Text>
+      <Text color={colors.success}>{symbols.success}</Text>{' '}
+      <Text color={colors.muted}>{title}</Text> <Text>{answer}</Text>
     </Text>
   )
 }

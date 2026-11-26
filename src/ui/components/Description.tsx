@@ -2,7 +2,13 @@ import { Box, Text } from 'ink'
 import type { ReactNode } from 'react'
 import { colors } from '../theme.js'
 
-export function Description({ children, color = colors.muted }: { children: ReactNode; color?: string }) {
+export function Description({
+  children,
+  color = colors.muted,
+}: {
+  children: ReactNode
+  color?: string
+}) {
   return (
     <Box
       borderStyle="bold"

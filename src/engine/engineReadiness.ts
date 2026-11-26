@@ -92,7 +92,10 @@ async function diagnosePodmanMachine(
       explanation: `The Podman machine '${machine.name}' is running, but Podman cannot connect to it.`,
       outputTail: errorOutput.split('\n'),
       fixes: [
-        { description: 'Check which connection Podman uses', command: 'podman system connection list' },
+        {
+          description: 'Check which connection Podman uses',
+          command: 'podman system connection list',
+        },
         {
           description: 'Restart the machine',
           command: `podman machine stop ${machine.name} && podman machine start ${machine.name}`,

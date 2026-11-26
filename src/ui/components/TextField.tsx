@@ -37,10 +37,14 @@ function applyKey(value: string, cursor: number, input: string, key: Key): EditR
     if (cursor === 0) return undefined
     return { value: value.slice(0, cursor - 1) + value.slice(cursor), cursor: cursor - 1 }
   }
-  if (key.ctrl || key.meta || key.upArrow || key.downArrow || key.tab || key.escape) return undefined
+  if (key.ctrl || key.meta || key.upArrow || key.downArrow || key.tab || key.escape)
+    return undefined
   if (!input) return undefined
   const typed = input.replace(/[\r\n]+/g, ' ')
-  return { value: value.slice(0, cursor) + typed + value.slice(cursor), cursor: cursor + typed.length }
+  return {
+    value: value.slice(0, cursor) + typed + value.slice(cursor),
+    cursor: cursor + typed.length,
+  }
 }
 
 export function TextField({

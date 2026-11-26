@@ -89,7 +89,10 @@ function containerCreationFailed(project: ProjectSettings, errorOutput: string):
       explanation: `One of the ports ${project.ports.join(', ')} is taken by another program or project.`,
       outputTail: errorOutput.trim().split('\n'),
       fixes: [
-        { description: 'Stop whatever uses it, or change the ports', command: `dev config ${project.name}` },
+        {
+          description: 'Stop whatever uses it, or change the ports',
+          command: `dev config ${project.name}`,
+        },
         { description: 'Then create the container again', command: `dev rebuild ${project.name}` },
       ],
     })

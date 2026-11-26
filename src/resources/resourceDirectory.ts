@@ -34,7 +34,9 @@ function repositoryRoot(): string {
 }
 
 function extractEmbeddedResources(): string {
-  const resources = JSON.parse(sea.getAsset(embeddedResourcesAssetName, 'utf8')) as EmbeddedResources
+  const resources = JSON.parse(
+    sea.getAsset(embeddedResourcesAssetName, 'utf8'),
+  ) as EmbeddedResources
   const resourcesRoot = path.join(devenvPaths.cache, 'resources')
   const destination = path.join(resourcesRoot, resources.fingerprint)
   if (fs.existsSync(path.join(destination, completionMarker))) return destination

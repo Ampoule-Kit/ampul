@@ -20,7 +20,11 @@ const nonInteractiveGitEnvironment = [
   'GIT_SSH_COMMAND=ssh -o BatchMode=yes',
 ]
 
-export function cloneCommand(projectName: string, repository: string, interactive: boolean): string[] {
+export function cloneCommand(
+  projectName: string,
+  repository: string,
+  interactive: boolean,
+): string[] {
   return [
     'exec',
     ...(interactive ? ['--interactive', '--tty'] : nonInteractiveGitEnvironment),
@@ -82,11 +86,18 @@ export async function copyFolderIntoContainer(
   if (!fs.existsSync(source.folder)) {
     throw new Problem(`${source.folder} no longer exists`, {
       explanation: 'The project copies its code from this folder, but it was moved or deleted.',
-      fixes: [{ description: 'Point the project at another folder', command: `dev config ${project.name}` }],
+      fixes: [
+        {
+          description: 'Point the project at another folder',
+          command: `dev config ${project.name}`,
+        },
+      ],
     })
   }
   const entries = source.onlyGitFiles ? await filesGitWouldKeep(source.folder) : ['.']
-  context.detail(`${entries.length === 1 ? 'all files' : `${entries.length} files`} from ${source.folder}`)
+  context.detail(
+    `${entries.length === 1 ? 'all files' : `${entries.length} files`} from ${source.folder}`,
+  )
   const { exitCode, errorOutput } = await replaceContainerFolder(
     engine,
     project.name,

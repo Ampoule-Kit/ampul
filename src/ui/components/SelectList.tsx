@@ -61,21 +61,22 @@ export function SelectList<Value>({
   const focused = options[focusedIndex]
   return (
     <Box flexDirection="column">
-      {visible.hasAbove && <Text color={colors.muted}>  ↑ more</Text>}
+      {visible.hasAbove && <Text color={colors.muted}> ↑ more</Text>}
       {options.slice(visible.start, visible.end).map((option, offset) => {
         const isFocused = visible.start + offset === focusedIndex
-        const color = option.tone === 'danger' ? colors.danger : isFocused ? colors.accent : undefined
+        const color =
+          option.tone === 'danger' ? colors.danger : isFocused ? colors.accent : undefined
         return (
           <Text key={option.label}>
             <Text color={colors.accent}>{isFocused ? symbols.pointer : ' '}</Text>{' '}
             <Text color={color} bold={isFocused}>
               {option.label}
             </Text>
-            {option.hint && <Text color={colors.muted}>  {option.hint}</Text>}
+            {option.hint && <Text color={colors.muted}> {option.hint}</Text>}
           </Text>
         )
       })}
-      {visible.hasBelow && <Text color={colors.muted}>  ↓ more</Text>}
+      {visible.hasBelow && <Text color={colors.muted}> ↓ more</Text>}
       {focused?.description && <Description>{focused.description}</Description>}
       <KeyHints
         hints={[

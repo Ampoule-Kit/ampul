@@ -41,11 +41,7 @@ export function parseLegacySettings(fileContent: string): ProjectSettings {
 
 function unquoteBashValue(rawValue: string): string {
   if (rawValue.startsWith("$'") && rawValue.endsWith("'")) {
-    return rawValue
-      .slice(2, -1)
-      .replace(/\\n/g, '\n')
-      .replace(/\\t/g, '\t')
-      .replace(/\\(.)/g, '$1')
+    return rawValue.slice(2, -1).replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\(.)/g, '$1')
   }
   let value = ''
   let insideSingleQuotes = false

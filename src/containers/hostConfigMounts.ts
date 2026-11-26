@@ -43,16 +43,32 @@ export async function hostConfigMounts(): Promise<HostMount[]> {
   const sshDirectory = path.join(homeDirectory, '.ssh')
 
   if (isFile(gitConfig)) {
-    mounts.push({ hostPath: gitConfig, containerPath: `${hostDirectory}/gitconfig`, readOnly: true })
+    mounts.push({
+      hostPath: gitConfig,
+      containerPath: `${hostDirectory}/gitconfig`,
+      readOnly: true,
+    })
   }
   if (isFile(xdgGitConfig())) {
-    mounts.push({ hostPath: xdgGitConfig(), containerPath: `${hostDirectory}/gitconfig-xdg`, readOnly: true })
+    mounts.push({
+      hostPath: xdgGitConfig(),
+      containerPath: `${hostDirectory}/gitconfig-xdg`,
+      readOnly: true,
+    })
   }
   if (isFile(gitCredentials)) {
-    mounts.push({ hostPath: gitCredentials, containerPath: `${containerHome()}/.git-credentials`, readOnly: false })
+    mounts.push({
+      hostPath: gitCredentials,
+      containerPath: `${containerHome()}/.git-credentials`,
+      readOnly: false,
+    })
   }
   if (isFile(excludesFile)) {
-    mounts.push({ hostPath: excludesFile, containerPath: `${hostDirectory}/gitignore_global`, readOnly: true })
+    mounts.push({
+      hostPath: excludesFile,
+      containerPath: `${hostDirectory}/gitignore_global`,
+      readOnly: true,
+    })
   }
   if (isDirectory(sshDirectory)) {
     mounts.push({ hostPath: sshDirectory, containerPath: `${hostDirectory}/ssh`, readOnly: true })

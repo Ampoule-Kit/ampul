@@ -48,10 +48,15 @@ function feedInput(child: ChildProcess, input: ProcessOptions['input']): void {
   }
 }
 
-function waitForExit(child: ChildProcess, onStartFailure: (message: string) => void): Promise<number> {
+function waitForExit(
+  child: ChildProcess,
+  onStartFailure: (message: string) => void,
+): Promise<number> {
   return new Promise((resolve) => {
     child.on('error', (error: NodeJS.ErrnoException) => {
-      onStartFailure(error.code === 'ENOENT' ? `${child.spawnfile}: command not found` : error.message)
+      onStartFailure(
+        error.code === 'ENOENT' ? `${child.spawnfile}: command not found` : error.message,
+      )
       resolve(commandNotFoundExitCode)
     })
     child.on('close', (exitCode, signal) => resolve(exitCode ?? (signal ? 128 : 1)))

@@ -21,7 +21,10 @@ export async function startContainer(engine: ContainerEngine, projectName: strin
       outputTail: stderr.trim().split('\n'),
       fixes: portInUse
         ? [
-            { description: 'Stop the program that uses the port, or change the ports', command: `dev config ${projectName}` },
+            {
+              description: 'Stop the program that uses the port, or change the ports',
+              command: `dev config ${projectName}`,
+            },
             { description: 'Then recreate the container', command: `dev rebuild ${projectName}` },
           ]
         : [{ description: 'Recreate the container', command: `dev rebuild ${projectName}` }],
@@ -34,7 +37,12 @@ export async function stopContainer(engine: ContainerEngine, projectName: string
   if (exitCode !== 0) {
     throw new Problem(`The container for '${projectName}' did not stop`, {
       outputTail: stderr.trim().split('\n'),
-      fixes: [{ description: 'Force it to stop', command: `${engine.runtime} kill ${containerName(projectName)}` }],
+      fixes: [
+        {
+          description: 'Force it to stop',
+          command: `${engine.runtime} kill ${containerName(projectName)}`,
+        },
+      ],
     })
   }
 }
@@ -62,15 +70,29 @@ export async function removeImage(engine: ContainerEngine, projectName: string):
   await engine.capture(['rmi', '--force', imageName(projectName)])
 }
 
-export async function removeInnerEngineVolume(engine: ContainerEngine, projectName: string): Promise<void> {
+export async function removeInnerEngineVolume(
+  engine: ContainerEngine,
+  projectName: string,
+): Promise<void> {
   const volume = innerEngineVolumeName(projectName)
   const { exitCode } = await engine.capture(['volume', 'inspect', volume])
   if (exitCode === 0) await engine.capture(['volume', 'rm', '--force', volume])
 }
 
-async function idsMatching(engine: ContainerEngine, listCommand: string[], label: string): Promise<string[]> {
+async function idsMatching(
+  engine: ContainerEngine,
+  listCommand: string[],
+  label: string,
+): Promise<string[]> {
   const { stdout } = await engine.capture([...listCommand, '--quiet', '--filter', `label=${label}`])
-  return [...new Set(stdout.split('\n').map((id) => id.trim()).filter(Boolean))]
+  return [
+    ...new Set(
+      stdout
+        .split('\n')
+        .map((id) => id.trim())
+        .filter(Boolean),
+    ),
+  ]
 }
 
 export async function removeEveryDevenvContainer(engine: ContainerEngine): Promise<void> {

@@ -37,7 +37,17 @@ export async function runContainerSetup(
 ): Promise<void> {
   const setupScript = fs.readFileSync(resourcePath('container', 'setup.sh'))
   const exitCode = await engine.stream(
-    ['exec', '--interactive', '--user', containerUser(), containerName(projectName), 'bash', '-s', '--', homeDirectory],
+    [
+      'exec',
+      '--interactive',
+      '--user',
+      containerUser(),
+      containerName(projectName),
+      'bash',
+      '-s',
+      '--',
+      homeDirectory,
+    ],
     {
       input: setupScript,
       onOutput: context.output,
@@ -56,7 +66,10 @@ export async function runContainerSetup(
     throw new Problem('The in-container setup failed', {
       explanation: 'Neovim, git and SSH may be only partly set up.',
       fixes: [
-        { description: 'Read the log, then run the setup again', command: `dev setup ${projectName}` },
+        {
+          description: 'Read the log, then run the setup again',
+          command: `dev setup ${projectName}`,
+        },
       ],
     })
   }

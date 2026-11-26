@@ -40,7 +40,11 @@ export async function listPodmanMachines(engine: ContainerEngine): Promise<Podma
 }
 
 export function preferredMachine(machines: PodmanMachine[]): PodmanMachine | undefined {
-  return machines.find((machine) => machine.isRunning) ?? machines.find((machine) => machine.isDefault) ?? machines[0]
+  return (
+    machines.find((machine) => machine.isRunning) ??
+    machines.find((machine) => machine.isDefault) ??
+    machines[0]
+  )
 }
 
 export function machineMemoryCommand(machineName: string): string {

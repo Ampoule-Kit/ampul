@@ -7,7 +7,10 @@ const extractIntoFreshFolderScript =
   'rm -rf "$1" && mkdir -p "$1" && tar --warning=no-unknown-keyword -xf - -C "$1"'
 
 export function archiveOf(directory: string, entries: string[] = ['.']): Readable {
-  return createTarStream({ cwd: directory, portable: true, follow: false }, entries) as unknown as Readable
+  return createTarStream(
+    { cwd: directory, portable: true, follow: false },
+    entries,
+  ) as unknown as Readable
 }
 
 export async function replaceContainerFolder(

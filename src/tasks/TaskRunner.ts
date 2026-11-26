@@ -120,7 +120,9 @@ export class TaskRunner {
   private failureProblem(error: unknown, state: TaskState): Problem {
     const problem = asProblem(error)
     const outputTail =
-      problem.outputTail.length > 0 ? problem.outputTail : state.recentOutput.slice(-failureOutputLines)
+      problem.outputTail.length > 0
+        ? problem.outputTail
+        : state.recentOutput.slice(-failureOutputLines)
     return new Problem(problem.title, {
       explanation: problem.explanation,
       fixes: problem.fixes,
