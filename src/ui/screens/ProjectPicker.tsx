@@ -27,7 +27,7 @@ export function ProjectPicker({ title, projects, states, finish }: ProjectPicker
         options={projects.map((project) => ({
           value: project.name,
           label: project.name,
-          hint: `${stateMarker(states.get(project.name))}  ${describeCodeSource(project.codeSource)}`,
+          hint: `${stateMarker(states.get(project.name) ?? 'missing')}  ${describeCodeSource(project.codeSource)}`,
           description: `Tools: ${describeTools(project)}\nPorts: ${describePorts(project.ports)}`,
         }))}
         onSelect={finish}

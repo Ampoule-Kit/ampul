@@ -20,6 +20,7 @@ export interface StreamingOptions extends ProcessOptions {
 }
 
 const commandNotFoundExitCode = 127
+const runningChildren = new Set<ChildProcess>()
 
 function startProcess(
   executable: string,
@@ -27,13 +28,20 @@ function startProcess(
   options: ProcessOptions,
   stdio: 'pipe' | 'inherit',
 ): ChildProcess {
-  return spawn(executable, args, {
+  const child = spawn(executable, args, {
     cwd: options.workingDirectory,
     env: { ...process.env, ...options.environment },
     stdio: stdio === 'inherit' ? 'inherit' : ['pipe', 'pipe', 'pipe'],
     timeout: options.timeoutMilliseconds,
     windowsHide: true,
   })
+  runningChildren.add(child)
+  child.on('close', () => runningChildren.delete(child))
+  return child
+}
+
+export function stopRunningProcesses(): void {
+  for (const child of runningChildren) child.kill('SIGTERM')
 }
 
 function feedInput(child: ChildProcess, input: ProcessOptions['input']): void {

@@ -148,9 +148,12 @@ export function ReviewStep({
         <Box flexDirection="column" marginTop={1}>
           <Text bold>What happens next</Text>
           {plannedSteps(project).map((step, index) => (
-            <Text key={step}>
-              <Text color={colors.accent}>{index + 1}.</Text> {step}
-            </Text>
+            <Box key={step}>
+              <Box width={3} flexShrink={0}>
+                <Text color={colors.accent}>{index + 1}.</Text>
+              </Box>
+              <Text>{step}</Text>
+            </Box>
           ))}
         </Box>
       )}

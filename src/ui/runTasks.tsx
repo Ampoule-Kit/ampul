@@ -1,5 +1,6 @@
-import { render } from 'ink'
 import chalk from 'chalk'
+import { render, Text, useInput } from 'ink'
+import { stopRunningProcesses } from '../system/processes.js'
 import type { LogFile } from '../tasks/LogFile.js'
 import {
   TaskRunner,
@@ -8,8 +9,10 @@ import {
   type TaskRunResult,
 } from '../tasks/TaskRunner.js'
 import { TaskProgressView } from './components/TaskProgressView.js'
-import { isInteractiveTerminal } from './terminal.js'
-import { symbols } from './theme.js'
+import { isInteractiveTerminal, printElement } from './terminal.js'
+import { colors, symbols } from './theme.js'
+
+const interruptedExitCode = 130
 
 const plainOutputObserver: TaskObserver = {
   taskStarted: (title) => process.stdout.write(chalk.bold(`==> ${title}\n`)),
@@ -17,11 +20,31 @@ const plainOutputObserver: TaskObserver = {
   warning: (message) => process.stderr.write(chalk.yellow(`${symbols.warning} ${message}\n`)),
 }
 
+function interrupt(logFile: LogFile): never {
+  stopRunningProcesses()
+  printElement(
+    <Text color={colors.warning}>
+      {symbols.warning} Stopped before finishing. Run the same command again to finish the job. The
+      log is in {logFile.path}
+    </Text>,
+  )
+  process.exit(interruptedExitCode)
+}
+
+function InterruptibleProgress({ runner, logFile }: { runner: TaskRunner; logFile: LogFile }) {
+  useInput((input, key) => {
+    if (key.ctrl && input === 'c') interrupt(logFile)
+  })
+  return <TaskProgressView runner={runner} />
+}
+
 export async function runTasks(tasks: Task[], logFile: LogFile): Promise<TaskRunResult> {
   if (!isInteractiveTerminal()) return new TaskRunner(tasks, logFile, plainOutputObserver).run()
 
   const runner = new TaskRunner(tasks, logFile)
-  const instance = render(<TaskProgressView runner={runner} />, { exitOnCtrlC: true })
+  const instance = render(<InterruptibleProgress runner={runner} logFile={logFile} />, {
+    exitOnCtrlC: false,
+  })
   const result = await runner.run()
   await instance.waitUntilRenderFlush()
   instance.unmount()

@@ -89,7 +89,7 @@ function ProjectList({ projects, states, finish }: Omit<HomeScreenProps, 'runtim
     <Box flexDirection="column">
       {projects.map((project, index) => {
         const isFocused = index === focusedIndex
-        const state = states.get(project.name)
+        const state = states.get(project.name) ?? 'missing'
         return (
           <Box key={project.name}>
             <Text color={colors.accent}>{isFocused ? symbols.pointer : ' '} </Text>

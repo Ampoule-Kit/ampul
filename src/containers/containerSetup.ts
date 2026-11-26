@@ -9,6 +9,13 @@ import { containerHome, containerName, containerUser } from './naming.js'
 
 const setupStepPrefix = '==> '
 const setupWarningPrefix = 'WARNING: '
+const failedToolPrefix = 'Failed to install: '
+const listedAboveMarker = ' (listed above)'
+
+function specificWarning(warning: string, failedTools: string[]): string {
+  if (!warning.includes(listedAboveMarker) || failedTools.length === 0) return warning
+  return warning.replace(listedAboveMarker, `: ${failedTools.join(', ')}`)
+}
 
 export async function copyDotfilesIntoContainer(
   engine: ContainerEngine,
@@ -36,6 +43,7 @@ export async function runContainerSetup(
   context: TaskContext,
 ): Promise<void> {
   const setupScript = fs.readFileSync(resourcePath('container', 'setup.sh'))
+  const failedTools: string[] = []
   const exitCode = await engine.stream(
     [
       'exec',
@@ -55,8 +63,10 @@ export async function runContainerSetup(
         if (line.startsWith(setupStepPrefix)) {
           context.detail(line.slice(setupStepPrefix.length))
         } else if (line.startsWith(setupWarningPrefix)) {
-          context.warn(line.slice(setupWarningPrefix.length))
+          context.warn(specificWarning(line.slice(setupWarningPrefix.length), failedTools))
         } else {
+          if (line.startsWith(failedToolPrefix))
+            failedTools.push(line.slice(failedToolPrefix.length))
           context.outputLine(line)
         }
       },

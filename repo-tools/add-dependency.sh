@@ -7,16 +7,14 @@ DOWNLOAD_URLS_FILE=$REPO_DIR/image/download-urls.sh
 OPTIONAL_DEPENDENCIES_FILE=$REPO_DIR/image/optional-dependencies
 CONTAINERFILE=$REPO_DIR/image/Containerfile
 TOOLS_DIR=$REPO_DIR/image/tools
-RESERVED_SETTINGS="PROJECT_NAME CODE_SOURCE REPOSITORIES COPY_FOLDER COPY_GIT_FILES_ONLY DOTNET_SDKS PORTS UBUNTU_IMAGE CONTAINER_USER RUNTIME"
+RESERVED_SETTINGS="PROJECT_NAME CODE_SOURCE REPOSITORIES COPY_FOLDER COPY_GIT_FILES_ONLY DOTNET_SDKS PORTS UBUNTU_IMAGE"
 
 die() {
   printf 'Error: %s\n' "$*" >&2
   exit 1
 }
 
-. "$REPO_DIR/devenv.conf"
-. "$REPO_DIR/cli/engine.sh"
-. "$REPO_DIR/cli/prompts.sh"
+. "$REPO_DIR/repo-tools/shell-helpers.sh"
 . "$REPO_DIR/repo-tools/pinning.sh"
 . "$REPO_DIR/repo-tools/install-test.sh"
 
@@ -73,6 +71,14 @@ prompt_label() {
     LABEL=$(ask_required "Label shown by dev new (for example Rust toolchain)")
     [[ "$LABEL" != *"|"* ]] && break
     echo "  The label can't contain '|'."
+  done
+}
+
+prompt_description() {
+  while true; do
+    DESCRIPTION=$(ask_required "One sentence dev new shows to explain it (for example The Rust compiler, cargo and rustup)")
+    [[ "$DESCRIPTION" != *"|"* ]] && break
+    echo "  The description can't contain '|'."
   done
 }
 
@@ -275,7 +281,7 @@ write_single_executable_script() {
 }
 
 stage_optional_dependency() {
-  echo "$SETTING|yes-no|$LABEL" >>"$STAGED_OPTIONAL_DEPENDENCIES"
+  echo "$SETTING|yes-no|$LABEL|$DESCRIPTION" >>"$STAGED_OPTIONAL_DEPENDENCIES"
   awk -v setting="$SETTING" -v script="$NAME.sh" '
     /^ARG USER_NAME=/ && !done {
       print "ARG WITH_" setting "="
@@ -338,6 +344,7 @@ build_install_test_base "$(variable_value "$VERSIONS_FILE" UBUNTU_IMAGE)"
 stage_repository_files
 prompt_dependency_name
 prompt_label
+prompt_description
 prompt_install_method
 EXECUTABLES=
 if [ "$INSTALL_METHOD" = packages ]; then

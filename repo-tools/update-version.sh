@@ -9,8 +9,7 @@ die() {
   exit 1
 }
 
-. "$REPO_DIR/devenv.conf"
-. "$REPO_DIR/cli/engine.sh"
+. "$REPO_DIR/repo-tools/shell-helpers.sh"
 . "$REPO_DIR/repo-tools/pinning.sh"
 . "$REPO_DIR/repo-tools/install-test.sh"
 

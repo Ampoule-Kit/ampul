@@ -53,14 +53,16 @@ export async function openShell(
   engine: ContainerEngine,
   project: ProjectSettings,
 ): Promise<number> {
-  const ports = project.ports.map((port) => `localhost:${port}`).join(' ')
+  const details = [
+    '~/Project',
+    ...project.ports.map((port) => `localhost:${port}`),
+    'leave with exit or ctrl+d',
+  ]
   printElement(
     <Text>
       <Text color={colors.accent}>{symbols.arrow}</Text> Connecting to{' '}
       <Text bold>{project.name}</Text>
-      <Text color={colors.muted}>
-        {'  '}~/Project{ports && `  ·  ${ports}`} · leave with exit or ctrl+d
-      </Text>
+      <Text color={colors.muted}> {details.join('  ·  ')}</Text>
     </Text>,
   )
   const exitCode = await engine.attach(shellCommand(project.name))
