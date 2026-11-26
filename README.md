@@ -54,7 +54,7 @@ dev              # see every project and act on it with single keys
 1. **The code.** Either git repositories (HTTPS or SSH), cloned side by side into `~/Project/<repo-name>`, or a folder on this machine, copied into `~/Project/<folder-name>` (tab completes folder names). For a git repository you can copy only what git tracks or doesn't ignore, which leaves out `node_modules`, `bin`, `obj`, `.env` and other ignored files.
 2. **The name**, suggested from the code.
 3. **Extra tools**, picked from a list that explains each one: .NET SDKs side by side, Java, Godot (standard or .NET), Python, and a container engine inside the container.
-4. **Ports** your apps listen on that this machine should reach at `localhost`.
+4. **Ports** your apps listen on that this machine should reach at `localhost`: pick common ones from a list (Angular, Vite, ASP.NET Core, Spring Boot, the Node and Java debuggers, PostgreSQL, Redis and more), and add your own ports and ranges such as `3000-3009`.
 
 A review then shows the choices, the container runtime in use, and what is about to happen. Esc goes back a step at any point. While the project builds, each step shows its progress (the image build with a progress bar and the tool being installed), the latest output and its duration. Repositories that need a password or SSH passphrase are cloned afterwards in the terminal, where git can ask for it. At the end, `dev new` offers to connect.
 
@@ -112,7 +112,9 @@ Each container runs its own `ssh-agent`. With `AddKeysToAgent yes` in your SSH c
 
 ### Ports
 
-Each port you list is published on the host's `127.0.0.1`. Apps in the container don't need to listen on `0.0.0.0`: a forwarder in the container passes each port on to the app's `127.0.0.1`, so dev servers that bind to localhost by default (Angular, Vite, ASP.NET) work unchanged. Node is set to prefer IPv4, so `localhost` in Node means `127.0.0.1`.
+Pick common ports from the list, or choose **Other ports and ranges** to add your own: a single port (`8081`), a range (`3000-3009`), or several at once (`3000-3009 8000-8005 9000`). Each entry is checked as you add it: ports run from 1 to 65535, a range can't run backwards or overlap one already in the list, and a project forwards at most 100 ports. Ports 61000–61099 are kept for devenv's own forwarding. You are warned when another project forwards the same port, and when a port below 1024 needs extra setup with rootless Podman.
+
+Each port is published on the host's `127.0.0.1`. Apps in the container don't need to listen on `0.0.0.0`: a forwarder in the container passes each port on to the app's `127.0.0.1`, so dev servers that bind to localhost by default (Angular, Vite, ASP.NET) work unchanged. Node is set to prefer IPv4, so `localhost` in Node means `127.0.0.1`.
 
 To change the ports, run `dev config <name>`, then `dev rebuild <name>`.
 

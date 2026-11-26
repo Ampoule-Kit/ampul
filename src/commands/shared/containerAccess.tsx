@@ -4,6 +4,7 @@ import { containerName } from '../../containers/naming.js'
 import { shellCommand, startContainer } from '../../containers/projectLifecycle.js'
 import type { ContainerEngine } from '../../engine/ContainerEngine.js'
 import { Problem } from '../../problems/Problem.js'
+import { formatPortRange, portRanges } from '../../projects/ports.js'
 import type { ProjectSettings } from '../../projects/ProjectSettings.js'
 import { LogFile } from '../../tasks/LogFile.js'
 import { runTasks } from '../../ui/runTasks.js'
@@ -55,7 +56,7 @@ export async function openShell(
 ): Promise<number> {
   const details = [
     '~/Project',
-    ...project.ports.map((port) => `localhost:${port}`),
+    ...portRanges(project.ports).map((range) => `localhost:${formatPortRange(range)}`),
     'leave with exit or ctrl+d',
   ]
   printElement(

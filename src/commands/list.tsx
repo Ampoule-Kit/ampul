@@ -8,6 +8,7 @@ import {
 import { createEngine, diagnoseEngine } from '../engine/engineReadiness.js'
 import type { Problem } from '../problems/Problem.js'
 import { describeCodeSource } from '../projects/codeSources.js'
+import { formatPortList } from '../projects/ports.js'
 import { listProjects } from '../projects/projectStore.js'
 import { selectedToolNames } from '../projects/projectSummary.js'
 import type { ProjectSettings } from '../projects/ProjectSettings.js'
@@ -49,7 +50,7 @@ function stateText(state: ContainerState | undefined): string {
 function ProjectTable({ rows }: { rows: ProjectRow[] }) {
   const nameWidth = Math.max(7, ...rows.map((row) => row.project.name.length)) + columnGap
   const stateWidth = Math.max(...rows.map((row) => stateText(row.state).length)) + columnGap
-  const portsText = (project: ProjectSettings) => project.ports.join(' ') || '–'
+  const portsText = (project: ProjectSettings) => formatPortList(project.ports) || '–'
   const portsWidth = Math.max(5, ...rows.map((row) => portsText(row.project).length)) + columnGap
   return (
     <Box flexDirection="column">

@@ -1,4 +1,5 @@
 import { dependencyCatalog } from '../resources/dependencyCatalog.js'
+import { formatPortRange, portRanges } from './ports.js'
 import type { DependencySelection, ProjectSettings } from './ProjectSettings.js'
 
 export function selectedToolNames(selection: DependencySelection): string[] {
@@ -13,7 +14,9 @@ export function selectedToolNames(selection: DependencySelection): string[] {
 }
 
 export function describePorts(ports: number[]): string {
-  return ports.length > 0 ? ports.map((port) => `localhost:${port}`).join(', ') : 'none'
+  const ranges = portRanges(ports)
+  if (ranges.length === 0) return 'none'
+  return ranges.map((range) => `localhost:${formatPortRange(range)}`).join(', ')
 }
 
 export function describeTools(project: ProjectSettings): string {

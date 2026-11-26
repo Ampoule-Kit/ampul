@@ -1,3 +1,5 @@
+import { presetRanges, presetsCoveredBy } from '../../projects/portPresets.js'
+import { combinePorts, portRanges, type PortRange } from '../../projects/ports.js'
 import type { ProjectSettings } from '../../projects/ProjectSettings.js'
 
 export interface ProjectDraft {
@@ -8,7 +10,9 @@ export interface ProjectDraft {
   name: string
   dotnetSdks: string[]
   optionalDependencies: Record<string, string>
-  ports: number[]
+  portPresetIds: string[]
+  addsOtherPorts: boolean
+  otherPortRanges: PortRange[]
 }
 
 export function emptyDraft(name = ''): ProjectDraft {
@@ -20,12 +24,15 @@ export function emptyDraft(name = ''): ProjectDraft {
     name,
     dotnetSdks: [],
     optionalDependencies: {},
-    ports: [],
+    portPresetIds: [],
+    addsOtherPorts: false,
+    otherPortRanges: [],
   }
 }
 
 export function draftFromSettings(settings: ProjectSettings): ProjectDraft {
   const source = settings.codeSource
+  const { presetIds, otherPorts } = presetsCoveredBy(settings.ports)
   return {
     codeSourceKind: source.kind,
     repositories: source.kind === 'repositories' ? source.repositories : [],
@@ -34,7 +41,9 @@ export function draftFromSettings(settings: ProjectSettings): ProjectDraft {
     name: settings.name,
     dotnetSdks: settings.dotnetSdks,
     optionalDependencies: settings.optionalDependencies,
-    ports: settings.ports,
+    portPresetIds: presetIds,
+    addsOtherPorts: otherPorts.length > 0,
+    otherPortRanges: portRanges(otherPorts),
   }
 }
 
@@ -47,6 +56,11 @@ export function settingsFromDraft(draft: ProjectDraft): ProjectSettings {
         : { kind: 'folder', folder: draft.folder, onlyGitFiles: draft.onlyGitFiles },
     dotnetSdks: draft.dotnetSdks,
     optionalDependencies: draft.optionalDependencies,
-    ports: draft.ports,
+    ports: draftPorts(draft),
   }
+}
+
+export function draftPorts(draft: ProjectDraft): number[] {
+  const otherRanges = draft.addsOtherPorts ? draft.otherPortRanges : []
+  return combinePorts([...presetRanges(draft.portPresetIds), ...otherRanges])
 }

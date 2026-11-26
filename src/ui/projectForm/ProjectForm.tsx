@@ -8,6 +8,7 @@ import { DependenciesStep, describeDependencies } from './DependenciesStep.js'
 import { describeFolder, FolderStep } from './FolderStep.js'
 import { describeGitFiles, GitFilesStep } from './GitFilesStep.js'
 import { NameStep } from './NameStep.js'
+import { describeOtherPorts, OtherPortsStep } from './OtherPortsStep.js'
 import { describePortsAnswer, PortsStep } from './PortsStep.js'
 import type { ProjectDraft } from './ProjectDraft.js'
 import { describeRepositories, RepositoriesStep } from './RepositoriesStep.js'
@@ -25,7 +26,7 @@ interface ProjectFormProps {
   finish: Finish<ProjectFormResult | undefined>
 }
 
-const stepsOfferedForChanges = new Set(['code', 'name', 'tools', 'ports'])
+const stepsOfferedForChanges = new Set(['code', 'name', 'tools', 'ports', 'other-ports'])
 
 function questionSteps(askForName: boolean): WizardStep<ProjectDraft>[] {
   return [
@@ -78,6 +79,14 @@ function questionSteps(askForName: boolean): WizardStep<ProjectDraft>[] {
       title: 'Ports',
       summary: describePortsAnswer,
       render: (controls) => <PortsStep {...controls} />,
+    },
+    {
+      id: 'other-ports',
+      title: 'Other ports',
+      isSkipped: (draft) => !draft.addsOtherPorts,
+      isComplete: (draft) => draft.otherPortRanges.length > 0,
+      summary: describeOtherPorts,
+      render: (controls) => <OtherPortsStep {...controls} />,
     },
   ]
 }

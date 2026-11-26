@@ -1,6 +1,6 @@
 import type { ContainerEngine } from '../engine/ContainerEngine.js'
 import { Problem } from '../problems/Problem.js'
-import { forwardedContainerPort } from '../projects/ports.js'
+import { formatPortList, formatPortRange, portForwards, portsInRange } from '../projects/ports.js'
 import type { ProjectSettings } from '../projects/ProjectSettings.js'
 import type { TaskContext } from '../tasks/TaskRunner.js'
 import { hostConfigMounts, volumeArgument } from './hostConfigMounts.js'
@@ -72,11 +72,14 @@ export async function createContainer(
     )
   }
 
-  const forwards = project.ports.map((port, index) => `${port}:${forwardedContainerPort(index)}`)
-  for (const [index, port] of project.ports.entries()) {
-    args.push('--publish', `127.0.0.1:${port}:${forwardedContainerPort(index)}`)
+  const forwards = portForwards(project.ports)
+  for (const { host, container } of forwards) {
+    args.push('--publish', `127.0.0.1:${formatPortRange(host)}:${formatPortRange(container)}`)
   }
-  args.push('--env', `DEVENV_PORT_FORWARDS=${forwards.join(' ')}`, imageName(project.name))
+  const socatForwards = forwards.flatMap(({ host, container }) =>
+    portsInRange(host).map((port, offset) => `${port}:${container.first + offset}`),
+  )
+  args.push('--env', `DEVENV_PORT_FORWARDS=${socatForwards.join(' ')}`, imageName(project.name))
 
   const { exitCode, stderr } = await engine.capture(args)
   context.output(stderr)
@@ -86,7 +89,7 @@ export async function createContainer(
 function containerCreationFailed(project: ProjectSettings, errorOutput: string): Problem {
   if (/address already in use|port is already allocated/i.test(errorOutput)) {
     return new Problem('A port is already in use on this machine', {
-      explanation: `One of the ports ${project.ports.join(', ')} is taken by another program or project.`,
+      explanation: `One of the ports ${formatPortList(project.ports)} is taken by another program or project.`,
       outputTail: errorOutput.trim().split('\n'),
       fixes: [
         {

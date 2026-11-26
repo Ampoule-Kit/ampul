@@ -9,6 +9,7 @@ import {
 } from '../../containers/projectCode.js'
 import type { ContainerEngine } from '../../engine/ContainerEngine.js'
 import { codeSourceFolderNames, repositoryFolderName } from '../../projects/codeSources.js'
+import { formatPortRange, portRanges } from '../../projects/ports.js'
 import type { ProjectSettings } from '../../projects/ProjectSettings.js'
 import { displayPath } from '../../system/platform.js'
 import { LogFile } from '../../tasks/LogFile.js'
@@ -103,9 +104,10 @@ function ReadySummary({
       {folders.map((folder) => (
         <Bullet key={folder}>Code in ~/Project/{folder}</Bullet>
       ))}
-      {project.ports.map((port) => (
-        <Bullet key={port}>
-          localhost:{port} on this machine reaches port {port} in the container
+      {portRanges(project.ports).map((range) => (
+        <Bullet key={range.first}>
+          localhost:{formatPortRange(range)} on this machine reaches{' '}
+          {range.first === range.last ? 'port' : 'ports'} {formatPortRange(range)} in the container
         </Bullet>
       ))}
       {unclonedRepositories.map((repository) => (
