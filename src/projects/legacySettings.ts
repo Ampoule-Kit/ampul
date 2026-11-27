@@ -7,7 +7,6 @@ const settingsThatAreNotDependencies = new Set([
   'REPOSITORIES',
   'COPY_FOLDER',
   'COPY_GIT_FILES_ONLY',
-  'DOTNET_SDKS',
   'PORTS',
 ])
 
@@ -68,7 +67,6 @@ export function parseLegacySettings(
   return settingsBeforeModulesSchema.parse({
     name: projectName,
     codeSource,
-    dotnetSdks: words('DOTNET_SDKS'),
     optionalDependencies,
     ports: words('PORTS').map(Number),
   })

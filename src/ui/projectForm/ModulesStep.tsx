@@ -4,6 +4,7 @@ import {
   describeConflict,
   describeModuleSelection,
   moduleVersionText,
+  mutuallyExclusiveIds,
   requiringModuleLabels,
   selectionConflicts,
 } from '../../modules/moduleSelection.ts'
@@ -22,7 +23,7 @@ function moduleOptions(catalog: ModuleCatalog): MultiSelectOption<string>[] {
     hint: moduleVersionText(module) || undefined,
     section: module.section,
     description: module.description,
-    exclusiveGroup: module.exclusiveGroup,
+    exclusiveWith: mutuallyExclusiveIds(module, catalog),
   }))
 }
 

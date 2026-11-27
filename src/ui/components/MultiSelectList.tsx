@@ -13,7 +13,7 @@ export interface MultiSelectOption<Value> {
   hint?: string | undefined
   description?: string | undefined
   section?: string | undefined
-  exclusiveGroup?: string | undefined
+  exclusiveWith?: Value[] | undefined
 }
 
 interface MultiSelectListProps<Value> {
@@ -101,7 +101,7 @@ export function MultiSelectList<Value>({
       setLockedNotice(`${focusedOption.label} stays selected: ${requiredReason}.`)
       return
     }
-    const toggled = toggleSelection(selection, focusedOption, options)
+    const toggled = toggleSelection(selection, focusedOption)
     const problem = selectionProblem?.(toggled)
     setLockedNotice(problem === undefined ? undefined : `${problem}.`)
     if (problem === undefined) setSelection(toggled)
@@ -142,7 +142,7 @@ export function MultiSelectList<Value>({
               requiredReason={requiredReasons.get(option.value)}
               isFocused={index === navigation.focusedIndex}
               isSelected={effectiveSelection.includes(option.value)}
-              isExclusive={option.exclusiveGroup !== undefined}
+              isExclusive={(option.exclusiveWith ?? []).length > 0}
             />
           </Fragment>
         )

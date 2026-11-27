@@ -36,22 +36,23 @@ The latest version comes from the module's `latestVersion` when it has one, and 
 
 ## module.json
 
-| Field               | Meaning                                                                                                                  |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `label`             | Required. The name shown by `ampul new` and `ampul config`.                                                              |
-| `description`       | Required. One or two sentences shown with it.                                                                            |
-| `check`             | Required. A command that proves the tool works once installed.                                                           |
-| `version`           | The version its downloads use, unless a download has its own.                                                            |
-| `latestVersion`     | Where updates find the latest `version`: `{ "url": ..., "match": ... }`, see below.                                      |
-| `selectedByDefault` | Whether new projects get it.                                                                                             |
-| `requires`          | Ids of the modules it needs. They are selected with it and installed before it.                                          |
-| `exclusiveGroup`    | Modules with the same group can't be selected together. Selecting one unselects the others.                              |
-| `packages`          | Ubuntu packages to install with apt.                                                                                     |
-| `downloads`         | Release files to download, verify and unpack, described below.                                                           |
-| `environment`       | Environment variables for the container. `{home}` becomes the user's home folder.                                        |
-| `path`              | Folders to put at the front of `PATH`. `{home}` works here too.                                                          |
-| `container`         | What the container needs at run time: `privileged: true`, and `volumes` that keep data across rebuilds, described below. |
-| `legacySettings`    | Which settings of the old bash version of ampul select this module when an old project is migrated, described below.     |
+| Field                   | Meaning                                                                                                                                              |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`                 | Required. The name shown by `ampul new` and `ampul config`.                                                                                          |
+| `description`           | Required. One or two sentences shown with it.                                                                                                        |
+| `check`                 | Required. A command that proves the tool works once installed.                                                                                       |
+| `version`               | The version its downloads use, unless a download has its own.                                                                                        |
+| `latestVersion`         | Where updates find the latest `version`: `{ "url": ..., "match": ... }`, see below.                                                                  |
+| `selectedByDefault`     | Whether new projects get it.                                                                                                                         |
+| `requires`              | Ids of the modules it needs. They are selected with it and installed before it.                                                                      |
+| `mutuallyExclusiveWith` | Ids of modules it can never be selected with. It works both ways, so only one of the two needs to list the other. Selecting one unselects the other. |
+| `packages`              | Ubuntu packages to install with apt.                                                                                                                 |
+| `downloads`             | Release files to download, verify and unpack, described below.                                                                                       |
+| `environment`           | Environment variables for the container. `{home}` becomes the user's home folder.                                                                    |
+| `path`                  | Folders to put at the front of `PATH`. `{home}` works here too.                                                                                      |
+| `container`             | What the container needs at run time: `privileged: true`, and `volumes` that keep data across rebuilds, described below.                             |
+| `portPresets`           | Ports the tool's apps usually listen on, offered on the ports screen when the module is selected, described below.                                   |
+| `legacySettings`        | Which settings of the old bash version of ampul select this module when an old project is migrated, described below.                                 |
 
 ### downloads
 
@@ -95,13 +96,30 @@ The page at `url` is read, and the highest version captured by the regular expre
 
 A privileged module makes the whole container privileged, and ampul warns about it before creating the project. Each volume is created for the project as `ampul-<project>-<name>`, mounted at `path`, kept across rebuilds and removed with `ampul rm`. `contents` is how `ampul rebuild` and `ampul rm` describe what it holds. Volume names must be unique across all modules.
 
+### portPresets
+
+```json
+"portPresets": [
+  {
+    "id": "my-tool-web",
+    "label": "My Tool dev server",
+    "port": 5000,
+    "lastPort": 5001,
+    "section": "Web apps",
+    "description": "What listens on these ports."
+  }
+]
+```
+
+`lastPort` makes it a range. Presets are grouped by `section`. Several modules can offer the same preset, such as side-by-side versions of one SDK, as long as every copy is identical.
+
 ### legacySettings
 
 ```json
-"legacySettings": [{ "setting": "GODOT", "value": "dotnet" }]
+"legacySettings": [{ "setting": "MY_TOOL", "value": "full" }]
 ```
 
-An old project with this setting gets this module. Without `value`, any value selects it, unless another module names the exact value.
+An old project with this setting gets this module. A setting can hold several words, such as `MY_TOOL_SDKS='1 2'`, and each one is matched on its own. Without `value`, any value selects it, unless another module names the exact value.
 
 ## Checks
 
@@ -109,7 +127,9 @@ ampul checks the modules when it loads them, and `npm test` does too. It refuses
 
 - a folder that `catalog.json` does not list, or lists twice
 - a requirement that does not exist, or modules that require each other in a circle
-- a module that needs, directly or through its requirements, two modules of the same exclusive group
+- a module that is mutually exclusive with a module that does not exist
+- a module that needs, directly or through its requirements, two mutually exclusive modules
 - two modules that install to the same folder and could be selected together
 - two modules with a volume of the same name
+- two copies of a port preset that differ, or two presets with the same label
 - a download without a checksum for both architectures

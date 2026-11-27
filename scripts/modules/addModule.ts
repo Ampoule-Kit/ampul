@@ -74,9 +74,9 @@ async function askSection(): Promise<string> {
   return titles[Number(answer) - 1] ?? answer
 }
 
-async function askRequirements(): Promise<string[]> {
+async function askModuleIds(question: string): Promise<string[]> {
   const answer = await askUntilValid(
-    'Modules it needs, space-separated (- for none)',
+    `${question}, space-separated (- for none)`,
     (text) => {
       const unknown = text
         .split(/\s+/)
@@ -88,26 +88,6 @@ async function askRequirements(): Promise<string[]> {
     '-',
   )
   return answer.split(/\s+/).filter((moduleId) => moduleId !== '-')
-}
-
-async function askExclusiveGroup(): Promise<string | undefined> {
-  const groups = [
-    ...new Set(
-      readCatalog()
-        .sections.flatMap((section) => section.modules)
-        .flatMap((moduleId) => readModuleSource(moduleId).exclusiveGroup ?? []),
-    ),
-  ]
-  if (groups.length > 0) console.log(`Exclusive groups so far: ${groups.join(', ')}`)
-  const answer = await askUntilValid(
-    'Exclusive group, when only one module of a group can be selected (- for none)',
-    (text) =>
-      text === '-' || validModuleId.test(text)
-        ? undefined
-        : 'Use lowercase letters, digits and dashes, starting with a letter.',
-    '-',
-  )
-  return answer === '-' ? undefined : answer
 }
 
 function regularExpressionProblem(text: string): string | undefined {
@@ -281,7 +261,7 @@ async function askInstallChoice(engine: ContainerEngine, moduleId: string): Prom
 
 interface Relations {
   requires: string[]
-  exclusiveGroup: string | undefined
+  mutuallyExclusiveWith: string[]
 }
 
 function moduleSource(
@@ -291,7 +271,7 @@ function moduleSource(
   install: InstallChoice,
   check: string,
 ): ModuleFileSource {
-  const { requires, exclusiveGroup } = relations
+  const { requires, mutuallyExclusiveWith } = relations
   return {
     label: texts.label,
     description: texts.description,
@@ -299,7 +279,7 @@ function moduleSource(
     ...(install.latestVersion ? { latestVersion: install.latestVersion } : {}),
     selectedByDefault,
     ...(requires.length > 0 ? { requires } : {}),
-    ...(exclusiveGroup === undefined ? {} : { exclusiveGroup }),
+    ...(mutuallyExclusiveWith.length > 0 ? { mutuallyExclusiveWith } : {}),
     ...(install.packages.length > 0 ? { packages: install.packages } : {}),
     ...(install.download ? { downloads: [install.download] } : {}),
     check,
@@ -331,7 +311,7 @@ To go further, add to modules/${moduleId}/:
   setup.sh    runs in the container after the config is linked, with step and warn available
   install.sh  runs at image build after the packages and downloads, for anything else
   start.sh    runs each time the container starts, for services the tool needs
-and see modules/README.md for every field of module.json, such as environment, container and legacySettings.
+and see modules/README.md for every field of module.json, such as environment, container, portPresets and legacySettings.
 
 Then run npm run cli:install so ampul offers it. Add it to a project with: ampul config <project>, then ampul rebuild <project>`)
 }
@@ -340,21 +320,23 @@ async function addModule(): Promise<void> {
   const engine = await requireRunningEngine()
   await buildInstallTestBase(engine, readBaseImage())
   const moduleId = await askUntilValid(
-    'Module name, in lowercase (for example rust)',
+    'Module name, in lowercase (for example my-tool)',
     moduleIdProblem,
   )
   const label = await askUntilValid(
-    'Label shown by ampul new (for example Rust toolchain)',
+    'Label shown by ampul new (for example My Tool)',
     () => undefined,
   )
   const description = await askUntilValid(
-    'One sentence ampul new shows to explain it (for example The Rust compiler, cargo and rustup)',
+    'One sentence ampul new shows to explain it (for example The my-tool command and its plugins)',
     () => undefined,
   )
   const section = await askSection()
   const selectedByDefault = await askYesOrNo('Select it for new projects by default?', false)
-  const requires = await askRequirements()
-  const exclusiveGroup = await askExclusiveGroup()
+  const requires = await askModuleIds('Modules it needs')
+  const mutuallyExclusiveWith = await askModuleIds(
+    'Modules it is mutually exclusive with, so they are never selected together',
+  )
   const install = await askInstallChoice(engine, moduleId)
   const suggestedCheck = install.commandNames[0]
     ? `${install.commandNames[0].split('/').at(-1) ?? ''} --version`
@@ -369,7 +351,7 @@ async function addModule(): Promise<void> {
   const module = moduleSource(
     { label, description },
     selectedByDefault,
-    { requires, exclusiveGroup },
+    { requires, mutuallyExclusiveWith },
     install,
     check,
   )

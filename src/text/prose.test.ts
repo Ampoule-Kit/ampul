@@ -5,8 +5,8 @@ import { joinInProse, pluralize } from './prose.ts'
 describe('prose', () => {
   it('joins lists the way a sentence would', () => {
     assert.equal(joinInProse([]), '')
-    assert.equal(joinInProse(['Neovim']), 'Neovim')
-    assert.equal(joinInProse(['Neovim', 'Node.js', 'fd']), 'Neovim, Node.js and fd')
+    assert.equal(joinInProse(['Editor']), 'Editor')
+    assert.equal(joinInProse(['Editor', 'Runtime', 'search']), 'Editor, Runtime and search')
   })
 
   it('pluralizes counts', () => {

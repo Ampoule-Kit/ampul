@@ -55,7 +55,7 @@ export async function buildImage(
   const [conflict] = selectionConflicts(project.modules, catalog)
   if (conflict) {
     throw new Problem(`${describeConflict(conflict)} in ${project.name}`, {
-      explanation: `Only one module of the exclusive group '${conflict.exclusiveGroup}' can be installed.`,
+      explanation: 'Only one of them can be installed in a project.',
       fixes: [{ description: 'Choose one of them', command: `ampul config ${project.name}` }],
     })
   }

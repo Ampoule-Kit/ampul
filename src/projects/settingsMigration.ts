@@ -9,12 +9,9 @@ interface LegacyValue {
 }
 
 function legacyValues(settings: SettingsBeforeModules): LegacyValue[] {
-  return [
-    ...settings.dotnetSdks.map((value) => ({ setting: 'DOTNET_SDKS', value })),
-    ...Object.entries(settings.optionalDependencies)
-      .filter(([, value]) => value !== '')
-      .map(([setting, value]) => ({ setting, value })),
-  ]
+  return Object.entries(settings.legacySettings).flatMap(([setting, values]) =>
+    values.map((value) => ({ setting, value })),
+  )
 }
 
 export function modulesForLegacyValue(legacy: LegacyValue, catalog: ModuleCatalog): string[] {
@@ -32,9 +29,11 @@ export function modulesForLegacyValue(legacy: LegacyValue, catalog: ModuleCatalo
   return exactMatches.length > 0 ? exactMatches : matching(false)
 }
 
-export function migrateToModules(settings: SettingsBeforeModules): ProjectSettings {
-  const catalog = moduleCatalog()
-  const { dotnetSdks: _dotnetSdks, optionalDependencies: _optional, ...unchanged } = settings
+export function migrateToModules(
+  settings: SettingsBeforeModules,
+  catalog: ModuleCatalog = moduleCatalog(),
+): ProjectSettings {
+  const { legacySettings: _legacySettings, ...unchanged } = settings
   const selectedModules = [
     ...defaultModuleIds(catalog),
     ...legacyValues(settings).flatMap((legacy) => modulesForLegacyValue(legacy, catalog)),

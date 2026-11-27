@@ -40,9 +40,9 @@ module.json, or else from the latest GitHub release of its download. Set GITHUB_
 to avoid GitHub's rate limit.
 
 Examples:
-  npm run modules:update-version -- lazygit
-  npm run modules:update-version -- lazygit 0.67.0
-  npm run modules:update-version -- container-engine:compose
+  npm run modules:update-version -- my-tool             Pin my-tool to its latest version
+  npm run modules:update-version -- my-tool 1.2.3       Pin my-tool to 1.2.3
+  npm run modules:update-version -- my-tool:plugin      Pin the download named plugin of my-tool
 
 A new major line of a tool installed side by side (such as another SDK channel) is a new
 module: copy its folder in modules/, rename it, add it to modules/catalog.json, then pin it

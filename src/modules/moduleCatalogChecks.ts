@@ -1,5 +1,6 @@
 import { Problem } from '../problems/Problem.ts'
 import type { ModuleDefinition } from './ModuleDefinition.ts'
+import { areMutuallyExclusive } from './moduleSelection.ts'
 
 export const modulesFolder = 'modules'
 export const catalogFileName = 'catalog.json'
@@ -86,30 +87,41 @@ function allRequirementsOf(id: string, byId: ReadonlyMap<string, ModuleDefinitio
   return [...found]
 }
 
+function checkExclusionsExist(
+  modules: ModuleDefinition[],
+  byId: ReadonlyMap<string, ModuleDefinition>,
+): void {
+  for (const module of modules) {
+    const unknown = module.mutuallyExclusiveWith.find(
+      (other) => other === module.id || !byId.has(other),
+    )
+    if (unknown !== undefined) {
+      throw brokenCatalog(
+        `The module '${module.id}' is mutually exclusive with '${unknown}', which is not another module`,
+        `${modulesFolder}/${module.id}/${moduleFileName} lists '${unknown}' in mutuallyExclusiveWith.`,
+      )
+    }
+  }
+}
+
 function checkRequirementsAreCompatible(
   modules: ModuleDefinition[],
   byId: ReadonlyMap<string, ModuleDefinition>,
 ): void {
   for (const module of modules) {
-    const withRequirements = [module.id, ...allRequirementsOf(module.id, byId)]
-    const byGroup = new Map<string, string>()
-    for (const id of withRequirements) {
-      const group = byId.get(id)?.exclusiveGroup
-      if (group === undefined) continue
-      const other = byGroup.get(group)
-      if (other !== undefined) {
+    const needed = [module.id, ...allRequirementsOf(module.id, byId)].flatMap(
+      (id) => byId.get(id) ?? [],
+    )
+    for (const [index, first] of needed.entries()) {
+      const second = needed.slice(index + 1).find((other) => areMutuallyExclusive(first, other))
+      if (second) {
         throw brokenCatalog(
-          `The module '${module.id}' needs both '${other}' and '${id}'`,
-          `They are both in the exclusive group '${group}', so only one of them can be selected. Change requires in ${modulesFolder}/${module.id}/${moduleFileName}, or the exclusiveGroup of one of them.`,
+          `The module '${module.id}' needs both '${first.id}' and '${second.id}'`,
+          `They are mutually exclusive, so they can't be selected together. Change requires in ${modulesFolder}/${module.id}/${moduleFileName}, or mutuallyExclusiveWith in one of them.`,
         )
       }
-      byGroup.set(group, id)
     }
   }
-}
-
-function sameExclusiveGroup(first: ModuleDefinition, second: ModuleDefinition): boolean {
-  return first.exclusiveGroup !== undefined && first.exclusiveGroup === second.exclusiveGroup
 }
 
 function checkInstallFoldersDoNotClash(modules: ModuleDefinition[]): void {
@@ -122,11 +134,11 @@ function checkInstallFoldersDoNotClash(modules: ModuleDefinition[]): void {
         owner !== undefined &&
         owner.module !== module &&
         !(owner.shared && shared) &&
-        !sameExclusiveGroup(owner.module, module)
+        !areMutuallyExclusive(owner.module, module)
       if (clashes) {
         throw brokenCatalog(
           `The modules '${owner.module.id}' and '${module.id}' both install to ${download.installTo}`,
-          'Installing one would replace the other. Give them different installTo folders, set sharedFolder on both downloads, or put them in the same exclusiveGroup so only one can be selected.',
+          'Installing one would replace the other. Give them different installTo folders, set sharedFolder on both downloads, or make them mutually exclusive so only one can be selected.',
         )
       }
       if (!owner) owners.set(download.installTo, { module, shared })
@@ -150,6 +162,32 @@ function checkVolumeNamesAreUnique(modules: ModuleDefinition[]): void {
   }
 }
 
+function checkPortPresetsAgree(modules: ModuleDefinition[]): void {
+  const byId = new Map<string, { module: string; text: string }>()
+  const byLabel = new Map<string, string>()
+  for (const module of modules) {
+    for (const preset of module.portPresets) {
+      const text = JSON.stringify(preset)
+      const earlier = byId.get(preset.id)
+      if (earlier && earlier.text !== text) {
+        throw brokenCatalog(
+          `The modules '${earlier.module}' and '${module.id}' define the port preset '${preset.id}' differently`,
+          'Modules can share a port preset, but each copy of it must be the same.',
+        )
+      }
+      const labelOwner = byLabel.get(preset.label)
+      if (labelOwner !== undefined && labelOwner !== preset.id) {
+        throw brokenCatalog(
+          `The port presets '${labelOwner}' and '${preset.id}' are both labelled '${preset.label}'`,
+          'Give each port preset its own label.',
+        )
+      }
+      byId.set(preset.id, { module: module.id, text })
+      byLabel.set(preset.label, preset.id)
+    }
+  }
+}
+
 export function checkModuleCatalog(
   modules: ModuleDefinition[],
   byId: ReadonlyMap<string, ModuleDefinition>,
@@ -159,7 +197,9 @@ export function checkModuleCatalog(
   checkEveryFolderIsListed(byId, moduleFolders)
   checkRequirementsExist(modules, byId)
   checkNoCircularRequirements(modules, byId)
+  checkExclusionsExist(modules, byId)
   checkRequirementsAreCompatible(modules, byId)
   checkInstallFoldersDoNotClash(modules)
   checkVolumeNamesAreUnique(modules)
+  checkPortPresetsAgree(modules)
 }

@@ -78,7 +78,7 @@ function machineMemoryCheck(machineName: string, memoryMebibytes: number): Healt
   return {
     title: 'Podman machine memory',
     status: 'warn',
-    detail: `${memory}. Building .NET or Node projects and running containers inside them needs at least ${mebibytesAsGigabytes(recommendedMachineMemoryMebibytes)}; 6–8 GB for larger projects.`,
+    detail: `${memory}. Building images and running projects needs at least ${mebibytesAsGigabytes(recommendedMachineMemoryMebibytes)}; 6–8 GB for larger projects.`,
     fixes: [{ description: 'Give it more memory', command: machineMemoryCommand(machineName) }],
   }
 }

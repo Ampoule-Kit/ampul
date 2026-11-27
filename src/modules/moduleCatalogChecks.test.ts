@@ -54,15 +54,40 @@ describe('checkModuleCatalog', () => {
     assert.throws(() => check([module('a')], ['a', 'forgotten']), /does not list forgotten/)
   })
 
-  it('reports a module that needs two modules of the same exclusive group', () => {
+  it('reports a module that needs two mutually exclusive modules', () => {
     assert.throws(
       () =>
         check([
           module('a', ['b', 'c']),
-          module('b', [], { exclusiveGroup: 'engine' }),
-          module('c', [], { exclusiveGroup: 'engine' }),
+          module('b'),
+          module('c', [], { mutuallyExclusiveWith: ['b'] }),
         ]),
       /needs both 'b' and 'c'/,
+    )
+  })
+
+  it('reports a module that is mutually exclusive with one that does not exist', () => {
+    assert.throws(
+      () => check([module('a', [], { mutuallyExclusiveWith: ['missing'] })]),
+      /mutually exclusive with 'missing'/,
+    )
+  })
+
+  it('reports two modules that define one port preset differently', () => {
+    const preset = { id: 'web', label: 'Web', port: 3000, section: 'Web', description: 'Web' }
+    assert.doesNotThrow(() =>
+      check([
+        module('a', [], { portPresets: [preset] }),
+        module('b', [], { portPresets: [preset] }),
+      ]),
+    )
+    assert.throws(
+      () =>
+        check([
+          module('a', [], { portPresets: [preset] }),
+          module('b', [], { portPresets: [{ ...preset, port: 3001 }] }),
+        ]),
+      /define the port preset 'web' differently/,
     )
   })
 
@@ -77,13 +102,13 @@ describe('checkModuleCatalog', () => {
     )
   })
 
-  it('accepts a shared install folder, or one used by modules of one exclusive group', () => {
+  it('accepts a shared install folder, or one used by mutually exclusive modules', () => {
     assert.doesNotThrow(() =>
       check([
         module('a', [], { downloads: [download('/opt/sdk', true)] }),
         module('b', [], { downloads: [download('/opt/sdk', true)] }),
-        module('c', [], { exclusiveGroup: 'tool', downloads: [download('/opt/tool')] }),
-        module('d', [], { exclusiveGroup: 'tool', downloads: [download('/opt/tool')] }),
+        module('c', [], { mutuallyExclusiveWith: ['d'], downloads: [download('/opt/tool')] }),
+        module('d', [], { downloads: [download('/opt/tool')] }),
       ]),
     )
   })

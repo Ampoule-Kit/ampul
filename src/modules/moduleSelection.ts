@@ -86,27 +86,42 @@ export function describeModuleSelection(ids: string[], catalog: ModuleCatalog): 
   return addedLabels.length > 0 ? `${base}, plus ${joinInProse(addedLabels)}` : base
 }
 
+export function areMutuallyExclusive(first: ModuleDefinition, second: ModuleDefinition): boolean {
+  return (
+    first.mutuallyExclusiveWith.includes(second.id) ||
+    second.mutuallyExclusiveWith.includes(first.id)
+  )
+}
+
+export function mutuallyExclusiveIds(module: ModuleDefinition, catalog: ModuleCatalog): string[] {
+  return catalog.modules
+    .filter((other) => other !== module && areMutuallyExclusive(module, other))
+    .map((other) => other.id)
+}
+
 export interface SelectionConflict {
-  exclusiveGroup: string
-  labels: string[]
+  labels: [string, string]
+}
+
+export function conflictsAmong(
+  modules: ModuleDefinition[],
+): [ModuleDefinition, ModuleDefinition][] {
+  return modules.flatMap((module, index) =>
+    modules
+      .slice(index + 1)
+      .filter((other) => areMutuallyExclusive(module, other))
+      .map((other): [ModuleDefinition, ModuleDefinition] => [module, other]),
+  )
 }
 
 export function selectionConflicts(ids: string[], catalog: ModuleCatalog): SelectionConflict[] {
-  const labelsByGroup = new Map<string, string[]>()
-  for (const module of selectedModules(ids, catalog)) {
-    if (module.exclusiveGroup === undefined) continue
-    labelsByGroup.set(module.exclusiveGroup, [
-      ...(labelsByGroup.get(module.exclusiveGroup) ?? []),
-      module.label,
-    ])
-  }
-  return [...labelsByGroup]
-    .filter(([, labels]) => labels.length > 1)
-    .map(([exclusiveGroup, labels]) => ({ exclusiveGroup, labels }))
+  return conflictsAmong(selectedModules(ids, catalog)).map(([first, second]) => ({
+    labels: [first.label, second.label],
+  }))
 }
 
 export function describeConflict(conflict: SelectionConflict): string {
-  return `${joinInProse(conflict.labels)} can’t be selected together`
+  return `${joinInProse(conflict.labels)} are mutually exclusive`
 }
 
 export function privilegedModuleLabels(ids: string[], catalog: ModuleCatalog): string[] {

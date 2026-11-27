@@ -50,6 +50,21 @@ export const moduleContainerSchema = z.strictObject({
   volumes: z.array(moduleVolumeSchema).optional(),
 })
 
+const portNumber = z.int().min(1).max(65_535)
+
+export const portPresetSchema = z
+  .strictObject({
+    id: simpleName,
+    label: z.string().min(1),
+    port: portNumber,
+    lastPort: portNumber.optional(),
+    section: z.string().min(1),
+    description: z.string().min(1),
+  })
+  .refine((preset) => preset.lastPort === undefined || preset.lastPort > preset.port, {
+    message: 'lastPort must be above port',
+  })
+
 export const legacySettingSchema = z.strictObject({
   setting: z.string().regex(/^[A-Z0-9_]+$/, 'legacy settings are UPPER_CASE names'),
   value: z.string().min(1).optional(),
@@ -62,12 +77,13 @@ export const moduleFileSourceSchema = z.strictObject({
   version: z.string().min(1).optional(),
   selectedByDefault: z.boolean().optional(),
   requires: z.array(moduleId).optional(),
-  exclusiveGroup: simpleName.optional(),
+  mutuallyExclusiveWith: z.array(moduleId).optional(),
   packages: z.array(z.string().min(1)).optional(),
   downloads: z.array(moduleDownloadSchema).optional(),
   environment: z.record(z.string(), z.string()).optional(),
   path: z.array(z.string().min(1)).optional(),
   container: moduleContainerSchema.optional(),
+  portPresets: z.array(portPresetSchema).optional(),
   latestVersion: latestVersionSchema.optional(),
   legacySettings: z.array(legacySettingSchema).optional(),
   check: z.string().min(1),
@@ -85,6 +101,8 @@ export const moduleFileSchema = moduleFileSourceSchema.transform((source) => ({
     privileged: source.container?.privileged ?? false,
     volumes: source.container?.volumes ?? [],
   },
+  mutuallyExclusiveWith: source.mutuallyExclusiveWith ?? [],
+  portPresets: source.portPresets ?? [],
   legacySettings: source.legacySettings ?? [],
 }))
 
@@ -93,6 +111,7 @@ export const moduleCatalogFileSchema = z.strictObject({
 })
 
 export type LatestVersionSource = z.infer<typeof latestVersionSchema>
+export type ModulePortPreset = z.infer<typeof portPresetSchema>
 export type ModuleVolume = z.infer<typeof moduleVolumeSchema>
 export type ModuleDownload = z.infer<typeof moduleDownloadSchema>
 export type ModuleFileSource = z.infer<typeof moduleFileSourceSchema>
