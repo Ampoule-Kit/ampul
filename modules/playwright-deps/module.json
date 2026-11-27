@@ -1,0 +1,28 @@
+{
+  "label": "Playwright libraries",
+  "description": "The system libraries that Playwright's Chromium, Firefox and WebKit need. Your project's Playwright downloads the browsers into ~/.cache, which is kept across rebuilds.",
+  "version": "1.65.1",
+  "selectedByDefault": false,
+  "requires": [
+    "node"
+  ],
+  "downloads": [
+    {
+      "url": "https://registry.npmjs.org/playwright-core/-/playwright-core-{version}.tgz",
+      "architectures": {
+        "arm64": "any",
+        "amd64": "any"
+      },
+      "sha512": {
+        "arm64": "86a3e9cfb6e548c3f1595768784d728814b35ec2a254e77693e9230af994cb00f618f3b60ddf477dc5a7abd34dd061db3590c5819f497c116bf97e7f04ba34ab",
+        "amd64": "86a3e9cfb6e548c3f1595768784d728814b35ec2a254e77693e9230af994cb00f618f3b60ddf477dc5a7abd34dd061db3590c5819f497c116bf97e7f04ba34ab"
+      },
+      "installTo": "/opt/playwright-core"
+    }
+  ],
+  "latestVersion": {
+    "url": "https://registry.npmjs.org/playwright-core/latest",
+    "match": "\"version\":\"([0-9]+\\.[0-9]+\\.[0-9]+)\""
+  },
+  "check": "dpkg -s libnss3 libgbm1 libasound2t64 libgtk-3-0t64 >/dev/null"
+}

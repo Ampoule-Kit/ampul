@@ -1,0 +1,27 @@
+{
+  "label": "Kotlin",
+  "description": "The Kotlin compiler, kotlinc. It runs on Java, which is selected with it. Gradle and Maven projects bring their own Kotlin.",
+  "version": "2.4.21",
+  "selectedByDefault": false,
+  "requires": [
+    "java"
+  ],
+  "downloads": [
+    {
+      "url": "https://github.com/JetBrains/kotlin/releases/download/v{version}/kotlin-compiler-{version}.zip",
+      "architectures": {
+        "arm64": "any",
+        "amd64": "any"
+      },
+      "sha256": {
+        "arm64": "7cc140e76daf416a0424a5557f99afd7ca89ebd463ea1101261e3e01c33e75cd",
+        "amd64": "7cc140e76daf416a0424a5557f99afd7ca89ebd463ea1101261e3e01c33e75cd"
+      },
+      "installTo": "/opt/kotlin"
+    }
+  ],
+  "path": [
+    "/opt/kotlin/bin"
+  ],
+  "check": "kotlinc -version"
+}

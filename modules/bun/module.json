@@ -1,0 +1,34 @@
+{
+  "label": "Bun",
+  "description": "The Bun JavaScript runtime, package manager and test runner, the bun and bunx commands.",
+  "version": "1.4.5",
+  "selectedByDefault": false,
+  "downloads": [
+    {
+      "url": "https://github.com/oven-sh/bun/releases/download/bun-v{version}/bun-linux-{arch}.zip",
+      "architectures": {
+        "arm64": "aarch64",
+        "amd64": "x64"
+      },
+      "sha256": {
+        "arm64": "18656a3bf0ea5641f5796ae4213b75255579a70a0fded2f337933785568cdf84",
+        "amd64": "94559b3b528995a49452f9f2404cec74f2efd7d06e0a000a8cd214b02c3666eb"
+      },
+      "installTo": "/opt/bun",
+      "commands": [
+        "bun",
+        {
+          "path": "bun",
+          "as": "bunx"
+        }
+      ]
+    }
+  ],
+  "environment": {
+    "BUN_INSTALL_CACHE_DIR": "{home}/.cache/bun"
+  },
+  "path": [
+    "{home}/.bun/bin"
+  ],
+  "check": "bun --version && bunx --version"
+}

@@ -1,0 +1,33 @@
+{
+  "label": "Go",
+  "description": "The Go toolchain. Downloaded modules are cached across rebuilds, and go install puts tools in ~/go/bin.",
+  "version": "1.27.4",
+  "selectedByDefault": false,
+  "downloads": [
+    {
+      "url": "https://go.dev/dl/go{version}.linux-{arch}.tar.gz",
+      "architectures": {
+        "arm64": "arm64",
+        "amd64": "amd64"
+      },
+      "sha256": {
+        "arm64": "3392582988a273a87ab5043ee1b2c9c17a2c3c00580bf9326c47a2e0aaaeac92",
+        "amd64": "7226736c2339719cda28fbf3a54d71aa63bcefe376e98cef00034268dab24840"
+      },
+      "installTo": "/opt/go"
+    }
+  ],
+  "environment": {
+    "GOPATH": "{home}/go",
+    "GOMODCACHE": "{home}/.cache/go-mod"
+  },
+  "path": [
+    "/opt/go/bin",
+    "{home}/go/bin"
+  ],
+  "latestVersion": {
+    "url": "https://go.dev/dl/?mode=json",
+    "match": "\"version\": \"go([0-9]+\\.[0-9]+\\.[0-9]+)\""
+  },
+  "check": "go version"
+}

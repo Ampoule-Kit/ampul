@@ -1,0 +1,24 @@
+{
+  "label": "MongoDB Shell",
+  "description": "mongosh, the shell for MongoDB databases.",
+  "version": "2.14.3",
+  "selectedByDefault": false,
+  "downloads": [
+    {
+      "url": "https://github.com/mongodb-js/mongosh/releases/download/v{version}/mongosh-{version}-linux-{arch}.tgz",
+      "architectures": {
+        "arm64": "arm64",
+        "amd64": "x64"
+      },
+      "sha256": {
+        "arm64": "47ce1c6b6aa22c58118416f6423237093bf67886b56998fae4dd8430b369b667",
+        "amd64": "2f9082b19c3daa4469865cb2d13ba64eea9f5b447371ecd25f175bb99320d575"
+      },
+      "installTo": "/opt/mongosh",
+      "commands": [
+        "bin/mongosh"
+      ]
+    }
+  ],
+  "check": "mongosh --version"
+}

@@ -1,0 +1,27 @@
+{
+  "label": "Codex CLI",
+  "description": "OpenAI's coding agent for the terminal. Start it with codex.",
+  "version": "0.172.0",
+  "selectedByDefault": false,
+  "downloads": [
+    {
+      "url": "https://github.com/openai/codex/releases/download/rust-v{version}/codex-{arch}.tar.gz",
+      "architectures": {
+        "arm64": "aarch64-unknown-linux-musl",
+        "amd64": "x86_64-unknown-linux-musl"
+      },
+      "sha256": {
+        "arm64": "0b99526c185a4425fe96a2214fb7b6a6a7f7c1471883b7afbebe97e15e83e79e",
+        "amd64": "a2342a8f7f68f088be30620ccfe9cb84162c93a6b56177855961cda3ed6be392"
+      },
+      "installTo": "/opt/codex",
+      "commands": [
+        {
+          "path": "codex-{arch}",
+          "as": "codex"
+        }
+      ]
+    }
+  ],
+  "check": "codex --version"
+}

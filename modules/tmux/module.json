@@ -1,0 +1,9 @@
+{
+  "label": "tmux",
+  "description": "The tmux terminal multiplexer, for those who prefer it to Zellij.",
+  "selectedByDefault": false,
+  "packages": [
+    "tmux"
+  ],
+  "check": "tmux -V"
+}

@@ -1,0 +1,29 @@
+{
+  "label": "Azure CLI",
+  "description": "Microsoft's command line for Azure, the az command.",
+  "version": "2.93.0",
+  "selectedByDefault": false,
+  "downloads": [
+    {
+      "url": "https://packages.microsoft.com/repos/azure-cli/pool/main/a/azure-cli/azure-cli_{version}-1~noble_{arch}.deb",
+      "architectures": {
+        "arm64": "arm64",
+        "amd64": "amd64"
+      },
+      "sha256": {
+        "arm64": "b6c9cb1151ebcfe7d5f494cbc3ef4a05c2e960917a5bdfac39ad57e2ab9e2dea",
+        "amd64": "a6ed3e2d3eca33c6e3b40d0534d4607048a02d656192accefcb7881ce8679124"
+      },
+      "installTo": "/opt/azure-cli",
+      "fileName": "azure-cli.deb"
+    }
+  ],
+  "environment": {
+    "AZURE_CORE_COLLECT_TELEMETRY": "false"
+  },
+  "latestVersion": {
+    "url": "https://packages.microsoft.com/repos/azure-cli/dists/noble/main/binary-amd64/Packages",
+    "match": "azure-cli_([0-9]+\\.[0-9]+\\.[0-9]+)-1~noble_amd64\\.deb"
+  },
+  "check": "az version"
+}

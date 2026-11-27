@@ -7,6 +7,9 @@
     "match": "\"version\":\"v(26\\.[0-9]+\\.[0-9]+)\""
   },
   "selectedByDefault": true,
+  "packages": [
+    "libatomic1"
+  ],
   "downloads": [
     {
       "url": "https://nodejs.org/dist/v{version}/node-v{version}-linux-{arch}.tar.xz",

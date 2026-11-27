@@ -1,0 +1,31 @@
+{
+  "label": "Gradle",
+  "description": "The Gradle build tool, for projects without a Gradle wrapper and for starting new ones with gradle init. It runs on Java, which is selected with it.",
+  "version": "9.9.2",
+  "selectedByDefault": false,
+  "requires": [
+    "java"
+  ],
+  "downloads": [
+    {
+      "url": "https://services.gradle.org/distributions/gradle-{version}-bin.zip",
+      "architectures": {
+        "arm64": "any",
+        "amd64": "any"
+      },
+      "sha256": {
+        "arm64": "971fcd7150ca4ba04852c0b2ca0d2d0ab9468e14b03473eab19528809914c76b",
+        "amd64": "971fcd7150ca4ba04852c0b2ca0d2d0ab9468e14b03473eab19528809914c76b"
+      },
+      "installTo": "/opt/gradle"
+    }
+  ],
+  "path": [
+    "/opt/gradle/bin"
+  ],
+  "latestVersion": {
+    "url": "https://services.gradle.org/versions/current",
+    "match": "\"version\" : \"([0-9]+\\.[0-9]+(?:\\.[0-9]+)?)\""
+  },
+  "check": "gradle --version"
+}
