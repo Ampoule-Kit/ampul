@@ -55,7 +55,6 @@ function loadModule(id: string, section: string): ModuleDefinition {
     ...definition,
     id,
     section,
-    hasConfig: fs.existsSync(resourcePath(modulesFolder, id, 'config')),
     hasSetup: fs.existsSync(resourcePath(modulesFolder, id, 'setup.sh')),
   }
 }

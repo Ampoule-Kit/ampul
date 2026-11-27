@@ -10,10 +10,6 @@ export const homeDirectory = os.homedir()
 
 const fallbackUserId = 1000
 
-function windowsRoamingAppData(): string {
-  return environmentVariable('APPDATA') ?? path.join(homeDirectory, 'AppData', 'Roaming')
-}
-
 function windowsLocalAppData(): string {
   return environmentVariable('LOCALAPPDATA') ?? path.join(homeDirectory, 'AppData', 'Local')
 }
@@ -23,7 +19,7 @@ function xdgDirectory(variableName: string, fallbackUnderHome: string): string {
 }
 
 function configRoot(): string {
-  return isWindows ? windowsRoamingAppData() : xdgDirectory('XDG_CONFIG_HOME', '.config')
+  return xdgDirectory('XDG_CONFIG_HOME', '.config')
 }
 
 function stateRoot(): string {
@@ -34,10 +30,13 @@ function cacheRoot(): string {
   return isWindows ? windowsLocalAppData() : xdgDirectory('XDG_CACHE_HOME', '.cache')
 }
 
+const configFolder = path.join(configRoot(), 'ampul')
+
 export const ampulPaths = {
-  config: path.join(configRoot(), 'ampul'),
-  projects: path.join(configRoot(), 'ampul', 'projects'),
-  preferences: path.join(configRoot(), 'ampul', 'config.json'),
+  config: configFolder,
+  settings: path.join(configFolder, 'settings.json'),
+  dotfiles: path.join(configFolder, 'dotfiles'),
+  projects: path.join(homeDirectory, '.ampul', 'projects'),
   logs: path.join(stateRoot(), 'ampul', 'logs'),
   cache: path.join(cacheRoot(), 'ampul'),
 }

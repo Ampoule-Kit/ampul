@@ -1,6 +1,6 @@
 {
   "label": "lsd",
-  "description": "ls with colours and icons. ls runs lsd -Alh.",
+  "description": "ls with colours and icons.",
   "version": "1.2.0",
   "selectedByDefault": true,
   "downloads": [

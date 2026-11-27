@@ -4,7 +4,7 @@ import path from 'node:path'
 import type { EmbeddedResources } from '../../src/resources/embeddedResources.ts'
 import { repositoryRoot } from '../shared/repository.ts'
 
-const embeddedFolders = ['image', 'container', 'dotfiles', 'modules']
+const embeddedFolders = ['image', 'container', 'modules']
 const embeddedFiles = ['.dockerignore']
 const fingerprintLength = 16
 const permissionBits = 0o777

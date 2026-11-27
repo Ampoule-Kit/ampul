@@ -10,6 +10,7 @@ HOST_HOME=$1
 shift
 MODULES=("$@")
 AMPUL_DIR=$HOME/.ampul
+DOTFILES_DIR=$AMPUL_DIR/dotfiles
 HOST_DIR=$HOME/.host
 GIT_CONFIG_FILE=$HOME/.config/git/config
 LOG_FILE=/tmp/ampul/setup.log
@@ -35,21 +36,19 @@ remove_links_to_deleted_config() {
     done
 }
 
-module_config_dir() {
-  echo "$AMPUL_DIR/modules/$1/config"
+remove_files_in_the_way_of_dotfiles() {
+  local relative_path
+  while IFS= read -r -d '' relative_path; do
+    [ -L "$HOME/$relative_path" ] || rm -f "$HOME/$relative_path"
+  done < <(find "$DOTFILES_DIR" ! -type d -printf '%P\0')
 }
 
-link_config() {
-  local module
-  [ -d "$AMPUL_DIR/dotfiles" ] || return 1
-  step "Linking your dotfiles and the tools' config into $HOME"
-  rm -f "$HOME/.bashrc" "$HOME/.profile" "$HOME/.bash_logout"
+link_dotfiles() {
+  [ -d "$DOTFILES_DIR" ] || return 1
+  step "Linking your dotfiles into $HOME"
   remove_links_to_deleted_config
-  stow --no-folding --dir "$AMPUL_DIR" --target "$HOME" dotfiles || return 1
-  for module in "${MODULES[@]}"; do
-    [ -d "$(module_config_dir "$module")" ] || continue
-    stow --no-folding --dir "$AMPUL_DIR/modules/$module" --target "$HOME" config || return 1
-  done
+  remove_files_in_the_way_of_dotfiles
+  stow --no-folding --dir "$AMPUL_DIR" --target "$HOME" dotfiles >>"$LOG_FILE" 2>&1
 }
 
 run_module_setups() {
@@ -154,10 +153,10 @@ link_host_ssh() {
 mkdir -p "$(dirname "$LOG_FILE")"
 : >"$LOG_FILE"
 
-if link_config; then
+if link_dotfiles; then
   run_module_setups
 else
-  warn "The dotfiles and tool config could not be linked, so the tools were not set up. See $LOG_FILE."
+  warn "Your dotfiles could not be linked, so the tools were not set up. See $LOG_FILE."
 fi
 
 link_host_git_config || warn "The host's git config could not be linked."

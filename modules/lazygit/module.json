@@ -1,6 +1,6 @@
 {
   "label": "lazygit",
-  "description": "A terminal UI for git. Start it with lg.",
+  "description": "A terminal UI for git.",
   "version": "0.66.3",
   "selectedByDefault": true,
   "downloads": [

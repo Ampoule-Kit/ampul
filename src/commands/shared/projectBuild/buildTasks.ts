@@ -25,7 +25,7 @@ export function setupTask(engine: ContainerEngine, project: ProjectSettings): Ta
   return {
     title: 'Set up your dotfiles, tools, git and SSH',
     run: async (context) => {
-      context.detail('Copying the dotfiles and tool config in')
+      context.detail('Copying your dotfiles in')
       await copyConfigIntoContainer(engine, project, context)
       await runContainerSetup(engine, project, context)
     },

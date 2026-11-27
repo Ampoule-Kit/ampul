@@ -6,7 +6,8 @@ import {
   type StreamingOptions,
   streamCommand,
 } from '../system/processes.ts'
-import { type RuntimeName, type RuntimeSelection, runtimeDisplayNames } from './runtimeSelection.ts'
+import { type RuntimeName, runtimeDisplayNames } from './runtimeNames.ts'
+import type { RuntimeSelection } from './runtimeSelection.ts'
 
 const reachabilityTimeoutMilliseconds = 20_000
 
