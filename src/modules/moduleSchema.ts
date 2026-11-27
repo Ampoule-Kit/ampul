@@ -65,11 +65,6 @@ export const portPresetSchema = z
     message: 'lastPort must be above port',
   })
 
-export const legacySettingSchema = z.strictObject({
-  setting: z.string().regex(/^[A-Z0-9_]+$/, 'legacy settings are UPPER_CASE names'),
-  value: z.string().min(1).optional(),
-})
-
 export const moduleFileSourceSchema = z.strictObject({
   $schema: z.string().optional(),
   label: z.string().min(1),
@@ -85,7 +80,6 @@ export const moduleFileSourceSchema = z.strictObject({
   container: moduleContainerSchema.optional(),
   portPresets: z.array(portPresetSchema).optional(),
   latestVersion: latestVersionSchema.optional(),
-  legacySettings: z.array(legacySettingSchema).optional(),
   check: z.string().min(1),
 })
 
@@ -103,7 +97,6 @@ export const moduleFileSchema = moduleFileSourceSchema.transform((source) => ({
   },
   mutuallyExclusiveWith: source.mutuallyExclusiveWith ?? [],
   portPresets: source.portPresets ?? [],
-  legacySettings: source.legacySettings ?? [],
 }))
 
 export const moduleCatalogFileSchema = z.strictObject({

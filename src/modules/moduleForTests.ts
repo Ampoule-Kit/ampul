@@ -18,7 +18,6 @@ export function moduleForTests(
     mutuallyExclusiveWith: [],
     container: { privileged: false, volumes: [] },
     portPresets: [],
-    legacySettings: [],
     hasConfig: false,
     hasSetup: false,
     ...overrides,

@@ -41,11 +41,5 @@
       "description": "The GDScript language server that the Godot editor runs, so an editor on this machine gets completion and errors from Godot in the container."
     }
   ],
-  "legacySettings": [
-    {
-      "setting": "GODOT",
-      "value": "dotnet"
-    }
-  ],
   "check": "godot --headless --version"
 }

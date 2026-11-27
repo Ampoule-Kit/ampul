@@ -54,11 +54,5 @@
       "description": "The Aspire dashboard on 18888, and its OpenTelemetry endpoints on 18889 (gRPC) and 18890 (HTTP). An AppHost made with dotnet new picks its own dashboard port in Properties/launchSettings.json; add that one under other ports."
     }
   ],
-  "legacySettings": [
-    {
-      "setting": "DOTNET_SDKS",
-      "value": "10"
-    }
-  ],
   "check": "dotnet --list-sdks"
 }

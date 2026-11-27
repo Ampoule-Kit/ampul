@@ -52,7 +52,6 @@ The latest version comes from the module's `latestVersion` when it has one, and 
 | `path`                  | Folders to put at the front of `PATH`. `{home}` works here too.                                                                                      |
 | `container`             | What the container needs at run time: `privileged: true`, and `volumes` that keep data across rebuilds, described below.                             |
 | `portPresets`           | Ports the tool's apps usually listen on, offered on the ports screen when the module is selected, described below.                                   |
-| `legacySettings`        | Which settings of the old bash version of ampul select this module when an old project is migrated, described below.                                 |
 
 ### downloads
 
@@ -112,14 +111,6 @@ A privileged module makes the whole container privileged, and ampul warns about 
 ```
 
 `lastPort` makes it a range. Presets are grouped by `section`. Several modules can offer the same preset, such as side-by-side versions of one SDK, as long as every copy is identical.
-
-### legacySettings
-
-```json
-"legacySettings": [{ "setting": "MY_TOOL", "value": "full" }]
-```
-
-An old project with this setting gets this module. A setting can hold several words, such as `MY_TOOL_SDKS='1 2'`, and each one is matched on its own. Without `value`, any value selects it, unless another module names the exact value.
 
 ## Checks
 

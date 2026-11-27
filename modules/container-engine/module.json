@@ -100,10 +100,5 @@
       "description": "Reach a Redis server running in the container with tools on this machine."
     }
   ],
-  "legacySettings": [
-    {
-      "setting": "CONTAINER_ENGINE"
-    }
-  ],
   "check": "podman --version && docker --version && docker compose version"
 }

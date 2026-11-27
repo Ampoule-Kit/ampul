@@ -311,7 +311,7 @@ To go further, add to modules/${moduleId}/:
   setup.sh    runs in the container after the config is linked, with step and warn available
   install.sh  runs at image build after the packages and downloads, for anything else
   start.sh    runs each time the container starts, for services the tool needs
-and see modules/README.md for every field of module.json, such as environment, container, portPresets and legacySettings.
+and see modules/README.md for every field of module.json, such as environment, container and portPresets.
 
 Then run npm run cli:install so ampul offers it. Add it to a project with: ampul config <project>, then ampul rebuild <project>`)
 }

@@ -24,10 +24,5 @@
       "description": "JupyterLab and Jupyter Notebook."
     }
   ],
-  "legacySettings": [
-    {
-      "setting": "PYTHON"
-    }
-  ],
   "check": "python3 --version && pip3 --version"
 }
