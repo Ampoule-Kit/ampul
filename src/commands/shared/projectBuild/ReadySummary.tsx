@@ -28,10 +28,10 @@ export function ReadySummary({ project, unclonedRepositories, warnings }: ReadyS
   return (
     <Callout tone={needsAttention ? 'warning' : 'success'} title={`${project.name} is ready`}>
       {codeFolders.map((folder) => (
-        <Bullet key={folder}>Code in ~/home/{folder}</Bullet>
+        <Bullet key={folder}>Code in ~/work/{folder}</Bullet>
       ))}
       {project.codeSource.kind === 'pass-through' && (
-        <Bullet>~/home is your home folder on this machine, {homeDirectory}</Bullet>
+        <Bullet>~/work is your home folder on this machine, {homeDirectory}</Bullet>
       )}
       {portRanges(project.ports).map((range) => (
         <Bullet key={range.first}>{portForwardDescription(range)}</Bullet>

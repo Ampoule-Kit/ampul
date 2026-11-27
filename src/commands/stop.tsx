@@ -70,7 +70,7 @@ export const stopCommand: CommandDefinition = {
   ],
   flags: [{ name: 'all', short: 'a', description: 'Stop every running project.' }],
   description: [
-    'Stops the container, which ends every shell and process in it. Nothing is deleted: the code in ~/home and everything else in the container is still there after ampul start.',
+    'Stops the container, which ends every shell and process in it. Nothing is deleted: the code in ~/work and everything else in the container is still there after ampul start.',
   ],
   examples: [
     { command: 'ampul stop api', explanation: 'Stop the api project.' },

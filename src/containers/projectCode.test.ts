@@ -26,7 +26,7 @@ describe('codeMounts', () => {
     assert.throws(() => codeMounts(missing), /no longer exists/)
   })
 
-  it('mounts the home folder at ~/home in pass-through mode', () => {
+  it('mounts the home folder at ~/work in pass-through mode', () => {
     assert.deepEqual(codeMounts(projectWith({ kind: 'pass-through' })), [
       { hostPath: homeDirectory, containerPath: containerCodeDirectory(), readOnly: false },
     ])

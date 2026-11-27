@@ -9,5 +9,5 @@ ENV SHELL=/bin/bash \
 COPY container/entrypoint.sh /opt/ampul/entrypoint.sh
 
 USER ${USER_NAME}
-WORKDIR /home/${USER_NAME}/home
+WORKDIR /home/${USER_NAME}/work
 CMD ["/opt/ampul/entrypoint.sh"]

@@ -15,5 +15,5 @@ fi
 useradd --create-home --uid "$user_id" --gid "$group_id" --shell /bin/bash "$user_name"
 echo "$user_name ALL=(ALL) NOPASSWD:ALL" >"/etc/sudoers.d/$user_name"
 chmod 0440 "/etc/sudoers.d/$user_name"
-mkdir -p "/home/$user_name/home" "/home/$user_name/.cache" "/home/$user_name/.host"
+mkdir -p "/home/$user_name/work" "/home/$user_name/.cache" "/home/$user_name/.host"
 chown -R "$user_id:$group_id" "/home/$user_name"

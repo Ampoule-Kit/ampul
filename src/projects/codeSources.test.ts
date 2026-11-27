@@ -13,7 +13,7 @@ describe('repository URLs', () => {
   it('rejects URLs that would clone into the same folder', () => {
     assert.match(
       repositoryUrlProblem('https://github.com/b/api.git', ['git@github.com:a/api.git']) ?? '',
-      /already clones into ~\/home\/api/,
+      /already clones into ~\/work\/api/,
     )
   })
 
@@ -28,7 +28,7 @@ describe('mounted folders', () => {
     const otherApiFolder = path.join('work', 'api')
     assert.match(
       mountedFolderProblem(otherApiFolder, [apiFolder]) ?? '',
-      /already mounted at ~\/home\/api/,
+      /already mounted at ~\/work\/api/,
     )
     assert.equal(mountedFolderProblem(path.join('code', 'web'), [apiFolder]), undefined)
   })

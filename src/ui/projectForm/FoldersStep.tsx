@@ -28,7 +28,7 @@ function MountedFolder({ folder }: { folder: string }) {
         <Text color={colors.muted}>
           {isGitRepositoryRoot(folder) ? ' · git repository' : ''}
           {'  '}
-          {symbols.arrow} ~/home/{path.basename(folder)}
+          {symbols.arrow} ~/work/{path.basename(folder)}
         </Text>
       </Text>
       {sharingWarning && (
@@ -82,7 +82,7 @@ export function FoldersStep({ draft, submit, back }: StepControls<ProjectDraft>)
   return (
     <Question
       title="Which folders should be mounted?"
-      explanation="Each folder is mounted at ~/home/<folder name>, so changes on either side show up on both. Press enter to add a folder, and enter on an empty line when the list is complete."
+      explanation="Each folder is mounted at ~/work/<folder name>, so changes on either side show up on both. Press enter to add a folder, and enter on an empty line when the list is complete."
     >
       {folders.map((folder) => (
         <MountedFolder key={folder} folder={folder} />

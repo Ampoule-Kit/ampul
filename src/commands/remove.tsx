@@ -28,7 +28,7 @@ async function run(invocation: Invocation): Promise<number> {
     title: `Removing ${project.name} cannot be undone.`,
     lost: [
       project.codeSource.kind === 'repositories'
-        ? 'The container, with the clones in ~/home, including unpushed work'
+        ? 'The container, with the clones in ~/work, including unpushed work'
         : 'The container',
       'The image',
       ...moduleVolumes(project.modules, moduleCatalog()).map((volume) => volume.contents),
@@ -77,7 +77,7 @@ export const removeCommand: CommandDefinition = {
   ],
   flags: [yesFlag],
   description: [
-    'Deletes the project’s container (and cloned repositories in ~/home with it), its image, the data of containers that ran inside it, and its settings. The shared package cache and every folder on this machine are kept.',
+    'Deletes the project’s container (and cloned repositories in ~/work with it), its image, the data of containers that ran inside it, and its settings. The shared package cache and every folder on this machine are kept.',
     'It shows exactly what goes before asking you to confirm.',
   ],
   examples: [

@@ -31,5 +31,5 @@ export function containerHome(): string {
 }
 
 export function containerCodeDirectory(): string {
-  return `${containerHome()}/home`
+  return `${containerHome()}/work`
 }
