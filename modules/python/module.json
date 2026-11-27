@@ -8,5 +8,21 @@
     "python3-pip",
     "python3-venv"
   ],
+  "portPresets": [
+    {
+      "id": "python-web",
+      "label": "Django, FastAPI",
+      "port": 8000,
+      "section": "Web apps",
+      "description": "Django’s runserver, FastAPI with uvicorn, and python -m http.server."
+    },
+    {
+      "id": "jupyter",
+      "label": "Jupyter",
+      "port": 8888,
+      "section": "Web apps",
+      "description": "JupyterLab and Jupyter Notebook."
+    }
+  ],
   "check": "python3 --version && pip3 --version"
 }

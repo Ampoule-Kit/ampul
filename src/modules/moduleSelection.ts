@@ -1,5 +1,6 @@
 import { joinInProse } from '../text/prose.ts'
 import type { ModuleCatalog, ModuleDefinition } from './ModuleDefinition.ts'
+import type { ModuleVolume } from './moduleSchema.ts'
 
 export function defaultModuleIds(catalog: ModuleCatalog): string[] {
   return catalog.modules.filter((module) => module.selectedByDefault).map((module) => module.id)
@@ -83,4 +84,52 @@ export function describeModuleSelection(ids: string[], catalog: ModuleCatalog): 
       ? 'The defaults'
       : `The defaults without ${joinInProse(leftOutLabels)}`
   return addedLabels.length > 0 ? `${base}, plus ${joinInProse(addedLabels)}` : base
+}
+
+export function areMutuallyExclusive(first: ModuleDefinition, second: ModuleDefinition): boolean {
+  return (
+    first.mutuallyExclusiveWith.includes(second.id) ||
+    second.mutuallyExclusiveWith.includes(first.id)
+  )
+}
+
+export function mutuallyExclusiveIds(module: ModuleDefinition, catalog: ModuleCatalog): string[] {
+  return catalog.modules
+    .filter((other) => other !== module && areMutuallyExclusive(module, other))
+    .map((other) => other.id)
+}
+
+export interface SelectionConflict {
+  labels: [string, string]
+}
+
+export function conflictsAmong(
+  modules: ModuleDefinition[],
+): [ModuleDefinition, ModuleDefinition][] {
+  return modules.flatMap((module, index) =>
+    modules
+      .slice(index + 1)
+      .filter((other) => areMutuallyExclusive(module, other))
+      .map((other): [ModuleDefinition, ModuleDefinition] => [module, other]),
+  )
+}
+
+export function selectionConflicts(ids: string[], catalog: ModuleCatalog): SelectionConflict[] {
+  return conflictsAmong(selectedModules(ids, catalog)).map(([first, second]) => ({
+    labels: [first.label, second.label],
+  }))
+}
+
+export function describeConflict(conflict: SelectionConflict): string {
+  return `${joinInProse(conflict.labels)} are mutually exclusive`
+}
+
+export function privilegedModuleLabels(ids: string[], catalog: ModuleCatalog): string[] {
+  return selectedModules(ids, catalog)
+    .filter((module) => module.container.privileged)
+    .map((module) => module.label)
+}
+
+export function moduleVolumes(ids: string[], catalog: ModuleCatalog): ModuleVolume[] {
+  return selectedModules(ids, catalog).flatMap((module) => module.container.volumes)
 }

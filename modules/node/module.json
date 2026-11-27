@@ -2,6 +2,10 @@
   "label": "Node.js",
   "description": "Node.js with npm, for JavaScript and TypeScript. Neovim's language servers run on it.",
   "version": "26.13.1",
+  "latestVersion": {
+    "url": "https://nodejs.org/dist/index.json",
+    "match": "\"version\":\"v(26\\.[0-9]+\\.[0-9]+)\""
+  },
   "selectedByDefault": true,
   "downloads": [
     {
@@ -23,6 +27,43 @@
   },
   "path": [
     "/opt/node/bin"
+  ],
+  "portPresets": [
+    {
+      "id": "node-web",
+      "label": "Next.js, React, Express",
+      "port": 3000,
+      "section": "Web apps",
+      "description": "The default dev server port of Next.js, Create React App, Express, Remix and Rails."
+    },
+    {
+      "id": "angular",
+      "label": "Angular",
+      "port": 4200,
+      "section": "Web apps",
+      "description": "The Angular CLI dev server started by ng serve."
+    },
+    {
+      "id": "vite",
+      "label": "Vite",
+      "port": 5173,
+      "section": "Web apps",
+      "description": "The Vite dev server, used by the Vue, Svelte, SolidJS and React templates."
+    },
+    {
+      "id": "storybook",
+      "label": "Storybook",
+      "port": 6006,
+      "section": "Web apps",
+      "description": "The Storybook component explorer."
+    },
+    {
+      "id": "node-inspector",
+      "label": "Node.js inspector",
+      "port": 9229,
+      "section": "Debuggers and language servers",
+      "description": "Attach a debugger on this machine to an app started with node --inspect."
+    }
   ],
   "check": "node --version && npm --version"
 }

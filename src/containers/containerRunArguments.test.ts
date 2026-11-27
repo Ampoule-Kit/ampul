@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
+import { moduleForTests } from '../modules/moduleForTests.ts'
 import type { ProjectSettings } from '../projects/ProjectSettings.ts'
 import { containerRunArguments } from './containerRunArguments.ts'
 
@@ -10,7 +11,7 @@ const project: ProjectSettings = {
   ports: [3000, 3001, 3002, 4200],
 }
 
-const noHostSetup = { isRootlessPodman: false, hostMounts: [] }
+const noHostSetup = { isRootlessPodman: false, hostMounts: [], modules: [] }
 
 describe('containerRunArguments', () => {
   it('publishes consecutive ports as one range on the host loopback address', () => {
@@ -22,12 +23,15 @@ describe('containerRunArguments', () => {
     )
   })
 
-  it('runs privileged with its own storage only when the container engine module is selected', () => {
+  it('runs privileged with the volumes of the modules only when a module asks for them', () => {
     assert.ok(!containerRunArguments(project, noHostSetup).includes('--privileged'))
-    const withEngine = containerRunArguments(
-      { ...project, modules: ['container-engine'] },
-      noHostSetup,
-    )
+    const engineModule = moduleForTests('engine', {
+      container: {
+        privileged: true,
+        volumes: [{ name: 'engine', path: '/var/lib/containers', contents: 'Images' }],
+      },
+    })
+    const withEngine = containerRunArguments(project, { ...noHostSetup, modules: [engineModule] })
     assert.ok(withEngine.includes('--privileged'))
     assert.ok(withEngine.includes('ampul-api-engine:/var/lib/containers'))
   })

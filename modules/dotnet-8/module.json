@@ -2,6 +2,10 @@
   "label": ".NET 8 SDK",
   "description": "The .NET SDK, installed side by side with any other .NET SDK you pick, with NuGet packages cached across rebuilds.",
   "version": "8.0.428",
+  "latestVersion": {
+    "url": "https://builds.dotnet.microsoft.com/dotnet/release-metadata/8.0/releases.json",
+    "match": "\"latest-sdk\":\\s*\"([^\"]+)\""
+  },
   "selectedByDefault": false,
   "packages": [
     "libicu74"
@@ -31,6 +35,24 @@
   "path": [
     "/opt/dotnet",
     "{home}/.dotnet/tools"
+  ],
+  "portPresets": [
+    {
+      "id": "aspnet",
+      "label": "ASP.NET Core",
+      "port": 5000,
+      "lastPort": 5001,
+      "section": "Web apps",
+      "description": "Kestrel’s defaults: HTTP on 5000 and HTTPS on 5001. Projects made with dotnet new pick their own ports in Properties/launchSettings.json."
+    },
+    {
+      "id": "aspire-dashboard",
+      "label": ".NET Aspire dashboard",
+      "port": 18888,
+      "lastPort": 18890,
+      "section": "Web apps",
+      "description": "The Aspire dashboard on 18888, and its OpenTelemetry endpoints on 18889 (gRPC) and 18890 (HTTP). An AppHost made with dotnet new picks its own dashboard port in Properties/launchSettings.json; add that one under other ports."
+    }
   ],
   "check": "dotnet --list-sdks"
 }

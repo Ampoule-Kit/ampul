@@ -9,6 +9,12 @@ const perArchitecture = <Value extends z.ZodType>(value: Value) =>
 const sha256Checksum = z.string().regex(/^[0-9a-f]{64}$/, 'a sha256 checksum is 64 hex digits')
 const sha512Checksum = z.string().regex(/^[0-9a-f]{128}$/, 'a sha512 checksum is 128 hex digits')
 const moduleId = z.string().regex(/^[a-z][a-z0-9-]*$/, 'use lowercase letters, digits and dashes')
+const simpleName = z.string().regex(/^[a-z][a-z0-9-]*$/, 'use lowercase letters, digits and dashes')
+
+export const latestVersionSchema = z.strictObject({
+  url: z.url({ protocol: /^https$/ }),
+  match: z.string().min(1),
+})
 
 const commandLinkSchema = z.union([
   z.string().min(1),
@@ -27,9 +33,36 @@ export const moduleDownloadSchema = z
     sharedFolder: z.boolean().optional(),
     fileName: z.string().min(1).optional(),
     commands: z.array(commandLinkSchema).optional(),
+    latestVersion: latestVersionSchema.optional(),
   })
   .refine((download) => download.sha256 ?? download.sha512, {
     message: 'every download needs a sha256 or sha512 checksum for both architectures',
+  })
+
+export const moduleVolumeSchema = z.strictObject({
+  name: simpleName,
+  path: z.string().startsWith('/'),
+  contents: z.string().min(1),
+})
+
+export const moduleContainerSchema = z.strictObject({
+  privileged: z.boolean().optional(),
+  volumes: z.array(moduleVolumeSchema).optional(),
+})
+
+const portNumber = z.int().min(1).max(65_535)
+
+export const portPresetSchema = z
+  .strictObject({
+    id: simpleName,
+    label: z.string().min(1),
+    port: portNumber,
+    lastPort: portNumber.optional(),
+    section: z.string().min(1),
+    description: z.string().min(1),
+  })
+  .refine((preset) => preset.lastPort === undefined || preset.lastPort > preset.port, {
+    message: 'lastPort must be above port',
   })
 
 export const moduleFileSourceSchema = z.strictObject({
@@ -39,11 +72,14 @@ export const moduleFileSourceSchema = z.strictObject({
   version: z.string().min(1).optional(),
   selectedByDefault: z.boolean().optional(),
   requires: z.array(moduleId).optional(),
-  group: z.string().min(1).optional(),
+  mutuallyExclusiveWith: z.array(moduleId).optional(),
   packages: z.array(z.string().min(1)).optional(),
   downloads: z.array(moduleDownloadSchema).optional(),
   environment: z.record(z.string(), z.string()).optional(),
   path: z.array(z.string().min(1)).optional(),
+  container: moduleContainerSchema.optional(),
+  portPresets: z.array(portPresetSchema).optional(),
+  latestVersion: latestVersionSchema.optional(),
   check: z.string().min(1),
 })
 
@@ -55,12 +91,21 @@ export const moduleFileSchema = moduleFileSourceSchema.transform((source) => ({
   downloads: source.downloads ?? [],
   environment: source.environment ?? {},
   path: source.path ?? [],
+  container: {
+    privileged: source.container?.privileged ?? false,
+    volumes: source.container?.volumes ?? [],
+  },
+  mutuallyExclusiveWith: source.mutuallyExclusiveWith ?? [],
+  portPresets: source.portPresets ?? [],
 }))
 
 export const moduleCatalogFileSchema = z.strictObject({
   sections: z.array(z.strictObject({ title: z.string().min(1), modules: z.array(moduleId) })),
 })
 
+export type LatestVersionSource = z.infer<typeof latestVersionSchema>
+export type ModulePortPreset = z.infer<typeof portPresetSchema>
+export type ModuleVolume = z.infer<typeof moduleVolumeSchema>
 export type ModuleDownload = z.infer<typeof moduleDownloadSchema>
 export type ModuleFileSource = z.infer<typeof moduleFileSourceSchema>
 export type ModuleFile = z.infer<typeof moduleFileSchema>

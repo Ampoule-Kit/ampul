@@ -3,27 +3,16 @@ import path from 'node:path'
 import { z } from 'zod'
 import { Problem } from '../problems/Problem.ts'
 import { ampulPaths, displayPath } from '../system/platform.ts'
-import { parseLegacySettings } from './legacySettings.ts'
-import {
-  type ProjectSettings,
-  projectSettingsSchema,
-  settingsBeforeModulesSchema,
-} from './ProjectSettings.ts'
-import { migrateToModules } from './settingsMigration.ts'
+import { type ProjectSettings, projectSettingsSchema } from './ProjectSettings.ts'
 
 const settingsExtension = '.json'
-const legacySettingsExtension = '.env'
 
 export function projectSettingsFile(name: string): string {
   return path.join(ampulPaths.projects, name + settingsExtension)
 }
 
-function legacySettingsFile(name: string): string {
-  return path.join(ampulPaths.projects, name + legacySettingsExtension)
-}
-
 export function projectExists(name: string): boolean {
-  return fs.existsSync(projectSettingsFile(name)) || fs.existsSync(legacySettingsFile(name))
+  return fs.existsSync(projectSettingsFile(name))
 }
 
 export function listProjectNames(): string[] {
@@ -31,7 +20,7 @@ export function listProjectNames(): string[] {
   const names = new Set<string>()
   for (const entry of fs.readdirSync(ampulPaths.projects)) {
     const extension = path.extname(entry)
-    if (extension === settingsExtension || extension === legacySettingsExtension) {
+    if (extension === settingsExtension) {
       names.add(path.basename(entry, extension))
     }
   }
@@ -67,16 +56,11 @@ function loadCurrentSettings(name: string): ProjectSettings {
   const storedSettings = readStoredSettings(name)
   const current = projectSettingsSchema.safeParse(storedSettings)
   if (current.success) return current.data
-  const beforeModules = settingsBeforeModulesSchema.safeParse(storedSettings)
-  if (!beforeModules.success) throw unreadableSettings(name, z.prettifyError(current.error))
-  const migrated = migrateToModules(beforeModules.data)
-  saveProject(migrated)
-  return migrated
+  throw unreadableSettings(name, z.prettifyError(current.error))
 }
 
 export function loadProject(name: string): ProjectSettings {
   if (fs.existsSync(projectSettingsFile(name))) return loadCurrentSettings(name)
-  if (fs.existsSync(legacySettingsFile(name))) return migrateLegacySettings(name)
   throw projectNotFound(name)
 }
 
@@ -87,19 +71,10 @@ export function saveProject(settings: ProjectSettings): void {
 
 export function deleteProjectSettings(name: string): void {
   fs.rmSync(projectSettingsFile(name), { force: true })
-  fs.rmSync(legacySettingsFile(name), { force: true })
 }
 
 export function deleteAllProjectSettings(): void {
   fs.rmSync(ampulPaths.projects, { recursive: true, force: true })
-}
-
-function migrateLegacySettings(name: string): ProjectSettings {
-  const legacyContent = fs.readFileSync(legacySettingsFile(name), 'utf8')
-  const settings = migrateToModules(parseLegacySettings(legacyContent, name))
-  saveProject(settings)
-  fs.rmSync(legacySettingsFile(name))
-  return settings
 }
 
 function projectNotFound(name: string): Problem {

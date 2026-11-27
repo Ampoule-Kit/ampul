@@ -10,7 +10,6 @@ HOST_HOME=$1
 shift
 MODULES=("$@")
 AMPUL_DIR=$HOME/.ampul
-LEGACY_DOTFILES_DIR=$HOME/dotfiles
 HOST_DIR=$HOME/.host
 GIT_CONFIG_FILE=$HOME/.config/git/config
 LOG_FILE=/tmp/ampul/setup.log
@@ -29,7 +28,7 @@ warn() {
 remove_links_to_deleted_config() {
   local link
   find "$HOME" \( -path "$AMPUL_DIR" -o -path "$HOST_DIR" -o -path "$HOME/home" -o -path "$HOME/.cache" -o -path "$HOME/.local" \) -prune \
-    -o -xtype l \( -lname '*.ampul/*' -o -lname '*dotfiles/*' \) -print0 |
+    -o -xtype l -lname '*.ampul/*' -print0 |
     while IFS= read -r -d '' link; do
       rm "$link"
       rmdir --parents --ignore-fail-on-non-empty "$(dirname "$link")" 2>/dev/null
@@ -44,7 +43,6 @@ link_config() {
   local module
   [ -d "$AMPUL_DIR/dotfiles" ] || return 1
   step "Linking your dotfiles and the tools' config into $HOME"
-  rm -rf "$LEGACY_DOTFILES_DIR"
   rm -f "$HOME/.bashrc" "$HOME/.profile" "$HOME/.bash_logout"
   remove_links_to_deleted_config
   stow --no-folding --dir "$AMPUL_DIR" --target "$HOME" dotfiles || return 1

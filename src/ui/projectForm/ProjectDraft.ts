@@ -1,7 +1,7 @@
 import { moduleCatalog } from '../../modules/moduleCatalog.ts'
 import { defaultModuleIds, withRequiredModules } from '../../modules/moduleSelection.ts'
 import type { CodeSource, ProjectSettings } from '../../projects/ProjectSettings.ts'
-import { presetRanges, presetsCoveredBy } from '../../projects/portPresets.ts'
+import { offeredPortPresets, presetRanges, presetsCoveredBy } from '../../projects/portPresets.ts'
 import { combinePorts, type PortRange, portRanges } from '../../projects/ports.ts'
 
 export interface ProjectDraft {
@@ -30,7 +30,10 @@ export function emptyDraft(name = ''): ProjectDraft {
 
 export function draftFromSettings(settings: ProjectSettings): ProjectDraft {
   const source = settings.codeSource
-  const { presetIds, otherPorts } = presetsCoveredBy(settings.ports)
+  const { presetIds, otherPorts } = presetsCoveredBy(
+    settings.ports,
+    offeredPortPresets(settings.modules),
+  )
   return {
     codeSourceKind: source.kind,
     repositories: source.kind === 'repositories' ? source.repositories : [],

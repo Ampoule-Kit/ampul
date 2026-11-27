@@ -45,7 +45,7 @@ export const setupCommand: CommandDefinition = {
   ],
   flags: [],
   description: [
-    'Copies this repo’s dotfiles/ folder and the config of each tool the project has (modules/<tool>/config) into the container and links them into the home folder. It then runs each tool’s own setup, such as installing the Neovim plugins pinned in lazy-lock.json and its language servers, and links the git and SSH config of this machine.',
+    'Copies this repo’s dotfiles/ folder and the config of each tool the project has (modules/<tool>/config) into the container and links them into the home folder. It then runs each tool’s own setup script (modules/<tool>/setup.sh), and links the git and SSH config of this machine.',
     'Nothing else is touched, so ~/home and running work are safe. Links to config you deleted are removed. Run it after changing your dotfiles, a tool’s config or your SSH config.',
     'The dotfiles and tool config are built into the ampul command, so run the installer again first when you changed them in the repo. Adding or removing a tool needs ampul config, then ampul rebuild.',
   ],

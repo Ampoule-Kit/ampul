@@ -9,6 +9,12 @@ import { requireRunningEngine } from './containerEngine.ts'
 import { pinDownload } from './downloadPinning.ts'
 import { buildInstallTestBase, runInstallTest } from './installTest.ts'
 import {
+  compareVersions,
+  latestVersion,
+  type VersionTarget,
+  versionTargets,
+} from './latestVersions.ts'
+import {
   moduleExists,
   moduleFilePath,
   moduleIdsInCatalogOrder,
@@ -20,19 +26,27 @@ import {
 } from './moduleSources.ts'
 
 const usage = `Usage: npm run modules:update-version                                  List the modules and what they pin
-       npm run modules:update-version -- <module> <version>            Pin a module to <version>
-       npm run modules:update-version -- <module>:<download> <version> Pin one named download of a module
-       npm run modules:update-version -- ubuntu <tag>                  Pin the base image to ubuntu:<tag>
+       npm run modules:update-version -- --outdated                     Also look up the latest version of each
+       npm run modules:update-version -- <module> [<version>]           Pin a module to <version>, or to its latest
+       npm run modules:update-version -- <module>:<download> [<version>] Pin one named download of a module
+       npm run modules:update-version -- --all                          Pin every outdated module to its latest
+       npm run modules:update-version -- ubuntu <tag>                   Pin the base image to ubuntu:<tag>
 
 Options:
   --skip-install-test    Don't test the install in a container
 
-Examples:
-  npm run modules:update-version -- neovim 0.12.7
-  npm run modules:update-version -- container-engine:docker 29.11.0
+The latest version comes from the module's latestVersion (a page and a pattern) in its
+module.json, or else from the latest GitHub release of its download. Set GITHUB_TOKEN
+to avoid GitHub's rate limit.
 
-A new .NET SDK channel is a new module: copy modules/dotnet-10 to modules/dotnet-<channel>,
-add it to modules/catalog.json, then pin it with this command.`
+Examples:
+  npm run modules:update-version -- my-tool             Pin my-tool to its latest version
+  npm run modules:update-version -- my-tool 1.2.3       Pin my-tool to 1.2.3
+  npm run modules:update-version -- my-tool:plugin      Pin the download named plugin of my-tool
+
+A new major line of a tool installed side by side (such as another SDK channel) is a new
+module: copy its folder in modules/, rename it, add it to modules/catalog.json, then pin it
+with this command.`
 
 const validVersion = /^[0-9A-Za-z][0-9A-Za-z.+_-]*$/
 const ubuntuTagInImage = /^.*:([^@]+)@.*$/
@@ -61,16 +75,49 @@ function ubuntuTag(image: string): string {
   return image.replace(ubuntuTagInImage, '$1')
 }
 
-function listPins(): void {
+function allVersionTargets(): VersionTarget[] {
+  return moduleIdsInCatalogOrder().flatMap((moduleId) =>
+    versionTargets(moduleId, readModuleSource(moduleId)),
+  )
+}
+
+async function latestText(target: VersionTarget): Promise<string> {
+  try {
+    const latest = await latestVersion(target)
+    return compareVersions(latest, target.currentVersion) > 0 ? `${latest} available` : 'up to date'
+  } catch (error) {
+    return `unknown (${error instanceof Error ? error.message : String(error)})`
+  }
+}
+
+async function listPins(withLatest: boolean): Promise<void> {
   const rows = [
-    ['MODULE', 'VERSION'],
+    ['MODULE', 'VERSION', ...(withLatest ? ['LATEST'] : [])],
     ['ubuntu', ubuntuTag(readBaseImage())],
-    ...moduleIdsInCatalogOrder().map((moduleId) => [
-      moduleId,
-      describePins(readModuleSource(moduleId)),
-    ]),
   ]
-  for (const [name = '', pins = ''] of rows) console.log(`${name.padEnd(18)} ${pins}`)
+  for (const moduleId of moduleIdsInCatalogOrder()) {
+    const module = readModuleSource(moduleId)
+    const targets = versionTargets(moduleId, module)
+    if (!withLatest || targets.length === 0) {
+      rows.push([moduleId, describePins(module)])
+      continue
+    }
+    for (const target of targets) {
+      rows.push([target.name, target.currentVersion, await latestText(target)])
+    }
+  }
+  const width = Math.max(...rows.map(([name = '']) => name.length)) + 2
+  const versionWidth =
+    Math.max(
+      ...rows.filter((row) => row[2] !== undefined).map(([, version = '']) => version.length),
+    ) + 2
+  for (const [name = '', pins = '', latest] of rows) {
+    console.log(
+      latest === undefined
+        ? `${name.padEnd(width)}${pins}`
+        : `${name.padEnd(width)}${pins.padEnd(versionWidth)}${latest}`,
+    )
+  }
 }
 
 async function resolveUbuntuImage(tag: string): Promise<string> {
@@ -101,7 +148,7 @@ async function updateUbuntu(tag: string, skipInstallTest: boolean): Promise<void
   const image = await resolveUbuntuImage(tag)
   if (tag.split('.')[0] !== currentTag.split('.')[0]) {
     console.log(
-      `Note: this moves from Ubuntu ${currentTag} to ${tag}. Ubuntu package names in modules (such as libicu74 in the dotnet modules) may differ; build a project with them to check.`,
+      `Note: this moves from Ubuntu ${currentTag} to ${tag}. Ubuntu package names in the modules' packages may differ; build a project with them to check.`,
     )
   }
   if (!skipInstallTest) {
@@ -156,30 +203,55 @@ async function pinDownloads(
   }
 }
 
+let installTestBaseIsBuilt = false
+
 async function testInstall(moduleId: string, module: ModuleFileSource): Promise<void> {
   const engine = await requireRunningEngine()
-  await buildInstallTestBase(engine, readBaseImage())
+  if (!installTestBaseIsBuilt) {
+    await buildInstallTestBase(engine, readBaseImage())
+    installTestBaseIsBuilt = true
+  }
   const moduleIds = modulesWithRequirements([moduleId])
   const modulesById = new Map(moduleIds.map((id) => [id, readModuleSource(id)]))
   await runInstallTest(engine, moduleIds, modulesById, new Map([[moduleId, module]]), module.check)
 }
 
-async function updateModule(
-  target: string,
-  version: string,
-  skipInstallTest: boolean,
-): Promise<void> {
-  const [moduleId = '', downloadName] = target.split(':')
-  if (!validVersion.test(version)) throw new Error(`'${version}' is not a valid version.`)
+function findTarget(target: string): VersionTarget {
+  const [moduleId = ''] = target.split(':')
   if (!moduleExists(moduleId)) {
     throw new Error(
       `There is no module named '${moduleId}'. Run npm run modules:update-version to list them.`,
     )
   }
-  const { updated, downloadsToPin } = withVersion(readModuleSource(moduleId), downloadName, version)
-  if (downloadsToPin.length === 0) {
+  const targets = versionTargets(moduleId, readModuleSource(moduleId))
+  const found = targets.find((each) => each.name === target)
+  if (found) return found
+  if (targets.length === 0) {
     throw new Error(`${moduleId} only installs Ubuntu packages, so there is no version to pin.`)
   }
+  throw new Error(
+    `${target} has no version of its own. Pin one of: ${targets.map((each) => each.name).join(', ')}.`,
+  )
+}
+
+async function updateModule(
+  target: string,
+  requestedVersion: string | undefined,
+  skipInstallTest: boolean,
+): Promise<void> {
+  const { moduleId, downloadName, currentVersion } = findTarget(target)
+  let version = requestedVersion
+  if (version === undefined) {
+    console.log(`==> Looking up the latest version of ${target}`)
+    version = await latestVersion(findTarget(target))
+    console.log(`    ${version}`)
+    if (compareVersions(version, currentVersion) <= 0) {
+      console.log(`${target} is already at ${currentVersion}, the latest version.`)
+      return
+    }
+  }
+  if (!validVersion.test(version)) throw new Error(`'${version}' is not a valid version.`)
+  const { updated, downloadsToPin } = withVersion(readModuleSource(moduleId), downloadName, version)
   console.log(`==> Downloading ${target} ${version} for arm64 and amd64`)
   const pinned = await pinDownloads(updated, downloadsToPin)
   if (!skipInstallTest) await testInstall(moduleId, pinned)
@@ -189,11 +261,34 @@ async function updateModule(
   )
 }
 
+async function updateEveryOutdatedModule(skipInstallTest: boolean): Promise<void> {
+  const failures: string[] = []
+  for (const target of allVersionTargets()) {
+    try {
+      if (!target.lookup) {
+        console.log(`Skipping ${target.name}: it does not say where to find its latest version.`)
+        continue
+      }
+      await updateModule(target.name, undefined, skipInstallTest)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      console.log(`  ${target.name} was not changed: ${message}`)
+      failures.push(target.name)
+    }
+  }
+  if (failures.length > 0) {
+    console.error(`Not updated: ${failures.join(', ')}. Every other module is up to date.`)
+    process.exitCode = 1
+  }
+}
+
 async function main(): Promise<void> {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
     options: {
       'skip-install-test': { type: 'boolean', default: false },
+      outdated: { type: 'boolean', default: false },
+      all: { type: 'boolean', default: false },
       help: { type: 'boolean', short: 'h', default: false },
     },
   })
@@ -203,12 +298,16 @@ async function main(): Promise<void> {
   }
   const skipInstallTest = values['skip-install-test']
   const [target, version] = positionals
-  if (target === undefined) {
-    listPins()
-  } else if (version === undefined || positionals.length > 2) {
+  if (values.all) {
+    if (positionals.length > 0) throw new Error('--all updates every module, so name none.')
+    await updateEveryOutdatedModule(skipInstallTest)
+  } else if (target === undefined) {
+    await listPins(values.outdated)
+  } else if (positionals.length > 2) {
     console.error(usage)
     process.exitCode = 1
   } else if (target === 'ubuntu') {
+    if (version === undefined) throw new Error('Give the Ubuntu tag to pin, such as 26.04.')
     await updateUbuntu(version, skipInstallTest)
   } else {
     await updateModule(target, version, skipInstallTest)

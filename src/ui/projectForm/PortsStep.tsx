@@ -1,5 +1,10 @@
 import { Box, Text } from 'ink'
-import { portPresets, presetRanges } from '../../projects/portPresets.ts'
+import {
+  allPortPresets,
+  offeredPortPresets,
+  type PortPreset,
+  presetRanges,
+} from '../../projects/portPresets.ts'
 import { combinePorts, formatPortList, formatPortRange } from '../../projects/ports.ts'
 import { MultiSelectList, type MultiSelectOption } from '../components/MultiSelectList.tsx'
 import { Question } from '../components/Question.tsx'
@@ -10,8 +15,17 @@ import type { ProjectDraft } from './ProjectDraft.ts'
 
 const otherPortsValue = 'other'
 
-const portOptions: MultiSelectOption<string>[] = [
-  ...portPresets.map((preset) => ({
+function presetsFor(draft: ProjectDraft): PortPreset[] {
+  const offered = offeredPortPresets(draft.modules)
+  const keptFromBefore = allPortPresets().filter(
+    (preset) =>
+      draft.portPresetIds.includes(preset.id) && !offered.some((each) => each.id === preset.id),
+  )
+  return [...offered, ...keptFromBefore]
+}
+
+const portOptions = (draft: ProjectDraft): MultiSelectOption<string>[] => [
+  ...presetsFor(draft).map((preset) => ({
     value: preset.id,
     label: preset.label,
     hint: formatPortRange(preset.range),
@@ -62,10 +76,10 @@ export function PortsStep({ draft, submit, back }: StepControls<ProjectDraft>) {
   return (
     <Question
       title="Which ports should this machine reach?"
-      explanation="Pick the ports your apps listen on. Apps can keep listening on localhost inside the container; ampul forwards each port to localhost on this machine."
+      explanation="Pick the ports your apps listen on. The common ports of the tools you selected are listed. Apps can keep listening on localhost inside the container; ampul forwards each port to localhost on this machine."
     >
       <MultiSelectList
-        options={portOptions}
+        options={portOptions(draft)}
         initialSelection={initialSelection}
         onSubmit={(values) =>
           submit({

@@ -3,7 +3,6 @@ import { preferences } from '../system/preferences.ts'
 export const projectLabel = 'ampul.project'
 export const cacheLabel = 'ampul.cache'
 export const sharedCacheVolume = 'ampul-cache'
-export const innerEngineSocket = '/run/podman/podman.sock'
 
 const resourcePrefix = 'ampul-'
 
@@ -15,8 +14,8 @@ export function imageName(projectName: string): string {
   return resourcePrefix + projectName
 }
 
-export function innerEngineVolumeName(projectName: string): string {
-  return `${resourcePrefix}${projectName}-engine`
+export function moduleVolumeName(projectName: string, volumeName: string): string {
+  return `${resourcePrefix}${projectName}-${volumeName}`
 }
 
 export function projectNameFromContainerName(name: string): string | undefined {

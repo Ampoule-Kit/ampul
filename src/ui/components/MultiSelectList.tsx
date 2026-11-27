@@ -13,7 +13,7 @@ export interface MultiSelectOption<Value> {
   hint?: string | undefined
   description?: string | undefined
   section?: string | undefined
-  exclusiveGroup?: string | undefined
+  exclusiveWith?: Value[] | undefined
 }
 
 interface MultiSelectListProps<Value> {
@@ -23,6 +23,7 @@ interface MultiSelectListProps<Value> {
   onCancel?: (() => void) | undefined
   footer?: ((selection: Value[]) => ReactNode) | undefined
   requiredOptions?: ((selection: Value[]) => Map<Value, string>) | undefined
+  selectionProblem?: ((selection: Value[]) => string | undefined) | undefined
   maxVisible?: number
 }
 
@@ -80,6 +81,7 @@ export function MultiSelectList<Value>({
   onCancel,
   footer,
   requiredOptions,
+  selectionProblem,
   maxVisible = 12,
 }: MultiSelectListProps<Value>) {
   const navigation = useListNavigation(options.length)
@@ -99,8 +101,10 @@ export function MultiSelectList<Value>({
       setLockedNotice(`${focusedOption.label} stays selected: ${requiredReason}.`)
       return
     }
-    setLockedNotice(undefined)
-    setSelection((current) => toggleSelection(current, focusedOption, options))
+    const toggled = toggleSelection(selection, focusedOption)
+    const problem = selectionProblem?.(toggled)
+    setLockedNotice(problem === undefined ? undefined : `${problem}.`)
+    if (problem === undefined) setSelection(toggled)
   }
 
   useInput((input, key) => {
@@ -138,7 +142,7 @@ export function MultiSelectList<Value>({
               requiredReason={requiredReasons.get(option.value)}
               isFocused={index === navigation.focusedIndex}
               isSelected={effectiveSelection.includes(option.value)}
-              isExclusive={option.exclusiveGroup !== undefined}
+              isExclusive={(option.exclusiveWith ?? []).length > 0}
             />
           </Fragment>
         )

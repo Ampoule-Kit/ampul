@@ -2,7 +2,6 @@ import assert from 'node:assert/strict'
 import path from 'node:path'
 import { describe, it } from 'node:test'
 import { mountedFolderProblem, repositoryFolderName, repositoryUrlProblem } from './codeSources.ts'
-import { codeSourceSchema } from './ProjectSettings.ts'
 
 describe('repository URLs', () => {
   it('finds the folder git clones into', () => {
@@ -36,15 +35,5 @@ describe('mounted folders', () => {
 
   it('rejects folders with a colon in their path', () => {
     assert.match(mountedFolderProblem('/code/a:b', []) ?? '', /colon/)
-  })
-
-  it('turns a copied folder from earlier settings into a mounted one', () => {
-    assert.deepEqual(
-      codeSourceSchema.parse({ kind: 'folder', folder: '/code/api', onlyGitFiles: true }),
-      {
-        kind: 'folders',
-        folders: ['/code/api'],
-      },
-    )
   })
 })

@@ -1,5 +1,5 @@
 import type { ContainerEngine } from '../engine/ContainerEngine.ts'
-import { cacheLabel, imageName, innerEngineVolumeName, projectLabel } from './naming.ts'
+import { cacheLabel, imageName, projectLabel } from './naming.ts'
 
 const ampulLabels = [projectLabel, cacheLabel]
 
@@ -7,13 +7,16 @@ export async function removeImage(engine: ContainerEngine, projectName: string):
   await engine.capture(['rmi', '--force', imageName(projectName)])
 }
 
-export async function removeInnerEngineVolume(
+export async function removeProjectVolumes(
   engine: ContainerEngine,
   projectName: string,
 ): Promise<void> {
-  const volume = innerEngineVolumeName(projectName)
-  const { exitCode } = await engine.capture(['volume', 'inspect', volume])
-  if (exitCode === 0) await engine.capture(['volume', 'rm', '--force', volume])
+  const volumeNames = await identifiersWithLabel(
+    engine,
+    ['volume', 'ls'],
+    `${projectLabel}=${projectName}`,
+  )
+  if (volumeNames.length > 0) await engine.capture(['volume', 'rm', '--force', ...volumeNames])
 }
 
 async function identifiersWithLabel(

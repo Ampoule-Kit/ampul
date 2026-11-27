@@ -77,7 +77,10 @@ export const configCommand: CommandDefinition = {
     'Changes apply when the container is rebuilt. You can rebuild right away from the review, or later with ampul rebuild.',
   ],
   examples: [
-    { command: 'ampul config api', explanation: 'Add a .NET SDK to api, or change its ports.' },
+    {
+      command: 'ampul config api',
+      explanation: 'Add or remove tools in api, or change its ports.',
+    },
   ],
   seeAlso: ['rebuild', 'new'],
   run,

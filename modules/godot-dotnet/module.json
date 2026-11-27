@@ -6,7 +6,9 @@
   "requires": [
     "dotnet-8"
   ],
-  "group": "godot",
+  "mutuallyExclusiveWith": [
+    "godot"
+  ],
   "packages": [
     "libfontconfig1"
   ],
@@ -28,6 +30,15 @@
           "as": "godot"
         }
       ]
+    }
+  ],
+  "portPresets": [
+    {
+      "id": "godot-language-server",
+      "label": "Godot language server",
+      "port": 6005,
+      "section": "Debuggers and language servers",
+      "description": "The GDScript language server that the Godot editor runs, so an editor on this machine gets completion and errors from Godot in the container."
     }
   ],
   "check": "godot --headless --version"

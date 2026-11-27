@@ -25,7 +25,11 @@
       "installTo": "/opt/docker-cli",
       "commands": [
         "docker"
-      ]
+      ],
+      "latestVersion": {
+        "url": "https://download.docker.com/linux/static/stable/x86_64/",
+        "match": "docker-([0-9]+\\.[0-9]+\\.[0-9]+)\\.tgz"
+      }
     },
     {
       "name": "compose",
@@ -42,6 +46,58 @@
       "installTo": "/usr/local/lib/docker/cli-plugins",
       "sharedFolder": true,
       "fileName": "docker-compose"
+    }
+  ],
+  "environment": {
+    "DOCKER_HOST": "unix:///run/podman/podman.sock",
+    "CONTAINER_HOST": "unix:///run/podman/podman.sock",
+    "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE": "/run/podman/podman.sock"
+  },
+  "container": {
+    "privileged": true,
+    "volumes": [
+      {
+        "name": "engine",
+        "path": "/var/lib/containers",
+        "contents": "Images and data of the containers run inside the project"
+      }
+    ]
+  },
+  "portPresets": [
+    {
+      "id": "postgres",
+      "label": "PostgreSQL",
+      "port": 5432,
+      "section": "Databases and services",
+      "description": "Reach a PostgreSQL server running in the container, for example from a compose stack, with tools on this machine."
+    },
+    {
+      "id": "mysql",
+      "label": "MySQL, MariaDB",
+      "port": 3306,
+      "section": "Databases and services",
+      "description": "Reach a MySQL or MariaDB server running in the container with tools on this machine."
+    },
+    {
+      "id": "sql-server",
+      "label": "SQL Server",
+      "port": 1433,
+      "section": "Databases and services",
+      "description": "Reach a SQL Server running in the container with tools on this machine."
+    },
+    {
+      "id": "mongodb",
+      "label": "MongoDB",
+      "port": 27017,
+      "section": "Databases and services",
+      "description": "Reach a MongoDB server running in the container with tools on this machine."
+    },
+    {
+      "id": "redis",
+      "label": "Redis",
+      "port": 6379,
+      "section": "Databases and services",
+      "description": "Reach a Redis server running in the container with tools on this machine."
     }
   ],
   "check": "podman --version && docker --version && docker compose version"
