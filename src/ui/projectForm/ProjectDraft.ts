@@ -1,14 +1,13 @@
 import { moduleCatalog } from '../../modules/moduleCatalog.ts'
 import { defaultModuleIds, withRequiredModules } from '../../modules/moduleSelection.ts'
-import type { ProjectSettings } from '../../projects/ProjectSettings.ts'
+import type { CodeSource, ProjectSettings } from '../../projects/ProjectSettings.ts'
 import { presetRanges, presetsCoveredBy } from '../../projects/portPresets.ts'
 import { combinePorts, type PortRange, portRanges } from '../../projects/ports.ts'
 
 export interface ProjectDraft {
-  codeSourceKind: 'repositories' | 'folder'
+  codeSourceKind: CodeSource['kind']
   repositories: string[]
-  folder: string
-  onlyGitFiles: boolean
+  folders: string[]
   name: string
   modules: string[]
   portPresetIds: string[]
@@ -20,8 +19,7 @@ export function emptyDraft(name = ''): ProjectDraft {
   return {
     codeSourceKind: 'repositories',
     repositories: [],
-    folder: '',
-    onlyGitFiles: true,
+    folders: [],
     name,
     modules: defaultModuleIds(moduleCatalog()),
     portPresetIds: [],
@@ -36,8 +34,7 @@ export function draftFromSettings(settings: ProjectSettings): ProjectDraft {
   return {
     codeSourceKind: source.kind,
     repositories: source.kind === 'repositories' ? source.repositories : [],
-    folder: source.kind === 'folder' ? source.folder : '',
-    onlyGitFiles: source.kind === 'folder' ? source.onlyGitFiles : true,
+    folders: source.kind === 'folders' ? source.folders : [],
     name: settings.name,
     modules: settings.modules,
     portPresetIds: presetIds,
@@ -49,13 +46,18 @@ export function draftFromSettings(settings: ProjectSettings): ProjectDraft {
 export function settingsFromDraft(draft: ProjectDraft): ProjectSettings {
   return {
     name: draft.name,
-    codeSource:
-      draft.codeSourceKind === 'repositories'
-        ? { kind: 'repositories', repositories: draft.repositories }
-        : { kind: 'folder', folder: draft.folder, onlyGitFiles: draft.onlyGitFiles },
+    codeSource: draftCodeSource(draft),
     modules: withRequiredModules(draft.modules, moduleCatalog()),
     ports: draftPorts(draft),
   }
+}
+
+function draftCodeSource(draft: ProjectDraft): CodeSource {
+  if (draft.codeSourceKind === 'repositories') {
+    return { kind: 'repositories', repositories: draft.repositories }
+  }
+  if (draft.codeSourceKind === 'folders') return { kind: 'folders', folders: draft.folders }
+  return { kind: 'pass-through' }
 }
 
 export function draftPorts(draft: ProjectDraft): number[] {

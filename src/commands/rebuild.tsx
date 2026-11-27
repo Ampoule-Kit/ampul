@@ -19,10 +19,15 @@ export async function confirmAndRebuild(
       commandLine: `ampul rebuild ${project.name}`,
       title: `Rebuilding recreates ${project.name} from scratch.`,
       lost: [
-        'Everything in ~/Project, including uncommitted and unpushed work',
+        ...(project.codeSource.kind === 'repositories'
+          ? ['The clones in ~/home, including uncommitted and unpushed work']
+          : []),
         'Anything else you changed inside the container',
       ],
       kept: [
+        ...(project.codeSource.kind === 'repositories'
+          ? []
+          : ['The folders mounted in ~/home, which stay on this machine']),
         'The shared package cache (NuGet, npm and other ~/.cache data)',
         ...(usesInnerContainerEngine(project)
           ? ['Images and data of the containers run inside the project']
@@ -60,7 +65,7 @@ export const rebuildCommand: CommandDefinition = {
   description: [
     'Builds the image again with the project’s current settings and pinned tool versions, replaces the container, sets it up and fetches the code again. Use it after ampul config, after pinning a new tool version, or when a container is broken.',
     'Image layers that did not change are reused, so a rebuild is much faster than the first build.',
-    'The container is thrown away, and ~/Project with it: push your work first.',
+    'The container is thrown away, and cloned repositories in ~/home with it: push your work first. Mounted folders stay on this machine.',
   ],
   examples: [
     { command: 'ampul rebuild api', explanation: 'Rebuild api after confirming.' },

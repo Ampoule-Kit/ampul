@@ -16,24 +16,38 @@ export function repositoryUrlProblem(url: string, otherRepositories: string[]): 
     (other) => repositoryFolderName(other) === folderName,
   )
   if (clashingRepository) {
-    return `${clashingRepository} already clones into ~/Project/${folderName}.`
+    return `${clashingRepository} already clones into ~/home/${folderName}.`
+  }
+  return undefined
+}
+
+export function mountedFolderProblem(folder: string, otherFolders: string[]): string | undefined {
+  const folderName = path.basename(folder)
+  if (!folderName) return `${folder} has no folder name to mount it under.`
+  const clashingFolder = otherFolders.find((other) => path.basename(other) === folderName)
+  if (clashingFolder) {
+    return `${displayPath(clashingFolder)} is already mounted at ~/home/${folderName}.`
   }
   return undefined
 }
 
 export function codeSourceFolderNames(codeSource: CodeSource): string[] {
   if (codeSource.kind === 'repositories') return codeSource.repositories.map(repositoryFolderName)
-  return [path.basename(codeSource.folder)]
+  if (codeSource.kind === 'folders')
+    return codeSource.folders.map((folder) => path.basename(folder))
+  return []
 }
 
 export function describeCodeSource(codeSource: CodeSource): string {
   if (codeSource.kind === 'repositories') {
-    const count = codeSource.repositories.length
     const names = codeSource.repositories.map(repositoryFolderName).join(', ')
-    return count === 1 ? `clone of ${names}` : `clones of ${names}`
+    return codeSource.repositories.length === 1 ? `clone of ${names}` : `clones of ${names}`
   }
-  const scope = codeSource.onlyGitFiles ? 'git files of' : 'copy of'
-  return `${scope} ${displayPath(codeSource.folder)}`
+  if (codeSource.kind === 'folders') {
+    const folders = codeSource.folders.map(displayPath).join(', ')
+    return codeSource.folders.length === 1 ? `mount of ${folders}` : `mounts of ${folders}`
+  }
+  return 'pass-through of your home folder'
 }
 
 export function suggestedProjectName(codeSource: CodeSource): string {

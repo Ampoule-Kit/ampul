@@ -5,7 +5,7 @@ import { askYesOrNo } from '../../../ui/askYesOrNo.tsx'
 import { runTasks } from '../../../ui/runTasks.tsx'
 import { printElement } from '../../../ui/terminal.tsx'
 import { openShell } from '../containerAccess.tsx'
-import { codeTask, containerTask, imageTask, setupTask } from './buildTasks.ts'
+import { cloneTasks, containerTask, imageTask, setupTask } from './buildTasks.ts'
 import { retryFailedClones } from './cloneRetry.tsx'
 import { ReadySummary } from './ReadySummary.tsx'
 
@@ -32,7 +32,7 @@ export async function buildProject(
       imageTask(engine, project),
       containerTask(engine, project),
       setupTask(engine, project),
-      codeTask(engine, project, recordCloneFailures),
+      ...cloneTasks(engine, project, recordCloneFailures),
     ],
     new LogFile(project.name, 'build'),
   )

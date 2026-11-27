@@ -53,14 +53,17 @@ ampul              # see all your projects and manage them with single keys
 
 `ampul new` asks for:
 
-1. **Your code.** One or more git repositories (HTTPS or SSH), or a folder on your machine. It is cloned or copied into `~/Project` in the container. For a git repository, you can copy only the files git tracks, leaving out `node_modules`, `.env` and other ignored files.
+1. **Your code**, which lands in `~/home` in the container. Pick one of:
+   - **Clone git repositories.** One or more repositories (HTTPS or SSH), cloned into `~/home/<name>`. The clones live only in the container.
+   - **Mount folders.** One or more folders on your machine, such as repositories you already have, mounted at `~/home/<folder name>`. The container works on the folders themselves.
+   - **Pass-through.** Your home folder on your machine is mounted at `~/home`, so all your own folders are there. The container keeps its own dotfiles and tool config in `~`.
 2. **A name**, suggested from your code.
 3. **Extra tools**, such as .NET SDKs, Java, Godot, Python or a container engine.
 4. **Ports** to reach from your machine at `localhost`. Pick common ones (Angular, Vite, ASP.NET Core, Spring Boot, PostgreSQL, Redis and more) or add your own, such as `3000-3009`.
 
 You can review everything before it builds, and press Esc to go back a step at any time. When it's done, ampul offers to connect you.
 
-> **Your code lives only in the container.** Push your work before running `ampul rebuild` or `ampul rm`, as both replace `~/Project`.
+> **Cloned repositories live only in the container.** Push your work before running `ampul rebuild` or `ampul rm`, as both throw the clones away. Mounted folders stay on your machine.
 
 ## Commands
 
@@ -68,7 +71,7 @@ You can review everything before it builds, and press Esc to go back a step at a
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `ampul`                | Shows every project and its status. Enter connects; `s` stops, `e` configures, `r` rebuilds, `x` removes, `n` creates. |
 | `ampul new [name]`     | Creates a project.                                                                                                     |
-| `ampul start [name]`   | Starts a project if needed and opens a shell in `~/Project`. Use `-d` to only start it.                                |
+| `ampul start [name]`   | Starts a project if needed and opens a shell in `~/home`. Use `-d` to only start it.                                   |
 | `ampul stop [name]`    | Stops a project. Use `--all` to stop every project.                                                                    |
 | `ampul ls`             | Lists your projects, their status, ports and code. Use `--json` for scripts.                                           |
 | `ampul config [name]`  | Changes a project's code, tools or ports.                                                                              |
@@ -131,11 +134,12 @@ Select the container engine to run Podman, docker and docker compose inside your
 
 ### What survives a rebuild
 
-| Kept                                                 | Replaced                                        |
-| ---------------------------------------------------- | ----------------------------------------------- |
-| Package caches, such as NuGet and npm                | `~/Project`, with freshly cloned or copied code |
-| Images and data of containers run inside the project | Dotfiles, tool config and installed tools       |
-| Project settings                                     | Everything else in the container                |
+| Kept                                                 | Replaced                                    |
+| ---------------------------------------------------- | ------------------------------------------- |
+| Package caches, such as NuGet and npm                | Cloned repositories, which are cloned again |
+| Mounted folders, which stay on your machine          | Dotfiles, tool config and installed tools   |
+| Images and data of containers run inside the project | Everything else in the container            |
+| Project settings                                     |                                             |
 
 ## Make it yours
 
@@ -178,13 +182,14 @@ To choose a runtime for a single command, set the `AMPUL_RUNTIME` environment va
 
 ## Platform notes
 
-Everything above works the same on every system. The differences are in how you set up the container engine and where ampul keeps its files. Logs hold the last ten builds, setups and removals for each project.
+Everything above works the same on every system. The differences are in how you set up the container engine, which folders it can mount, and where ampul keeps its files. Logs hold the last ten builds, setups and removals for each project.
 
 ### macOS
 
 - **Podman** runs containers inside a Linux virtual machine, called the Podman machine. Install it with `brew install podman`; ampul offers to create and start the machine for you.
 - **Memory:** builds need it, so give the Podman machine at least 4 GB, or 6 to 8 GB for larger projects. `ampul doctor` checks this and shows the command to change it.
 - **Docker:** use Docker Desktop or Colima, and make sure it is running before you use ampul.
+- **Mounted folders** must be shared with the virtual machine. The Podman machine and Docker Desktop share your home folder by default; add other locations, such as `/Volumes`, in their settings.
 
 | What           | Location                                                       |
 | -------------- | -------------------------------------------------------------- |
@@ -203,6 +208,7 @@ File locations are the same as on macOS.
 
 - **Podman:** install [Podman Desktop](https://podman.io). Like on macOS, it runs containers inside a Podman machine, which ampul offers to create and start. The same memory advice applies.
 - **Docker:** use Docker Desktop, and make sure it is running before you use ampul.
+- **Mounted folders** can be on any local drive, such as `C:\Users\you\code`.
 
 | What           | Location                           |
 | -------------- | ---------------------------------- |

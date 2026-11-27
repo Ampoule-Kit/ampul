@@ -13,6 +13,7 @@ import {
   projectLabel,
   sharedCacheVolume,
 } from './naming.ts'
+import { codeMounts } from './projectCode.ts'
 
 async function createVolumeIfMissing(
   engine: ContainerEngine,
@@ -32,6 +33,7 @@ export async function createContainer(
   project: ProjectSettings,
   context: TaskContext,
 ): Promise<void> {
+  const mounts = [...(await hostConfigMounts()), ...codeMounts(project)]
   await createVolumeIfMissing(engine, sharedCacheVolume, `${cacheLabel}=true`)
   if (usesInnerContainerEngine(project)) {
     await createVolumeIfMissing(
@@ -42,7 +44,7 @@ export async function createContainer(
   }
   const runArguments = containerRunArguments(project, {
     isRootlessPodman: await engine.isRootlessPodman(),
-    hostMounts: await hostConfigMounts(),
+    hostMounts: mounts,
   })
   const { exitCode, stderr } = await engine.capture(runArguments)
   context.output(stderr)

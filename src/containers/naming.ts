@@ -31,6 +31,6 @@ export function containerHome(): string {
   return `/home/${containerUser()}`
 }
 
-export function containerProjectDirectory(): string {
-  return `${containerHome()}/Project`
+export function containerCodeDirectory(): string {
+  return `${containerHome()}/home`
 }

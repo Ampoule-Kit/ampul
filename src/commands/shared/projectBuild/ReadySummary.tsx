@@ -2,6 +2,7 @@ import { Box, Text } from 'ink'
 import { codeSourceFolderNames, repositoryFolderName } from '../../../projects/codeSources.ts'
 import type { ProjectSettings } from '../../../projects/ProjectSettings.ts'
 import { formatPortRange, type PortRange, portRanges } from '../../../projects/ports.ts'
+import { homeDirectory } from '../../../system/platform.ts'
 import { pluralize } from '../../../text/prose.ts'
 import { Bullet, Callout } from '../../../ui/components/Callout.tsx'
 import { colors } from '../../../ui/theme.ts'
@@ -27,8 +28,11 @@ export function ReadySummary({ project, unclonedRepositories, warnings }: ReadyS
   return (
     <Callout tone={needsAttention ? 'warning' : 'success'} title={`${project.name} is ready`}>
       {codeFolders.map((folder) => (
-        <Bullet key={folder}>Code in ~/Project/{folder}</Bullet>
+        <Bullet key={folder}>Code in ~/home/{folder}</Bullet>
       ))}
+      {project.codeSource.kind === 'pass-through' && (
+        <Bullet>~/home is your home folder on this machine, {homeDirectory}</Bullet>
+      )}
       {portRanges(project.ports).map((range) => (
         <Bullet key={range.first}>{portForwardDescription(range)}</Bullet>
       ))}

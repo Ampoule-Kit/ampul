@@ -23,7 +23,7 @@ async function run(invocation: Invocation): Promise<number> {
     title: 'Purging removes everything ampul created.',
     lost: [
       projectNames.length > 0
-        ? `Every project container, with its ~/Project: ${projectNames.join(', ')}`
+        ? `Every project container, with its cloned repositories: ${projectNames.join(', ')}`
         : 'Every ampul container',
       'Every ampul image and volume, including the shared package cache',
       `All project settings in ${displayPath(ampulPaths.projects)}`,

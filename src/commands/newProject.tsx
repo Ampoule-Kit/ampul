@@ -91,10 +91,10 @@ export const newProjectCommand: CommandDefinition = {
   ],
   flags: [],
   description: [
-    'Opens a short guided form: where the code comes from (git repositories to clone, or a folder on this machine to copy), the project name, the tools it gets, and the ports this machine should reach. It shows what is about to happen before anything is built.',
-    'It then builds the image, creates the container, copies your dotfiles and each tool’s config in, sets up the tools, git and SSH, and fetches the code into ~/Project. Every step shows its progress, and the full output is kept in a log file.',
+    'Opens a short guided form: where the code comes from (git repositories to clone, folders on this machine to mount, or your whole home folder passed through), the project name, the tools it gets, and the ports this machine should reach. It shows what is about to happen before anything is built.',
+    'It then builds the image, creates the container, copies your dotfiles and each tool’s config in, sets up the tools, git and SSH, and clones or mounts the code into ~/home. Every step shows its progress, and the full output is kept in a log file.',
     'Repositories that need a password or passphrase are cloned afterwards in the terminal, where git can ask for it.',
-    'The code lives only in the container. Push your work before ampul rebuild or ampul rm, which both throw ~/Project away.',
+    'Cloned repositories live only in the container. Push your work before ampul rebuild or ampul rm, which both throw them away. Mounted folders stay on this machine.',
   ],
   examples: [
     { command: 'ampul new', explanation: 'Create a project, choosing everything in the form.' },

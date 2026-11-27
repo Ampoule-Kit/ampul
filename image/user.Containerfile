@@ -8,5 +8,5 @@ ENV SSH_AUTH_SOCK=/tmp/ampul/ssh-agent.sock
 COPY container/entrypoint.sh /opt/ampul/entrypoint.sh
 
 USER ${USER_NAME}
-WORKDIR /home/${USER_NAME}/Project
+WORKDIR /home/${USER_NAME}/home
 CMD ["/opt/ampul/entrypoint.sh"]

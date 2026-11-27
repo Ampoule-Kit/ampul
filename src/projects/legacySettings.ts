@@ -62,11 +62,7 @@ export function parseLegacySettings(
   )
   const codeSource =
     assignments.get('CODE_SOURCE') === 'copy'
-      ? {
-          kind: 'folder',
-          folder: assignments.get('COPY_FOLDER') ?? '',
-          onlyGitFiles: Boolean(assignments.get('COPY_GIT_FILES_ONLY')),
-        }
+      ? { kind: 'folder', folder: assignments.get('COPY_FOLDER') ?? '' }
       : { kind: 'repositories', repositories: words('REPOSITORIES') }
 
   return settingsBeforeModulesSchema.parse({

@@ -1,11 +1,9 @@
 import { Box } from 'ink'
-import { isGitRepositoryRoot } from '../../system/folders.ts'
 import { Header } from '../components/Header.tsx'
 import { answeredSteps, Wizard, type WizardStep } from '../components/Wizard.tsx'
 import type { Finish } from '../terminal.tsx'
 import { CodeSourceStep, describeCodeSourceKind } from './CodeSourceStep.tsx'
-import { describeFolder, FolderStep } from './FolderStep.tsx'
-import { describeGitFiles, GitFilesStep } from './GitFilesStep.tsx'
+import { describeFolders, FoldersStep } from './FoldersStep.tsx'
 import { describeModulesAnswer, ModulesStep } from './ModulesStep.tsx'
 import { NameStep } from './NameStep.tsx'
 import { describeOtherPorts, OtherPortsStep } from './OtherPortsStep.tsx'
@@ -45,20 +43,12 @@ function questionSteps(askForName: boolean): WizardStep<ProjectDraft>[] {
       render: (controls) => <RepositoriesStep {...controls} />,
     },
     {
-      id: 'folder',
-      title: 'Folder',
-      isSkipped: (draft) => draft.codeSourceKind !== 'folder',
-      isComplete: (draft) => Boolean(draft.folder),
-      summary: describeFolder,
-      render: (controls) => <FolderStep {...controls} />,
-    },
-    {
-      id: 'git-files',
-      title: 'Copy',
-      isSkipped: (draft) =>
-        draft.codeSourceKind !== 'folder' || !draft.folder || !isGitRepositoryRoot(draft.folder),
-      summary: describeGitFiles,
-      render: (controls) => <GitFilesStep {...controls} />,
+      id: 'folders',
+      title: 'Folders',
+      isSkipped: (draft) => draft.codeSourceKind !== 'folders',
+      isComplete: (draft) => draft.folders.length > 0,
+      summary: describeFolders,
+      render: (controls) => <FoldersStep {...controls} />,
     },
     {
       id: 'name',

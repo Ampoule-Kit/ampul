@@ -43,7 +43,7 @@ export function RepositoriesStep({ draft, submit, back }: StepControls<ProjectDr
           <Text color={colors.success}>{symbols.success}</Text> {repository}
           <Text color={colors.muted}>
             {'  '}
-            {symbols.arrow} ~/Project/{repositoryFolderName(repository)}
+            {symbols.arrow} ~/home/{repositoryFolderName(repository)}
           </Text>
         </Text>
       ))}

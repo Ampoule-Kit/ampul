@@ -1,30 +1,39 @@
+import type { CodeSource } from '../../projects/ProjectSettings.ts'
 import { Question } from '../components/Question.tsx'
-import { SelectList } from '../components/SelectList.tsx'
+import { SelectList, type SelectOption } from '../components/SelectList.tsx'
 import type { StepControls } from '../components/Wizard.tsx'
 import type { ProjectDraft } from './ProjectDraft.ts'
+
+const codeSourceOptions: SelectOption<CodeSource['kind']>[] = [
+  {
+    value: 'repositories',
+    label: 'Clone git repositories',
+    description:
+      'One or more repositories, HTTPS or SSH, cloned side by side into ~/home. The clones live only in the container and are cloned fresh on every rebuild. Your git credentials and SSH keys are available inside the container.',
+  },
+  {
+    value: 'folders',
+    label: 'Mount folders from this machine',
+    description:
+      'One or more folders, such as repositories you already have, mounted side by side into ~/home. The container works on the folders themselves, so nothing is lost on a rebuild.',
+  },
+  {
+    value: 'pass-through',
+    label: 'Pass through your home folder',
+    description:
+      'Your home folder on this machine is mounted at ~/home, so all your own folders are there. The container keeps its own dotfiles and tool config in ~.',
+  },
+]
 
 export function CodeSourceStep({ draft, submit, back }: StepControls<ProjectDraft>) {
   return (
     <Question
       title="Where does the code come from?"
-      explanation="The code lives only inside the container, in ~/Project. It is fetched fresh every time the project is rebuilt."
+      explanation="The code is in ~/home inside the container, where every shell starts."
     >
-      <SelectList<ProjectDraft['codeSourceKind']>
+      <SelectList<CodeSource['kind']>
         initialValue={draft.codeSourceKind}
-        options={[
-          {
-            value: 'repositories',
-            label: 'Clone git repositories',
-            description:
-              'One or more repositories, HTTPS or SSH, cloned side by side into ~/Project. Your git credentials and SSH keys are available inside the container.',
-          },
-          {
-            value: 'folder',
-            label: 'Copy a folder from this machine',
-            description:
-              'A one-time copy of a local folder. Changes inside the container never touch the original, and a rebuild copies it again.',
-          },
-        ]}
+        options={codeSourceOptions}
         onSelect={(codeSourceKind) => submit({ codeSourceKind })}
         onCancel={back}
         cancelLabel="quit"
@@ -34,5 +43,5 @@ export function CodeSourceStep({ draft, submit, back }: StepControls<ProjectDraf
 }
 
 export function describeCodeSourceKind(draft: ProjectDraft): string {
-  return draft.codeSourceKind === 'repositories' ? 'Clone git repositories' : 'Copy a folder'
+  return codeSourceOptions.find((option) => option.value === draft.codeSourceKind)?.label ?? ''
 }
