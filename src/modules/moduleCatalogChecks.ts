@@ -75,6 +75,81 @@ function checkNoCircularRequirements(
   for (const module of modules) visit(module.id, [])
 }
 
+function allRequirementsOf(id: string, byId: ReadonlyMap<string, ModuleDefinition>): string[] {
+  const found = new Set<string>()
+  const visit = (requiredId: string) => {
+    if (found.has(requiredId)) return
+    found.add(requiredId)
+    for (const next of byId.get(requiredId)?.requires ?? []) visit(next)
+  }
+  for (const required of byId.get(id)?.requires ?? []) visit(required)
+  return [...found]
+}
+
+function checkRequirementsAreCompatible(
+  modules: ModuleDefinition[],
+  byId: ReadonlyMap<string, ModuleDefinition>,
+): void {
+  for (const module of modules) {
+    const withRequirements = [module.id, ...allRequirementsOf(module.id, byId)]
+    const byGroup = new Map<string, string>()
+    for (const id of withRequirements) {
+      const group = byId.get(id)?.exclusiveGroup
+      if (group === undefined) continue
+      const other = byGroup.get(group)
+      if (other !== undefined) {
+        throw brokenCatalog(
+          `The module '${module.id}' needs both '${other}' and '${id}'`,
+          `They are both in the exclusive group '${group}', so only one of them can be selected. Change requires in ${modulesFolder}/${module.id}/${moduleFileName}, or the exclusiveGroup of one of them.`,
+        )
+      }
+      byGroup.set(group, id)
+    }
+  }
+}
+
+function sameExclusiveGroup(first: ModuleDefinition, second: ModuleDefinition): boolean {
+  return first.exclusiveGroup !== undefined && first.exclusiveGroup === second.exclusiveGroup
+}
+
+function checkInstallFoldersDoNotClash(modules: ModuleDefinition[]): void {
+  const owners = new Map<string, { module: ModuleDefinition; shared: boolean }>()
+  for (const module of modules) {
+    for (const download of module.downloads) {
+      const shared = download.sharedFolder === true
+      const owner = owners.get(download.installTo)
+      const clashes =
+        owner !== undefined &&
+        owner.module !== module &&
+        !(owner.shared && shared) &&
+        !sameExclusiveGroup(owner.module, module)
+      if (clashes) {
+        throw brokenCatalog(
+          `The modules '${owner.module.id}' and '${module.id}' both install to ${download.installTo}`,
+          'Installing one would replace the other. Give them different installTo folders, set sharedFolder on both downloads, or put them in the same exclusiveGroup so only one can be selected.',
+        )
+      }
+      if (!owner) owners.set(download.installTo, { module, shared })
+    }
+  }
+}
+
+function checkVolumeNamesAreUnique(modules: ModuleDefinition[]): void {
+  const owners = new Map<string, string>()
+  for (const module of modules) {
+    for (const volume of module.container.volumes) {
+      const owner = owners.get(volume.name)
+      if (owner !== undefined && owner !== module.id) {
+        throw brokenCatalog(
+          `The modules '${owner}' and '${module.id}' both have a volume named '${volume.name}'`,
+          'A volume name is shared by every module of a project, so each one needs its own.',
+        )
+      }
+      owners.set(volume.name, module.id)
+    }
+  }
+}
+
 export function checkModuleCatalog(
   modules: ModuleDefinition[],
   byId: ReadonlyMap<string, ModuleDefinition>,
@@ -84,4 +159,7 @@ export function checkModuleCatalog(
   checkEveryFolderIsListed(byId, moduleFolders)
   checkRequirementsExist(modules, byId)
   checkNoCircularRequirements(modules, byId)
+  checkRequirementsAreCompatible(modules, byId)
+  checkInstallFoldersDoNotClash(modules)
+  checkVolumeNamesAreUnique(modules)
 }

@@ -6,7 +6,7 @@
   "requires": [
     "dotnet-8"
   ],
-  "group": "godot",
+  "exclusiveGroup": "godot",
   "packages": [
     "libfontconfig1"
   ],
@@ -28,6 +28,12 @@
           "as": "godot"
         }
       ]
+    }
+  ],
+  "legacySettings": [
+    {
+      "setting": "GODOT",
+      "value": "dotnet"
     }
   ],
   "check": "godot --headless --version"

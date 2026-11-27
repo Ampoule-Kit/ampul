@@ -1,7 +1,11 @@
 import type { ContainerEngine } from '../engine/ContainerEngine.ts'
 import type { ModuleDefinition } from '../modules/ModuleDefinition.ts'
 import { moduleCatalog } from '../modules/moduleCatalog.ts'
-import { installationOrder } from '../modules/moduleSelection.ts'
+import {
+  describeConflict,
+  installationOrder,
+  selectionConflicts,
+} from '../modules/moduleSelection.ts'
 import { Problem } from '../problems/Problem.ts'
 import type { ProjectSettings } from '../projects/ProjectSettings.ts'
 import { resourceDirectory } from '../resources/resourceDirectory.ts'
@@ -47,7 +51,15 @@ export async function buildImage(
   context: TaskContext,
 ): Promise<void> {
   let sawOutOfMemory = false
-  const modules = installationOrder(project.modules, moduleCatalog())
+  const catalog = moduleCatalog()
+  const [conflict] = selectionConflicts(project.modules, catalog)
+  if (conflict) {
+    throw new Problem(`${describeConflict(conflict)} in ${project.name}`, {
+      explanation: `Only one module of the exclusive group '${conflict.exclusiveGroup}' can be installed.`,
+      fixes: [{ description: 'Choose one of them', command: `ampul config ${project.name}` }],
+    })
+  }
+  const modules = installationOrder(project.modules, catalog)
   const exitCode = await engine.stream(imageBuildArguments(engine, project, modules), {
     environment: engine.runtime === 'docker' ? { DOCKER_BUILDKIT: '1' } : undefined,
     onOutput: context.output,

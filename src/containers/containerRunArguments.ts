@@ -1,3 +1,4 @@
+import type { ModuleDefinition } from '../modules/ModuleDefinition.ts'
 import type { ProjectSettings } from '../projects/ProjectSettings.ts'
 import { formatPortRange, portForwards, portsInRange } from '../projects/ports.ts'
 import { type HostMount, volumeArgument } from './hostConfigMounts.ts'
@@ -5,23 +6,17 @@ import {
   containerHome,
   containerName,
   imageName,
-  innerEngineSocket,
-  innerEngineVolumeName,
+  moduleVolumeName,
   projectLabel,
   sharedCacheVolume,
 } from './naming.ts'
 
-const innerContainerEngineModule = 'container-engine'
-const innerEngineStorage = '/var/lib/containers'
 const portForwardsVariable = 'AMPUL_PORT_FORWARDS'
 
 export interface ContainerRunContext {
   isRootlessPodman: boolean
   hostMounts: HostMount[]
-}
-
-export function usesInnerContainerEngine(project: ProjectSettings): boolean {
-  return project.modules.includes(innerContainerEngineModule)
+  modules: ModuleDefinition[]
 }
 
 function identityArguments(project: ProjectSettings): string[] {
@@ -47,19 +42,15 @@ function hostMountArguments(context: ContainerRunContext): string[] {
   return context.hostMounts.flatMap((mount) => ['--volume', volumeArgument(mount)])
 }
 
-function innerEngineArguments(project: ProjectSettings): string[] {
-  if (!usesInnerContainerEngine(project)) return []
-  const socketAddress = `unix://${innerEngineSocket}`
+function moduleArguments(project: ProjectSettings, context: ContainerRunContext): string[] {
+  const privileged = context.modules.some((module) => module.container.privileged)
+  const volumes = context.modules.flatMap((module) => module.container.volumes)
   return [
-    '--privileged',
-    '--volume',
-    `${innerEngineVolumeName(project.name)}:${innerEngineStorage}`,
-    '--env',
-    `DOCKER_HOST=${socketAddress}`,
-    '--env',
-    `CONTAINER_HOST=${socketAddress}`,
-    '--env',
-    `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=${innerEngineSocket}`,
+    ...(privileged ? ['--privileged'] : []),
+    ...volumes.flatMap((volume) => [
+      '--volume',
+      `${moduleVolumeName(project.name, volume.name)}:${volume.path}`,
+    ]),
   ]
 }
 
@@ -89,7 +80,7 @@ export function containerRunArguments(
     ...sharedCacheArguments(),
     ...userNamespaceArguments(context),
     ...hostMountArguments(context),
-    ...innerEngineArguments(project),
+    ...moduleArguments(project, context),
     ...portArguments(project),
     imageName(project.name),
   ]

@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
+import { catalogForTests, moduleForTests } from '../modules/moduleForTests.ts'
 import { parseLegacySettings } from './legacySettings.ts'
-import { migrateToModules } from './settingsMigration.ts'
+import { migrateToModules, modulesForLegacyValue } from './settingsMigration.ts'
 
 const bashSettings = `PROJECT_NAME=api
 CODE_SOURCE=repositories
@@ -37,5 +38,20 @@ describe('settings from the bash version', () => {
       assert.ok(migrated.modules.includes(expected), `expected ${expected}`)
     }
     assert.ok(!migrated.modules.includes('python'))
+    assert.ok(!migrated.modules.includes('godot'))
+  })
+
+  it('prefers a module that names the exact old value over one that takes any value', () => {
+    const catalog = catalogForTests([
+      moduleForTests('engine', { legacySettings: [{ setting: 'ENGINE' }] }),
+      moduleForTests('engine-plus', { legacySettings: [{ setting: 'ENGINE', value: 'plus' }] }),
+    ])
+    assert.deepEqual(modulesForLegacyValue({ setting: 'ENGINE', value: 'plus' }, catalog), [
+      'engine-plus',
+    ])
+    assert.deepEqual(modulesForLegacyValue({ setting: 'ENGINE', value: 'yes' }, catalog), [
+      'engine',
+    ])
+    assert.deepEqual(modulesForLegacyValue({ setting: 'OTHER', value: 'yes' }, catalog), [])
   })
 })

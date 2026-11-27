@@ -25,4 +25,12 @@ describe('containerfileFor', () => {
     assert.match(containerfile, new RegExp(`NUGET_PACKAGES="${containerHome()}/\\.cache/nuget"`))
     assert.match(containerfile, /PATH="\/opt\/node\/bin:.*\/opt\/java\/bin:.*\$\{PATH\}"/)
   })
+
+  it('records the installed modules in installation order, for their start scripts', () => {
+    const line = containerfile.split('\n').find((each) => each.includes('installed-modules'))
+    assert.equal(
+      line,
+      "RUN printf '%s\\n' node build-essential tree-sitter ripgrep fd neovim java dotnet-8 >/opt/ampul/installed-modules",
+    )
+  })
 })

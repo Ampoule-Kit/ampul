@@ -1,8 +1,9 @@
 import { Text } from 'ink'
 import { type CommandDefinition, type Invocation, yesFlag } from '../cli/CommandDefinition.ts'
 import { removeContainer } from '../containers/containerCreation.ts'
-import { usesInnerContainerEngine } from '../containers/containerRunArguments.ts'
-import { removeImage, removeInnerEngineVolume } from '../containers/removal.ts'
+import { removeImage, removeProjectVolumes } from '../containers/removal.ts'
+import { moduleCatalog } from '../modules/moduleCatalog.ts'
+import { moduleVolumes } from '../modules/moduleSelection.ts'
 import { deleteProjectSettings, projectSettingsFile } from '../projects/projectStore.ts'
 import { displayPath } from '../system/platform.ts'
 import { LogFile } from '../tasks/LogFile.ts'
@@ -30,9 +31,7 @@ async function run(invocation: Invocation): Promise<number> {
         ? 'The container, with the clones in ~/home, including unpushed work'
         : 'The container',
       'The image',
-      ...(usesInnerContainerEngine(project)
-        ? ['Images and data of the containers run inside it']
-        : []),
+      ...moduleVolumes(project.modules, moduleCatalog()).map((volume) => volume.contents),
       `The settings in ${displayPath(projectSettingsFile(project.name))}`,
     ],
     kept: ['The shared package cache, used by your other projects', 'Every folder on this machine'],
@@ -44,8 +43,8 @@ async function run(invocation: Invocation): Promise<number> {
       { title: 'Remove the container', run: () => removeContainer(engine, project.name) },
       { title: 'Remove the image', run: () => removeImage(engine, project.name) },
       {
-        title: 'Remove the inner container data',
-        run: () => removeInnerEngineVolume(engine, project.name),
+        title: 'Remove the data the tools kept',
+        run: () => removeProjectVolumes(engine, project.name),
       },
       {
         title: 'Remove the settings',

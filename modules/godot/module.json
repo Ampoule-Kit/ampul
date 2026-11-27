@@ -3,7 +3,7 @@
   "description": "The Godot engine and editor, for GDScript projects.",
   "version": "4.7.2-stable",
   "selectedByDefault": false,
-  "group": "godot",
+  "exclusiveGroup": "godot",
   "packages": [
     "libfontconfig1"
   ],
@@ -25,6 +25,11 @@
           "as": "godot"
         }
       ]
+    }
+  ],
+  "legacySettings": [
+    {
+      "setting": "GODOT"
     }
   ],
   "check": "godot --headless --version"

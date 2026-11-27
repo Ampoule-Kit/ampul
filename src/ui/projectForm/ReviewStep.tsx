@@ -1,9 +1,8 @@
 import { Box, Text } from 'ink'
 import { useState } from 'react'
-import { usesInnerContainerEngine } from '../../containers/containerRunArguments.ts'
 import { imageName } from '../../containers/naming.ts'
 import { moduleCatalog } from '../../modules/moduleCatalog.ts'
-import { installationOrder } from '../../modules/moduleSelection.ts'
+import { installationOrder, privilegedModuleLabels } from '../../modules/moduleSelection.ts'
 import { describeCodeSource } from '../../projects/codeSources.ts'
 import type { CodeSource, ProjectSettings } from '../../projects/ProjectSettings.ts'
 import { describePorts, describeTools } from '../../projects/projectSummary.ts'
@@ -127,6 +126,7 @@ export function ReviewStep({
 }: StepControls<ProjectDraft> & { context: ReviewContext }) {
   const [choosingAnswer, setChoosingAnswer] = useState(false)
   const project = settingsFromDraft(draft)
+  const privilegedLabels = privilegedModuleLabels(project.modules, moduleCatalog())
   const original = context.originalSettings
 
   if (choosingAnswer) {
@@ -180,11 +180,11 @@ export function ReviewStep({
           ))}
         </Box>
       )}
-      {usesInnerContainerEngine(project) && (
+      {privilegedLabels.length > 0 && (
         <Box marginTop={1}>
           <Text color={colors.warning}>
-            {symbols.warning} The container engine inside the project needs the container to run
-            privileged.
+            {symbols.warning} {joinInProse(privilegedLabels)}{' '}
+            {privilegedLabels.length === 1 ? 'needs' : 'need'} the container to run privileged.
           </Text>
         </Box>
       )}

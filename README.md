@@ -147,7 +147,7 @@ Select the container engine to run Podman, docker and docker compose inside your
 
 | Kept                                                 | Replaced                                    |
 | ---------------------------------------------------- | ------------------------------------------- |
-| Package caches, such as NuGet and npm                | Cloned repositories, which are cloned again |
+| Package caches in `~/.cache`                         | Cloned repositories, which are cloned again |
 | Mounted folders, which stay on your machine          | Dotfiles, tool config and installed tools   |
 | Images and data of containers run inside the project | Everything else in the container            |
 | Project settings                                     |                                             |
@@ -171,14 +171,18 @@ npm run modules:add
 
 This asks how the tool installs, checks that the packages or downloads exist and match their checksums, and tests it in a container before adding it. Run `npm run cli:install` afterwards, and the new tool appears in `ampul new` and `ampul config`.
 
+A tool is a folder in [`modules/`](modules) and nothing else: ampul has no code for any one tool. What it requires, what it can't be selected with, what it installs, and what the container needs to run it are all fields of its `module.json`, described in [`modules/README.md`](modules/README.md).
+
 ### Update a tool's version
 
 ```sh
-npm run modules:update-version                    # list every tool and its version
-npm run modules:update-version -- neovim 0.12.7   # pin a new version
+npm run modules:outdated                          # every tool, its version and the latest one
+npm run modules:update-version -- neovim          # pin the latest version
+npm run modules:update-version -- neovim 0.12.7   # pin a given version
+npm run modules:update-version -- --all           # pin every outdated tool to its latest
 ```
 
-The new version is downloaded, verified and tested before anything changes. Run `npm run cli:install`, then `ampul rebuild <name>` to use it.
+The new version is downloaded, its checksums are recorded and verified, and it is tested in a container before anything changes. Run `npm run cli:install`, then `ampul rebuild <name>` to use it.
 
 ## Configuration
 

@@ -8,6 +8,7 @@ import { containerHome } from './naming.ts'
 
 const downloadCacheMount = '--mount=type=cache,target=/var/cache/ampul'
 const homePlaceholder = '{home}'
+const installedModulesFile = '/opt/ampul/installed-modules'
 
 const baseImageFileSchema = z.strictObject({ image: z.string().min(1) })
 
@@ -25,6 +26,12 @@ function moduleInstructions(module: ModuleDefinition): string {
     `COPY modules/${module.id}/ /opt/ampul/modules/${module.id}/`,
     `RUN ${downloadCacheMount} /opt/ampul/install-module.sh ${module.id}`,
   ].join('\n')
+}
+
+function installedModulesInstruction(modules: ModuleDefinition[]): string | undefined {
+  if (modules.length === 0) return undefined
+  const ids = modules.map((module) => module.id).join(' ')
+  return `RUN printf '%s\\n' ${ids} >${installedModulesFile}`
 }
 
 function withHome(value: string): string {
@@ -50,6 +57,7 @@ export function containerfileFor(modules: ModuleDefinition[]): string {
     readImageFile('base.Containerfile'),
     'FROM base AS ampul',
     ...modules.map(moduleInstructions),
+    installedModulesInstruction(modules),
     environmentInstruction(modules),
     readImageFile('user.Containerfile'),
   ]

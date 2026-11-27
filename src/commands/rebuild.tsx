@@ -1,7 +1,8 @@
 import { type CommandDefinition, type Invocation, yesFlag } from '../cli/CommandDefinition.ts'
-import { usesInnerContainerEngine } from '../containers/containerRunArguments.ts'
 import { containerState } from '../containers/containerState.ts'
 import type { ContainerEngine } from '../engine/ContainerEngine.ts'
+import { moduleCatalog } from '../modules/moduleCatalog.ts'
+import { moduleVolumes } from '../modules/moduleSelection.ts'
 import type { ProjectSettings } from '../projects/ProjectSettings.ts'
 import { confirmDestructiveAction } from './shared/confirmation.tsx'
 import { connectToEngine } from './shared/engineConnection.tsx'
@@ -28,10 +29,8 @@ export async function confirmAndRebuild(
         ...(project.codeSource.kind === 'repositories'
           ? []
           : ['The folders mounted in ~/home, which stay on this machine']),
-        'The shared package cache (NuGet, npm and other ~/.cache data)',
-        ...(usesInnerContainerEngine(project)
-          ? ['Images and data of the containers run inside the project']
-          : []),
+        'The shared package cache (everything in ~/.cache)',
+        ...moduleVolumes(project.modules, moduleCatalog()).map((volume) => volume.contents),
         'The project settings',
       ],
       yesLabel: 'Rebuild',

@@ -1,9 +1,11 @@
 import type { ModuleCatalog } from '../../modules/ModuleDefinition.ts'
 import { moduleCatalog } from '../../modules/moduleCatalog.ts'
 import {
+  describeConflict,
   describeModuleSelection,
   moduleVersionText,
   requiringModuleLabels,
+  selectionConflicts,
 } from '../../modules/moduleSelection.ts'
 import { joinInProse } from '../../text/prose.ts'
 import { MultiSelectList, type MultiSelectOption } from '../components/MultiSelectList.tsx'
@@ -20,7 +22,7 @@ function moduleOptions(catalog: ModuleCatalog): MultiSelectOption<string>[] {
     hint: moduleVersionText(module) || undefined,
     section: module.section,
     description: module.description,
-    exclusiveGroup: module.group,
+    exclusiveGroup: module.exclusiveGroup,
   }))
 }
 
@@ -30,6 +32,11 @@ function requiredModuleReasons(selection: string[], catalog: ModuleCatalog): Map
     reasons.set(id, `needed by ${joinInProse(requiredBy)}`)
   }
   return reasons
+}
+
+function selectionProblem(selection: string[], catalog: ModuleCatalog): string | undefined {
+  const [conflict] = selectionConflicts(selection, catalog)
+  return conflict && `${describeConflict(conflict)}, and one is needed by another selected tool`
 }
 
 export function ModulesStep({ draft, submit, back }: StepControls<ProjectDraft>) {
@@ -43,6 +50,7 @@ export function ModulesStep({ draft, submit, back }: StepControls<ProjectDraft>)
         options={moduleOptions(catalog)}
         initialSelection={draft.modules}
         requiredOptions={(selection) => requiredModuleReasons(selection, catalog)}
+        selectionProblem={(selection) => selectionProblem(selection, catalog)}
         onSubmit={(modules) => submit({ modules })}
         onCancel={back}
       />

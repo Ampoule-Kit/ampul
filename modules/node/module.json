@@ -2,6 +2,10 @@
   "label": "Node.js",
   "description": "Node.js with npm, for JavaScript and TypeScript. Neovim's language servers run on it.",
   "version": "26.13.1",
+  "latestVersion": {
+    "url": "https://nodejs.org/dist/index.json",
+    "match": "\"version\":\"v(26\\.[0-9]+\\.[0-9]+)\""
+  },
   "selectedByDefault": true,
   "downloads": [
     {

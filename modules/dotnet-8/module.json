@@ -2,6 +2,10 @@
   "label": ".NET 8 SDK",
   "description": "The .NET SDK, installed side by side with any other .NET SDK you pick, with NuGet packages cached across rebuilds.",
   "version": "8.0.428",
+  "latestVersion": {
+    "url": "https://builds.dotnet.microsoft.com/dotnet/release-metadata/8.0/releases.json",
+    "match": "\"latest-sdk\":\\s*\"([^\"]+)\""
+  },
   "selectedByDefault": false,
   "packages": [
     "libicu74"
@@ -31,6 +35,12 @@
   "path": [
     "/opt/dotnet",
     "{home}/.dotnet/tools"
+  ],
+  "legacySettings": [
+    {
+      "setting": "DOTNET_SDKS",
+      "value": "8"
+    }
   ],
   "check": "dotnet --list-sdks"
 }

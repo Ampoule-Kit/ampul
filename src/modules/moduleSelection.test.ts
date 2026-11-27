@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { moduleCatalog } from './moduleCatalog.ts'
+import { catalogForTests, moduleForTests } from './moduleForTests.ts'
 import {
   describeModuleSelection,
   installationOrder,
+  moduleVolumes,
+  privilegedModuleLabels,
   requiringModuleLabels,
+  selectionConflicts,
   withRequiredModules,
 } from './moduleSelection.ts'
 
@@ -42,5 +46,31 @@ describe('module selection', () => {
     assert.equal(describeModuleSelection(defaults, catalog), 'The defaults')
     assert.equal(describeModuleSelection([], catalog), 'No tools')
     assert.equal(describeModuleSelection(['python'], catalog), 'Only Python (pip, venv, headers)')
+  })
+})
+
+describe('generic module rules', () => {
+  const volume = { name: 'data', path: '/data', contents: 'The data' }
+  const catalog = catalogForTests([
+    moduleForTests('lite', { label: 'Lite', exclusiveGroup: 'engine' }),
+    moduleForTests('full', {
+      label: 'Full',
+      exclusiveGroup: 'engine',
+      container: { privileged: true, volumes: [volume] },
+    }),
+    moduleForTests('plugin', { label: 'Plugin', requires: ['full'] }),
+  ])
+
+  it('finds modules of one exclusive group, including those pulled in as requirements', () => {
+    assert.deepEqual(selectionConflicts(['lite'], catalog), [])
+    assert.deepEqual(selectionConflicts(['lite', 'plugin'], catalog), [
+      { exclusiveGroup: 'engine', labels: ['Lite', 'Full'] },
+    ])
+  })
+
+  it('collects what the selected modules ask of the container', () => {
+    assert.deepEqual(privilegedModuleLabels(['plugin'], catalog), ['Full'])
+    assert.deepEqual(privilegedModuleLabels(['lite'], catalog), [])
+    assert.deepEqual(moduleVolumes(['plugin'], catalog), [volume])
   })
 })

@@ -1,6 +1,6 @@
 {
   "name": "ampul",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Portable, containerized developer environments, one command away.",
   "license": "MIT",
   "private": true,
@@ -15,6 +15,7 @@
     "cli:install": "node scripts/require-supported-node.mjs && node scripts/installer/install.ts",
     "cli:uninstall": "node scripts/require-supported-node.mjs && node scripts/installer/uninstall.ts",
     "modules:update-version": "node scripts/modules/updateVersion.ts",
+    "modules:outdated": "node scripts/modules/updateVersion.ts --outdated",
     "modules:add": "node scripts/modules/addModule.ts",
     "typecheck": "tsc",
     "lint": "oxlint --type-aware --deny-warnings",

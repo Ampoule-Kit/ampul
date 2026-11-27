@@ -23,5 +23,10 @@
   "path": [
     "/opt/java/bin"
   ],
+  "legacySettings": [
+    {
+      "setting": "JAVA"
+    }
+  ],
   "check": "java -version"
 }

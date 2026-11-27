@@ -1,5 +1,6 @@
 import { joinInProse } from '../text/prose.ts'
 import type { ModuleCatalog, ModuleDefinition } from './ModuleDefinition.ts'
+import type { ModuleVolume } from './moduleSchema.ts'
 
 export function defaultModuleIds(catalog: ModuleCatalog): string[] {
   return catalog.modules.filter((module) => module.selectedByDefault).map((module) => module.id)
@@ -83,4 +84,37 @@ export function describeModuleSelection(ids: string[], catalog: ModuleCatalog): 
       ? 'The defaults'
       : `The defaults without ${joinInProse(leftOutLabels)}`
   return addedLabels.length > 0 ? `${base}, plus ${joinInProse(addedLabels)}` : base
+}
+
+export interface SelectionConflict {
+  exclusiveGroup: string
+  labels: string[]
+}
+
+export function selectionConflicts(ids: string[], catalog: ModuleCatalog): SelectionConflict[] {
+  const labelsByGroup = new Map<string, string[]>()
+  for (const module of selectedModules(ids, catalog)) {
+    if (module.exclusiveGroup === undefined) continue
+    labelsByGroup.set(module.exclusiveGroup, [
+      ...(labelsByGroup.get(module.exclusiveGroup) ?? []),
+      module.label,
+    ])
+  }
+  return [...labelsByGroup]
+    .filter(([, labels]) => labels.length > 1)
+    .map(([exclusiveGroup, labels]) => ({ exclusiveGroup, labels }))
+}
+
+export function describeConflict(conflict: SelectionConflict): string {
+  return `${joinInProse(conflict.labels)} can’t be selected together`
+}
+
+export function privilegedModuleLabels(ids: string[], catalog: ModuleCatalog): string[] {
+  return selectedModules(ids, catalog)
+    .filter((module) => module.container.privileged)
+    .map((module) => module.label)
+}
+
+export function moduleVolumes(ids: string[], catalog: ModuleCatalog): ModuleVolume[] {
+  return selectedModules(ids, catalog).flatMap((module) => module.container.volumes)
 }

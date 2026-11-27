@@ -1,16 +1,18 @@
 import type { ContainerEngine } from '../engine/ContainerEngine.ts'
+import { moduleCatalog } from '../modules/moduleCatalog.ts'
+import { installationOrder } from '../modules/moduleSelection.ts'
 import { Problem } from '../problems/Problem.ts'
 import type { ProjectSettings } from '../projects/ProjectSettings.ts'
 import { formatPortList } from '../projects/ports.ts'
 import type { TaskContext } from '../tasks/TaskRunner.ts'
 import { isPortAlreadyInUse, outputLines } from './containerErrors.ts'
-import { containerRunArguments, usesInnerContainerEngine } from './containerRunArguments.ts'
+import { containerRunArguments } from './containerRunArguments.ts'
 import { unsharedFoldersIn, unsharedFoldersProblem } from './folderSharing.ts'
 import { type HostMount, hostConfigMounts } from './hostConfigMounts.ts'
 import {
   cacheLabel,
   containerName,
-  innerEngineVolumeName,
+  moduleVolumeName,
   projectLabel,
   sharedCacheVolume,
 } from './naming.ts'
@@ -35,17 +37,19 @@ export async function createContainer(
   context: TaskContext,
 ): Promise<void> {
   const folderMounts = codeMounts(project)
+  const modules = installationOrder(project.modules, moduleCatalog())
   await createVolumeIfMissing(engine, sharedCacheVolume, `${cacheLabel}=true`)
-  if (usesInnerContainerEngine(project)) {
+  for (const volume of modules.flatMap((module) => module.container.volumes)) {
     await createVolumeIfMissing(
       engine,
-      innerEngineVolumeName(project.name),
+      moduleVolumeName(project.name, volume.name),
       `${projectLabel}=${project.name}`,
     )
   }
   const runArguments = containerRunArguments(project, {
     isRootlessPodman: await engine.isRootlessPodman(),
     hostMounts: [...(await hostConfigMounts()), ...folderMounts],
+    modules,
   })
   const { exitCode, stderr } = await engine.capture(runArguments)
   context.output(stderr)
