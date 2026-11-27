@@ -3,11 +3,11 @@ import path from 'node:path'
 import type { ContainerEngine } from '../engine/ContainerEngine.ts'
 import { Problem } from '../problems/Problem.ts'
 import { repositoryFolderName } from '../projects/codeSources.ts'
-import type { FolderSource, ProjectSettings } from '../projects/ProjectSettings.ts'
-import { captureCommand } from '../system/processes.ts'
+import type { ProjectSettings } from '../projects/ProjectSettings.ts'
+import { homeDirectory } from '../system/platform.ts'
 import type { TaskContext } from '../tasks/TaskRunner.ts'
-import { archiveOf, replaceContainerFolder } from './archives.ts'
-import { containerName, containerProjectDirectory, containerUser } from './naming.ts'
+import type { HostMount } from './hostConfigMounts.ts'
+import { containerCodeDirectory, containerName, containerUser } from './naming.ts'
 
 export interface CloneOutcome {
   failedRepositories: string[]
@@ -31,7 +31,7 @@ export function cloneCommand(
     '--user',
     containerUser(),
     '--workdir',
-    containerProjectDirectory(),
+    containerCodeDirectory(),
     containerName(projectName),
     'git',
     'clone',
@@ -59,56 +59,60 @@ export async function cloneRepositories(
   return { failedRepositories }
 }
 
-async function filesGitWouldKeep(folder: string): Promise<string[]> {
-  const { exitCode, stdout, stderr } = await captureCommand(
-    'git',
-    ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
-    { workingDirectory: folder },
-  )
-  if (exitCode !== 0) {
-    throw new Problem(`git could not list the files in ${folder}`, {
-      outputTail: stderr.trim().split('\n'),
-    })
-  }
-  const existingFiles = stdout
-    .split('\0')
-    .filter(Boolean)
-    .filter((file) => fs.existsSync(path.join(folder, file)))
-  return ['.git', ...existingFiles]
+function missingFolder(project: ProjectSettings, folder: string): Problem {
+  return new Problem(`${folder} no longer exists`, {
+    explanation: 'The project mounts this folder, but it was moved or deleted.',
+    fixes: [
+      {
+        description: 'Point the project at another folder',
+        command: `ampul config ${project.name}`,
+      },
+    ],
+  })
 }
 
-export async function copyFolderIntoContainer(
+const emptyFoldersScript = 'for folder; do [ -n "$(ls -A "$folder")" ] || echo "$folder"; done'
+
+function hasEntries(folder: string): boolean {
+  try {
+    return fs.readdirSync(folder).length > 0
+  } catch {
+    return false
+  }
+}
+
+export async function foldersMountedEmpty(
   engine: ContainerEngine,
   project: ProjectSettings,
-  source: FolderSource,
-  context: TaskContext,
-): Promise<void> {
-  if (!fs.existsSync(source.folder)) {
-    throw new Problem(`${source.folder} no longer exists`, {
-      explanation: 'The project copies its code from this folder, but it was moved or deleted.',
-      fixes: [
-        {
-          description: 'Point the project at another folder',
-          command: `ampul config ${project.name}`,
-        },
-      ],
-    })
-  }
-  const entries = source.onlyGitFiles ? await filesGitWouldKeep(source.folder) : ['.']
-  context.detail(
-    `${entries.length === 1 ? 'all files' : `${entries.length} files`} from ${source.folder}`,
-  )
-  const { exitCode, errorOutput } = await replaceContainerFolder(
-    engine,
-    project.name,
-    `${containerProjectDirectory()}/${path.basename(source.folder)}`,
-    archiveOf(source.folder, entries),
-  )
-  context.output(errorOutput)
-  if (exitCode !== 0) {
-    throw new Problem(`Copying ${source.folder} did not finish`, {
-      outputTail: errorOutput.trim().split('\n'),
-      fixes: [{ description: 'Try again', command: `ampul rebuild ${project.name}` }],
-    })
-  }
+  mounts: HostMount[],
+): Promise<string[]> {
+  const mountsToCheck = mounts.filter((mount) => hasEntries(mount.hostPath))
+  if (mountsToCheck.length === 0) return []
+  const { stdout } = await engine.capture([
+    'exec',
+    containerName(project.name),
+    'bash',
+    '-c',
+    emptyFoldersScript,
+    'check',
+    ...mountsToCheck.map((mount) => mount.containerPath),
+  ])
+  const emptyContainerPaths = new Set(stdout.split('\n').filter(Boolean))
+  return mountsToCheck
+    .filter((mount) => emptyContainerPaths.has(mount.containerPath))
+    .map((mount) => mount.hostPath)
+}
+
+function folderMount(hostPath: string, containerPath: string): HostMount {
+  return { hostPath, containerPath, readOnly: false }
+}
+
+export function codeMounts(project: ProjectSettings): HostMount[] {
+  const source = project.codeSource
+  if (source.kind === 'repositories') return []
+  if (source.kind === 'pass-through') return [folderMount(homeDirectory, containerCodeDirectory())]
+  return source.folders.map((folder) => {
+    if (!fs.existsSync(folder)) throw missingFolder(project, folder)
+    return folderMount(folder, `${containerCodeDirectory()}/${path.basename(folder)}`)
+  })
 }

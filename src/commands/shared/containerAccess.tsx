@@ -55,7 +55,7 @@ export async function openShell(
   project: ProjectSettings,
 ): Promise<number> {
   const details = [
-    '~/Project',
+    '~/home',
     ...portRanges(project.ports).map((range) => `localhost:${formatPortRange(range)}`),
     'leave with exit or ctrl+d',
   ]

@@ -1,7 +1,7 @@
 import type { ContainerEngine } from '../engine/ContainerEngine.ts'
 import { Problem, type ProblemFix } from '../problems/Problem.ts'
 import { isPortAlreadyInUse, outputLines } from './containerErrors.ts'
-import { containerName, containerProjectDirectory, containerUser } from './naming.ts'
+import { containerCodeDirectory, containerName, containerUser } from './naming.ts'
 
 function startFailureFixes(projectName: string, portInUse: boolean): ProblemFix[] {
   const recreate = {
@@ -53,7 +53,7 @@ export function shellCommand(projectName: string): string[] {
     '--user',
     containerUser(),
     '--workdir',
-    containerProjectDirectory(),
+    containerCodeDirectory(),
     '--env',
     'TERM=xterm-256color',
     '--env',

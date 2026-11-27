@@ -5,7 +5,7 @@ import { imageName } from '../../containers/naming.ts'
 import { moduleCatalog } from '../../modules/moduleCatalog.ts'
 import { installationOrder } from '../../modules/moduleSelection.ts'
 import { describeCodeSource } from '../../projects/codeSources.ts'
-import type { ProjectSettings } from '../../projects/ProjectSettings.ts'
+import type { CodeSource, ProjectSettings } from '../../projects/ProjectSettings.ts'
 import { describePorts, describeTools } from '../../projects/projectSummary.ts'
 import { joinInProse, pluralize } from '../../text/prose.ts'
 import { Question } from '../components/Question.tsx'
@@ -56,17 +56,24 @@ function setupStepDescription(project: ProjectSettings): string {
   return `Link your dotfiles and each tool’s config, and your git and SSH config${toolSetup}.`
 }
 
+function codeStepDescription(source: CodeSource): string {
+  if (source.kind === 'repositories') {
+    return `Clone ${pluralize(source.repositories.length, 'repository', 'repositories')} into ~/home.`
+  }
+  if (source.kind === 'folders') {
+    return `Mount ${pluralize(source.folders.length, 'folder')} from this machine into ~/home.`
+  }
+  return 'Mount your home folder from this machine at ~/home.'
+}
+
 function plannedSteps(project: ProjectSettings): string[] {
-  const source = project.codeSource
   return [
     `Build the image ${imageName(project.name)}. The first build downloads every tool and takes a few minutes; later builds reuse the cache.`,
     project.ports.length > 0
       ? `Create the container and forward ${pluralize(project.ports.length, 'port')} to this machine.`
       : 'Create the container.',
     setupStepDescription(project),
-    source.kind === 'repositories'
-      ? `Clone ${pluralize(source.repositories.length, 'repository', 'repositories')} into ~/Project.`
-      : 'Copy the folder into ~/Project.',
+    codeStepDescription(project.codeSource),
   ]
 }
 
@@ -83,7 +90,7 @@ function reviewChoices(mode: ReviewContext['mode']): SelectOption<ReviewChoice>[
       value: 'save-and-rebuild',
       label: 'Save and rebuild now',
       description:
-        'Recreates the container with the new settings. Unpushed work in ~/Project is lost.',
+        'Recreates the container with the new settings. Unpushed work in cloned repositories is lost.',
     },
     {
       value: 'save',

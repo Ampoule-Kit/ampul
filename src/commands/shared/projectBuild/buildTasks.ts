@@ -1,10 +1,9 @@
 import { createContainer, removeContainer } from '../../../containers/containerCreation.ts'
 import { copyConfigIntoContainer, runContainerSetup } from '../../../containers/containerSetup.ts'
 import { buildImage } from '../../../containers/imageBuild.ts'
-import { cloneRepositories, copyFolderIntoContainer } from '../../../containers/projectCode.ts'
+import { cloneRepositories } from '../../../containers/projectCode.ts'
 import type { ContainerEngine } from '../../../engine/ContainerEngine.ts'
 import type { ProjectSettings } from '../../../projects/ProjectSettings.ts'
-import { displayPath } from '../../../system/platform.ts'
 import type { Task } from '../../../tasks/TaskRunner.ts'
 import { pluralize } from '../../../text/prose.ts'
 
@@ -33,23 +32,20 @@ export function setupTask(engine: ContainerEngine, project: ProjectSettings): Ta
   }
 }
 
-export function codeTask(
+export function cloneTasks(
   engine: ContainerEngine,
   project: ProjectSettings,
   onCloneFailures: (repositories: string[]) => void,
-): Task {
+): Task[] {
   const source = project.codeSource
-  if (source.kind === 'folder') {
-    return {
-      title: `Copy ${displayPath(source.folder)} into ~/Project`,
-      run: (context) => copyFolderIntoContainer(engine, project, source, context),
-    }
-  }
-  return {
-    title: `Clone ${pluralize(source.repositories.length, 'repository', 'repositories')} into ~/Project`,
-    run: async (context) => {
-      const outcome = await cloneRepositories(engine, project, source.repositories, context)
-      onCloneFailures(outcome.failedRepositories)
+  if (source.kind !== 'repositories') return []
+  return [
+    {
+      title: `Clone ${pluralize(source.repositories.length, 'repository', 'repositories')} into ~/home`,
+      run: async (context) => {
+        const outcome = await cloneRepositories(engine, project, source.repositories, context)
+        onCloneFailures(outcome.failedRepositories)
+      },
     },
-  }
+  ]
 }

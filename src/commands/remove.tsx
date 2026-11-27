@@ -26,7 +26,9 @@ async function run(invocation: Invocation): Promise<number> {
     commandLine: `ampul rm ${project.name}`,
     title: `Removing ${project.name} cannot be undone.`,
     lost: [
-      'The container, with everything in ~/Project, including unpushed work',
+      project.codeSource.kind === 'repositories'
+        ? 'The container, with the clones in ~/home, including unpushed work'
+        : 'The container',
       'The image',
       ...(usesInnerContainerEngine(project)
         ? ['Images and data of the containers run inside it']
@@ -76,7 +78,7 @@ export const removeCommand: CommandDefinition = {
   ],
   flags: [yesFlag],
   description: [
-    'Deletes the project’s container (and the code in ~/Project with it), its image, the data of containers that ran inside it, and its settings. The shared package cache and every folder on this machine are kept.',
+    'Deletes the project’s container (and cloned repositories in ~/home with it), its image, the data of containers that ran inside it, and its settings. The shared package cache and every folder on this machine are kept.',
     'It shows exactly what goes before asking you to confirm.',
   ],
   examples: [

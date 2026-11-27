@@ -53,14 +53,28 @@ ampul              # see all your projects and manage them with single keys
 
 `ampul new` asks for:
 
-1. **Your code.** One or more git repositories (HTTPS or SSH), or a folder on your machine. It is cloned or copied into `~/Project` in the container. For a git repository, you can copy only the files git tracks, leaving out `node_modules`, `.env` and other ignored files.
+1. **Your code.** Clone git repositories, use folders already on your machine, or bring your whole home folder along. See [your code](#your-code) for how each one works.
 2. **A name**, suggested from your code.
 3. **Extra tools**, such as .NET SDKs, Java, Godot, Python or a container engine.
 4. **Ports** to reach from your machine at `localhost`. Pick common ones (Angular, Vite, ASP.NET Core, Spring Boot, PostgreSQL, Redis and more) or add your own, such as `3000-3009`.
 
 You can review everything before it builds, and press Esc to go back a step at any time. When it's done, ampul offers to connect you.
 
-> **Your code lives only in the container.** Push your work before running `ampul rebuild` or `ampul rm`, as both replace `~/Project`.
+## Your code
+
+Your code is in `~/home` inside the container, and every shell starts there. You choose how it gets there:
+
+| Option                 | What you get in the container                                     | Good for                                                      |
+| ---------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------- |
+| Clone git repositories | A fresh clone of each repository in `~/home/<repository name>`    | A clean start, or code you don't have on your machine yet     |
+| Mount folders          | Each folder you pick from your machine, in `~/home/<folder name>` | Repositories and projects you already work on                 |
+| Pass-through           | Your whole home folder from your machine, as `~/home`             | Reaching all your own folders, as if you were on your machine |
+
+**Cloned repositories live only in the container.** Push your work before running `ampul rebuild` or `ampul rm`, as both throw the clones away and clone them again from scratch.
+
+**Mounted folders stay on your machine.** The container works on the real folders, so a change on either side shows up on the other straight away. Rebuilding or removing a project never deletes them.
+
+**Pass-through keeps the container's own setup.** Your home folder appears as `~/home`, not in place of the container's home folder, so the container still uses its own dotfiles and tool config. Your hidden folders, such as `.ssh` and `.config`, are visible inside `~/home` too.
 
 ## Commands
 
@@ -68,13 +82,13 @@ You can review everything before it builds, and press Esc to go back a step at a
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `ampul`                | Shows every project and its status. Enter connects; `s` stops, `e` configures, `r` rebuilds, `x` removes, `n` creates. |
 | `ampul new [name]`     | Creates a project.                                                                                                     |
-| `ampul start [name]`   | Starts a project if needed and opens a shell in `~/Project`. Use `-d` to only start it.                                |
+| `ampul start [name]`   | Starts a project if needed and opens a shell in `~/home`. Use `-d` to only start it.                                   |
 | `ampul stop [name]`    | Stops a project. Use `--all` to stop every project.                                                                    |
 | `ampul ls`             | Lists your projects, their status, ports and code. Use `--json` for scripts.                                           |
-| `ampul config [name]`  | Changes a project's code, tools or ports.                                                                              |
-| `ampul rebuild [name]` | Rebuilds a project with fresh code and config.                                                                         |
+| `ampul config [name]`  | Changes where a project's code comes from, its tools or its ports.                                                     |
+| `ampul rebuild [name]` | Rebuilds a project with fresh config, cloning its repositories again.                                                  |
 | `ampul setup [name]`   | Reapplies your dotfiles, tool config, git and SSH without rebuilding.                                                  |
-| `ampul rm [name]`      | Removes a project and everything that belongs to it.                                                                   |
+| `ampul rm [name]`      | Removes a project and everything that belongs to it. Mounted folders on your machine are kept.                         |
 | `ampul purge`          | Removes every ampul project, container, image and volume.                                                              |
 | `ampul doctor`         | Checks that your machine is ready and explains how to fix anything that isn't.                                         |
 | `ampul help [command]` | Shows the manual for ampul or for one command.                                                                         |
@@ -131,11 +145,12 @@ Select the container engine to run Podman, docker and docker compose inside your
 
 ### What survives a rebuild
 
-| Kept                                                 | Replaced                                        |
-| ---------------------------------------------------- | ----------------------------------------------- |
-| Package caches, such as NuGet and npm                | `~/Project`, with freshly cloned or copied code |
-| Images and data of containers run inside the project | Dotfiles, tool config and installed tools       |
-| Project settings                                     | Everything else in the container                |
+| Kept                                                 | Replaced                                    |
+| ---------------------------------------------------- | ------------------------------------------- |
+| Package caches, such as NuGet and npm                | Cloned repositories, which are cloned again |
+| Mounted folders, which stay on your machine          | Dotfiles, tool config and installed tools   |
+| Images and data of containers run inside the project | Everything else in the container            |
+| Project settings                                     |                                             |
 
 ## Make it yours
 
@@ -178,13 +193,14 @@ To choose a runtime for a single command, set the `AMPUL_RUNTIME` environment va
 
 ## Platform notes
 
-Everything above works the same on every system. The differences are in how you set up the container engine and where ampul keeps its files. Logs hold the last ten builds, setups and removals for each project.
+Everything above works the same on every system. The differences are in how you set up the container engine, which folders it can mount, and where ampul keeps its files. Logs hold the last ten builds, setups and removals for each project.
 
 ### macOS
 
 - **Podman** runs containers inside a Linux virtual machine, called the Podman machine. Install it with `brew install podman`; ampul offers to create and start the machine for you.
 - **Memory:** builds need it, so give the Podman machine at least 4 GB, or 6 to 8 GB for larger projects. `ampul doctor` checks this and shows the command to change it.
 - **Docker:** use Docker Desktop or Colima, and make sure it is running before you use ampul.
+- **Mounted folders:** Podman and Docker can see the folders in your home folder out of the box. To mount a folder somewhere else, such as an external drive under `/Volumes`, add it to the shared folders in their settings first. ampul warns you when you pick such a folder, and tells you how to share it if the container can't see it.
 
 | What           | Location                                                       |
 | -------------- | -------------------------------------------------------------- |
@@ -203,6 +219,7 @@ File locations are the same as on macOS.
 
 - **Podman:** install [Podman Desktop](https://podman.io). Like on macOS, it runs containers inside a Podman machine, which ampul offers to create and start. The same memory advice applies.
 - **Docker:** use Docker Desktop, and make sure it is running before you use ampul.
+- **Mounted folders** can be on any drive that is part of your computer, such as `C:\Users\you\code`. Network drives can't be mounted.
 
 | What           | Location                           |
 | -------------- | ---------------------------------- |
@@ -222,6 +239,8 @@ Start with `ampul doctor`. It checks everything ampul depends on and tells you h
 | A port is already in use              | Another program or project is using it. Stop it, or change the project's ports with `ampul config`.               |
 | A forwarded port doesn't answer       | Check that your app is running, then read `/tmp/ampul/port-forwards.log` in the container.                        |
 | A Neovim tool didn't install          | Read `/tmp/ampul/setup.log` in the container, then run `:Mason` or `:Lazy restore`, or `ampul setup <name>`.      |
+| The container cannot see a folder     | ampul tells you how to share it with Podman or Docker on your system. See [platform notes](#platform-notes).      |
+| A mounted folder no longer exists     | You moved or deleted it. Point the project at its new place with `ampul config`, then run `ampul rebuild`.        |
 | The inner container engine misbehaves | Read `/tmp/ampul/container-engine.log` in the container.                                                          |
 
 ## Uninstall
