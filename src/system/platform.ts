@@ -52,6 +52,11 @@ export function hostGroupId(): number {
   return gid >= 0 ? gid : fallbackUserId
 }
 
+export function hostTimeZone(): string | undefined {
+  const { timeZone } = Intl.DateTimeFormat().resolvedOptions()
+  return timeZone && timeZone !== 'Etc/Unknown' ? timeZone : undefined
+}
+
 export function isRunningAsRoot(): boolean {
   return !isWindows && os.userInfo().uid === 0
 }

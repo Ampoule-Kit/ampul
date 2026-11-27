@@ -5,6 +5,7 @@ import { moduleCatalog } from '../modules/moduleCatalog.ts'
 import { installationOrder } from '../modules/moduleSelection.ts'
 import { Problem } from '../problems/Problem.ts'
 import type { ProjectSettings } from '../projects/ProjectSettings.ts'
+import { hostTimeZone } from '../system/platform.ts'
 import type { TaskContext } from '../tasks/TaskRunner.ts'
 import { outputLines } from './containerErrors.ts'
 import { containerRunArguments } from './containerRunArguments.ts'
@@ -53,6 +54,7 @@ export async function createContainer(
     hostMounts: [...(await hostConfigMounts()), ...folderMounts],
     modules,
     tunnelToken: newTunnelToken(),
+    timeZone: hostTimeZone(),
   })
   const { exitCode, stderr } = await engine.capture(runArguments)
   context.output(stderr)

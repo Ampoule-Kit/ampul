@@ -21,6 +21,7 @@ export interface ContainerRunContext {
   hostMounts: HostMount[]
   modules: ModuleDefinition[]
   tunnelToken: string
+  timeZone: string | undefined
 }
 
 function identityArguments(project: ProjectSettings): string[] {
@@ -58,6 +59,10 @@ function moduleArguments(project: ProjectSettings, context: ContainerRunContext)
   ]
 }
 
+export function timeZoneArguments(timeZone: string | undefined): string[] {
+  return timeZone === undefined ? [] : ['--env', `TZ=${timeZone}`]
+}
+
 function tunnelArguments(context: ContainerRunContext): string[] {
   return [
     '--publish',
@@ -85,6 +90,7 @@ export function containerRunArguments(
     ...hostMountArguments(context),
     ...moduleArguments(project, context),
     ...tunnelArguments(context),
+    ...timeZoneArguments(context.timeZone),
     imageName(project.name),
   ]
 }

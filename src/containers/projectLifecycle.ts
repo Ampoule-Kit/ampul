@@ -1,7 +1,9 @@
 import type { ContainerEngine } from '../engine/ContainerEngine.ts'
 import { stopPortForwarding } from '../forwarding/portForwarding.ts'
 import { Problem } from '../problems/Problem.ts'
+import { hostTimeZone } from '../system/platform.ts'
 import { outputLines } from './containerErrors.ts'
+import { timeZoneArguments } from './containerRunArguments.ts'
 import { containerCodeDirectory, containerName, containerUser } from './naming.ts'
 
 export async function startContainer(engine: ContainerEngine, projectName: string): Promise<void> {
@@ -41,6 +43,7 @@ export function shellCommand(projectName: string): string[] {
     'TERM=xterm-256color',
     '--env',
     'COLORTERM=truecolor',
+    ...timeZoneArguments(hostTimeZone()),
     containerName(projectName),
     'bash',
     '--login',

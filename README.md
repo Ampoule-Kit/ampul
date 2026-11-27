@@ -20,7 +20,7 @@ That is the idea behind the name: each project lives in its own sealed container
 
 - **Your machine stays clean.** Every tool, SDK and setting lives in the container. On your machine, ampul keeps only its [settings](#configuration), your dotfiles and the settings of each project.
 - **Rebuilds are repeatable.** Every tool is pinned to a version and checked against its checksum, so a rebuild months from now gives you the same environment.
-- **It feels like home.** Your dotfiles, git config, credentials and SSH keys come with you into every container.
+- **It feels like home.** Your dotfiles, git config, credentials, SSH keys and time zone come with you into every container.
 - **It guides you.** A terminal UI walks you through each step, shows progress as it builds, and tells you how to fix anything that goes wrong.
 
 ## Requirements

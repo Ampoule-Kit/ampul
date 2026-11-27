@@ -10,7 +10,13 @@ const project: ProjectSettings = {
   modules: [],
 }
 
-const noHostSetup = { isRootlessPodman: false, hostMounts: [], modules: [], tunnelToken: 'abc' }
+const noHostSetup = {
+  isRootlessPodman: false,
+  hostMounts: [],
+  modules: [],
+  tunnelToken: 'abc',
+  timeZone: undefined,
+}
 
 describe('containerRunArguments', () => {
   it('publishes only the tunnel port, on a free port of the host loopback address', () => {
@@ -32,6 +38,15 @@ describe('containerRunArguments', () => {
     const withEngine = containerRunArguments(project, { ...noHostSetup, modules: [engineModule] })
     assert.ok(withEngine.includes('--privileged'))
     assert.ok(withEngine.includes('ampul-api-engine:/var/lib/containers'))
+  })
+
+  it("sets the container's time zone to the host's when it is known", () => {
+    assert.ok(!containerRunArguments(project, noHostSetup).some((value) => value.startsWith('TZ=')))
+    const withZone = containerRunArguments(project, {
+      ...noHostSetup,
+      timeZone: 'Africa/Johannesburg',
+    })
+    assert.ok(withZone.includes('TZ=Africa/Johannesburg'))
   })
 
   it('keeps the user id with rootless Podman', () => {

@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       bash-completion ca-certificates curl file git jq less openssh-client procps socat stow \
-      sudo unzip wget xz-utils \
+      sudo tzdata unzip wget xz-utils \
  && rm -rf /var/lib/apt/lists/*
 
 COPY image/install-helpers.sh image/module-downloads.sh image/install-module.sh image/create-user.sh /opt/ampul/
