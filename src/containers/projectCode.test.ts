@@ -6,7 +6,7 @@ import { containerCodeDirectory } from './naming.ts'
 import { codeMounts } from './projectCode.ts'
 
 function projectWith(codeSource: ProjectSettings['codeSource']): ProjectSettings {
-  return { name: 'api', codeSource, modules: [], ports: [] }
+  return { name: 'api', codeSource, modules: [] }
 }
 
 describe('codeMounts', () => {

@@ -23,21 +23,5 @@
   "path": [
     "/opt/java/bin"
   ],
-  "portPresets": [
-    {
-      "id": "java-web",
-      "label": "Spring Boot, Tomcat",
-      "port": 8080,
-      "section": "Web apps",
-      "description": "The default port of Spring Boot, Tomcat, Quarkus and many other HTTP servers."
-    },
-    {
-      "id": "java-debugger",
-      "label": "Java debugger (JDWP)",
-      "port": 5005,
-      "section": "Debuggers and language servers",
-      "description": "Attach a debugger on this machine to a JVM started with -agentlib:jdwp, the port Gradle and Maven use for debugging."
-    }
-  ],
   "check": "java -version"
 }

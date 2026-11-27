@@ -2,7 +2,7 @@ import { Box, Text, useInput } from 'ink'
 import type { ContainerState } from '../../containers/containerState.ts'
 import { describeCodeSource } from '../../projects/codeSources.ts'
 import type { ProjectSettings } from '../../projects/ProjectSettings.ts'
-import { describePorts, describeTools } from '../../projects/projectSummary.ts'
+import { describeForwardedPorts, describeTools } from '../../projects/projectSummary.ts'
 import { Description } from '../components/Description.tsx'
 import { Header } from '../components/Header.tsx'
 import { hintWhen, type KeyHint, KeyHints } from '../components/KeyHints.tsx'
@@ -113,7 +113,7 @@ function ProjectList({ projects, states, finish }: Omit<HomeScreenProps, 'runtim
         )
       })}
       <Description>
-        {`Tools: ${describeTools(focusedProject)}\nPorts: ${describePorts(focusedProject.ports)}`}
+        {`Tools: ${describeTools(focusedProject)}\nPorts: ${describeForwardedPorts(focusedProject.name)}`}
       </Description>
       <KeyHints hints={hints} />
     </Box>

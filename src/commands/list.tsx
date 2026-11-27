@@ -2,6 +2,7 @@ import { Box, Text } from 'ink'
 import type { CommandDefinition, Invocation } from '../cli/CommandDefinition.ts'
 import { allContainerStates, type ContainerState } from '../containers/containerState.ts'
 import { createEngine, diagnoseEngine } from '../engine/engineReadiness.ts'
+import { readReport } from '../forwarding/forwarderFiles.ts'
 import { moduleCatalog } from '../modules/moduleCatalog.ts'
 import { moduleLabels } from '../modules/moduleSelection.ts'
 import type { Problem } from '../problems/Problem.ts'
@@ -34,15 +35,19 @@ async function loadRows(): Promise<{ rows: ProjectRow[]; engineProblem?: Problem
   }
 }
 
-function portsText(project: ProjectSettings): string {
-  return formatPortList(project.ports) || '–'
+function portsText({ project, state }: ProjectRow): string {
+  const report = state === 'running' ? readReport(project.name) : undefined
+  if (!report) return '–'
+  const inUse =
+    report.unavailable.length > 0 ? `${formatPortList(report.unavailable)} in use here` : ''
+  return [formatPortList(report.forwarded), inUse].filter(Boolean).join(', ') || '–'
 }
 
 function ProjectTable({ rows }: { rows: ProjectRow[] }) {
   const nameWidth = Math.max(7, ...rows.map((row) => row.project.name.length)) + columnGap
   const stateWidth =
     Math.max(...rows.map((row) => containerStateMarker(row.state).length)) + columnGap
-  const portsWidth = Math.max(5, ...rows.map((row) => portsText(row.project).length)) + columnGap
+  const portsWidth = Math.max(5, ...rows.map((row) => portsText(row).length)) + columnGap
   return (
     <Box flexDirection="column">
       <Box>
@@ -57,30 +62,38 @@ function ProjectTable({ rows }: { rows: ProjectRow[] }) {
         </Box>
         <Text bold>CODE</Text>
       </Box>
-      {rows.map(({ project, state }) => (
-        <Box key={project.name}>
-          <Box width={nameWidth}>
-            <Text color={colors.accent}>{project.name}</Text>
+      {rows.map((row) => {
+        const { project, state } = row
+        return (
+          <Box key={project.name}>
+            <Box width={nameWidth}>
+              <Text color={colors.accent}>{project.name}</Text>
+            </Box>
+            <Box width={stateWidth}>
+              <Text color={containerStateColor(state)}>{containerStateMarker(state)}</Text>
+            </Box>
+            <Box width={portsWidth}>
+              <Text>{portsText(row)}</Text>
+            </Box>
+            <Text wrap="truncate-end">{describeCodeSource(project.codeSource)}</Text>
           </Box>
-          <Box width={stateWidth}>
-            <Text color={containerStateColor(state)}>{containerStateMarker(state)}</Text>
-          </Box>
-          <Box width={portsWidth}>
-            <Text>{portsText(project)}</Text>
-          </Box>
-          <Text wrap="truncate-end">{describeCodeSource(project.codeSource)}</Text>
-        </Box>
-      ))}
+        )
+      })}
     </Box>
   )
 }
 
 function printJson(rows: ProjectRow[]): void {
-  const output = rows.map(({ project, state }) => ({
-    ...project,
-    status: state ?? 'unknown',
-    tools: moduleLabels(project.modules, moduleCatalog()),
-  }))
+  const output = rows.map(({ project, state }) => {
+    const report = state === 'running' ? readReport(project.name) : undefined
+    return {
+      ...project,
+      status: state ?? 'unknown',
+      tools: moduleLabels(project.modules, moduleCatalog()),
+      forwardedPorts: report?.forwarded ?? [],
+      portsInUseOnThisMachine: report?.unavailable ?? [],
+    }
+  })
   process.stdout.write(JSON.stringify(output, null, 2) + '\n')
 }
 
@@ -110,7 +123,7 @@ export const listCommand: CommandDefinition = {
   arguments: [],
   flags: [{ name: 'json', description: 'Print the projects as JSON, for scripts.' }],
   description: [
-    'Shows one line per project: its status (running, stopped, or no container), the ports it forwards and where its code comes from.',
+    'Shows one line per project: its status (running, stopped, or no container), the ports forwarded from its container right now and where its code comes from. A port also used by another program on this machine shows as in use here.',
     'When the container engine is not running, the statuses show as unknown and ampul ls explains how to start it.',
   ],
   examples: [

@@ -6,8 +6,6 @@ import { CodeSourceStep, describeCodeSourceKind } from './CodeSourceStep.tsx'
 import { describeFolders, FoldersStep } from './FoldersStep.tsx'
 import { describeModulesAnswer, ModulesStep } from './ModulesStep.tsx'
 import { NameStep } from './NameStep.tsx'
-import { describeOtherPorts, OtherPortsStep } from './OtherPortsStep.tsx'
-import { describePortsAnswer, PortsStep } from './PortsStep.tsx'
 import type { ProjectDraft } from './ProjectDraft.ts'
 import { describeRepositories, RepositoriesStep } from './RepositoriesStep.tsx'
 import { type ProjectFormAction, type ReviewContext, ReviewStep } from './ReviewStep.tsx'
@@ -24,7 +22,7 @@ interface ProjectFormProps {
   finish: Finish<ProjectFormResult | undefined>
 }
 
-const stepsOfferedForChanges = new Set(['code', 'name', 'tools', 'ports', 'other-ports'])
+const stepsOfferedForChanges = new Set(['code', 'name', 'tools'])
 
 function questionSteps(askForName: boolean): WizardStep<ProjectDraft>[] {
   return [
@@ -63,20 +61,6 @@ function questionSteps(askForName: boolean): WizardStep<ProjectDraft>[] {
       title: 'Tools',
       summary: describeModulesAnswer,
       render: (controls) => <ModulesStep {...controls} />,
-    },
-    {
-      id: 'ports',
-      title: 'Ports',
-      summary: describePortsAnswer,
-      render: (controls) => <PortsStep {...controls} />,
-    },
-    {
-      id: 'other-ports',
-      title: 'Other ports',
-      isSkipped: (draft) => !draft.addsOtherPorts,
-      isComplete: (draft) => draft.otherPortRanges.length > 0,
-      summary: describeOtherPorts,
-      render: (controls) => <OtherPortsStep {...controls} />,
     },
   ]
 }

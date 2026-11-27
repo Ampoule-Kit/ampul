@@ -63,7 +63,7 @@ async function run(invocation: Invocation): Promise<number> {
 
 export const configCommand: CommandDefinition = {
   name: 'config',
-  summary: 'Change where a project’s code comes from, its tools or its ports',
+  summary: 'Change where a project’s code comes from or its tools',
   arguments: [
     {
       name: 'project',
@@ -79,7 +79,7 @@ export const configCommand: CommandDefinition = {
   examples: [
     {
       command: 'ampul config api',
-      explanation: 'Add or remove tools in api, or change its ports.',
+      explanation: 'Add or remove tools in api.',
     },
   ],
   seeAlso: ['rebuild', 'new'],

@@ -79,7 +79,7 @@ async function askForSettings(): Promise<AmpulSettings> {
   )
   const runtime = await askForRuntime()
   const containerUser = await askForContainerUser()
-  return { runtime, containerUser }
+  return { ...defaultSettings, runtime, containerUser }
 }
 
 function SetUpSummary() {

@@ -1,11 +1,12 @@
 import type { ContainerEngine } from '../engine/ContainerEngine.ts'
+import { stopPortForwarding } from '../forwarding/portForwarding.ts'
+import { newTunnelToken } from '../forwarding/tunnel.ts'
 import { moduleCatalog } from '../modules/moduleCatalog.ts'
 import { installationOrder } from '../modules/moduleSelection.ts'
 import { Problem } from '../problems/Problem.ts'
 import type { ProjectSettings } from '../projects/ProjectSettings.ts'
-import { formatPortList } from '../projects/ports.ts'
 import type { TaskContext } from '../tasks/TaskRunner.ts'
-import { isPortAlreadyInUse, outputLines } from './containerErrors.ts'
+import { outputLines } from './containerErrors.ts'
 import { containerRunArguments } from './containerRunArguments.ts'
 import { unsharedFoldersIn, unsharedFoldersProblem } from './folderSharing.ts'
 import { type HostMount, hostConfigMounts } from './hostConfigMounts.ts'
@@ -28,6 +29,7 @@ async function createVolumeIfMissing(
 }
 
 export async function removeContainer(engine: ContainerEngine, projectName: string): Promise<void> {
+  await stopPortForwarding(projectName)
   await engine.capture(['rm', '--force', containerName(projectName)])
 }
 
@@ -50,6 +52,7 @@ export async function createContainer(
     isRootlessPodman: await engine.isRootlessPodman(),
     hostMounts: [...(await hostConfigMounts()), ...folderMounts],
     modules,
+    tunnelToken: newTunnelToken(),
   })
   const { exitCode, stderr } = await engine.capture(runArguments)
   context.output(stderr)
@@ -71,22 +74,6 @@ function containerCreationFailed(
   )
   if (unsharedFolders.length > 0) {
     return unsharedFoldersProblem(engine, project, unsharedFolders, errorOutput)
-  }
-  if (isPortAlreadyInUse(errorOutput)) {
-    return new Problem('A port is already in use on this machine', {
-      explanation: `One of the ports ${formatPortList(project.ports)} is taken by another program or project.`,
-      outputTail: outputLines(errorOutput),
-      fixes: [
-        {
-          description: 'Stop whatever uses it, or change the ports',
-          command: `ampul config ${project.name}`,
-        },
-        {
-          description: 'Then create the container again',
-          command: `ampul rebuild ${project.name}`,
-        },
-      ],
-    })
   }
   return new Problem('The container could not be created', {
     outputTail: outputLines(errorOutput),

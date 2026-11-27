@@ -1,37 +1,20 @@
 import type { ContainerEngine } from '../engine/ContainerEngine.ts'
-import { Problem, type ProblemFix } from '../problems/Problem.ts'
-import { isPortAlreadyInUse, outputLines } from './containerErrors.ts'
+import { stopPortForwarding } from '../forwarding/portForwarding.ts'
+import { Problem } from '../problems/Problem.ts'
+import { outputLines } from './containerErrors.ts'
 import { containerCodeDirectory, containerName, containerUser } from './naming.ts'
-
-function startFailureFixes(projectName: string, portInUse: boolean): ProblemFix[] {
-  const recreate = {
-    description: 'Recreate the container',
-    command: `ampul rebuild ${projectName}`,
-  }
-  if (!portInUse) return [recreate]
-  return [
-    {
-      description: 'Stop the program that uses the port, or change the ports',
-      command: `ampul config ${projectName}`,
-    },
-    { ...recreate, description: 'Then recreate the container' },
-  ]
-}
 
 export async function startContainer(engine: ContainerEngine, projectName: string): Promise<void> {
   const { exitCode, stderr } = await engine.capture(['start', containerName(projectName)])
   if (exitCode === 0) return
-  const portInUse = isPortAlreadyInUse(stderr)
   throw new Problem(`The container for '${projectName}' did not start`, {
-    explanation: portInUse
-      ? 'One of its ports is already used by another program or project on this machine.'
-      : undefined,
     outputTail: outputLines(stderr),
-    fixes: startFailureFixes(projectName, portInUse),
+    fixes: [{ description: 'Recreate the container', command: `ampul rebuild ${projectName}` }],
   })
 }
 
 export async function stopContainer(engine: ContainerEngine, projectName: string): Promise<void> {
+  await stopPortForwarding(projectName)
   const { exitCode, stderr } = await engine.capture(['stop', containerName(projectName)])
   if (exitCode === 0) return
   throw new Problem(`The container for '${projectName}' did not stop`, {

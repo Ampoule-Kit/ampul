@@ -3,6 +3,7 @@ import { commandManualPage, overviewManualPage } from './cli/manualPages.ts'
 import { parseArguments } from './cli/parseArguments.ts'
 import { runHome } from './commands/home.tsx'
 import { allCommands, commandNamed, unknownCommand } from './commands/registry.ts'
+import { forwarderCommandName, runPortForwarder } from './forwarding/forwarderProcess.ts'
 import { asProblem } from './problems/Problem.ts'
 import { UserCancelled } from './problems/UserCancelled.ts'
 import { ensureSettings } from './settings/onboarding.tsx'
@@ -19,6 +20,7 @@ const commandsThatNeedNoSettings = new Set(['help'])
 
 async function dispatch(args: string[]): Promise<number> {
   const [commandName, ...rest] = args
+  if (commandName === forwarderCommandName) return runPortForwarder(rest)
   const interactive = isInteractiveTerminal()
   if (!commandName) {
     if (!interactive) {

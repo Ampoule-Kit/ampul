@@ -73,24 +73,6 @@ describe('checkModuleCatalog', () => {
     )
   })
 
-  it('reports two modules that define one port preset differently', () => {
-    const preset = { id: 'web', label: 'Web', port: 3000, section: 'Web', description: 'Web' }
-    assert.doesNotThrow(() =>
-      check([
-        module('a', [], { portPresets: [preset] }),
-        module('b', [], { portPresets: [preset] }),
-      ]),
-    )
-    assert.throws(
-      () =>
-        check([
-          module('a', [], { portPresets: [preset] }),
-          module('b', [], { portPresets: [{ ...preset, port: 3001 }] }),
-        ]),
-      /define the port preset 'web' differently/,
-    )
-  })
-
   it('reports modules that install to the same folder and could be selected together', () => {
     assert.throws(
       () =>

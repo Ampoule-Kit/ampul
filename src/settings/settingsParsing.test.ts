@@ -26,8 +26,14 @@ function problemTitle(text: string): string {
 
 describe('parseSettingsFile', () => {
   it('reads a complete file of this version as it is', () => {
-    const parsed = parseSettingsFile(serializeSettings({ runtime: 'podman', containerUser: 'me' }))
-    assert.deepEqual(parsed.settings, { runtime: 'podman', containerUser: 'me' })
+    const parsed = parseSettingsFile(
+      serializeSettings({ runtime: 'podman', containerUser: 'me', ignoredPorts: [9229] }),
+    )
+    assert.deepEqual(parsed.settings, {
+      runtime: 'podman',
+      containerUser: 'me',
+      ignoredPorts: [9229],
+    })
     assert.equal(parsed.needsRewrite, false)
   })
 
@@ -36,18 +42,24 @@ describe('parseSettingsFile', () => {
       ampulVersion,
       runtime: 'auto',
       containerUser: 'dev',
+      ignoredPorts: [],
     })
   })
 
   it('fills in a missing setting with its default and asks for a rewrite', () => {
     const parsed = parseSettingsFile(settingsText({ ampulVersion, runtime: 'docker' }))
-    assert.deepEqual(parsed.settings, { runtime: 'docker', containerUser: 'dev' })
+    assert.deepEqual(parsed.settings, { runtime: 'docker', containerUser: 'dev', ignoredPorts: [] })
     assert.equal(parsed.needsRewrite, true)
   })
 
   it('takes a file from another version that still fits, to stamp the current version', () => {
     const parsed = parseSettingsFile(
-      settingsText({ ampulVersion: olderVersion, runtime: 'auto', containerUser: 'dev' }),
+      settingsText({
+        ampulVersion: olderVersion,
+        runtime: 'auto',
+        containerUser: 'dev',
+        ignoredPorts: [],
+      }),
     )
     assert.deepEqual(parsed.settings, defaultSettings)
     assert.equal(parsed.needsRewrite, true)

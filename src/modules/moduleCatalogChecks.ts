@@ -162,32 +162,6 @@ function checkVolumeNamesAreUnique(modules: ModuleDefinition[]): void {
   }
 }
 
-function checkPortPresetsAgree(modules: ModuleDefinition[]): void {
-  const byId = new Map<string, { module: string; text: string }>()
-  const byLabel = new Map<string, string>()
-  for (const module of modules) {
-    for (const preset of module.portPresets) {
-      const text = JSON.stringify(preset)
-      const earlier = byId.get(preset.id)
-      if (earlier && earlier.text !== text) {
-        throw brokenCatalog(
-          `The modules '${earlier.module}' and '${module.id}' define the port preset '${preset.id}' differently`,
-          'Modules can share a port preset, but each copy of it must be the same.',
-        )
-      }
-      const labelOwner = byLabel.get(preset.label)
-      if (labelOwner !== undefined && labelOwner !== preset.id) {
-        throw brokenCatalog(
-          `The port presets '${labelOwner}' and '${preset.id}' are both labelled '${preset.label}'`,
-          'Give each port preset its own label.',
-        )
-      }
-      byId.set(preset.id, { module: module.id, text })
-      byLabel.set(preset.label, preset.id)
-    }
-  }
-}
-
 export function checkModuleCatalog(
   modules: ModuleDefinition[],
   byId: ReadonlyMap<string, ModuleDefinition>,
@@ -201,5 +175,4 @@ export function checkModuleCatalog(
   checkRequirementsAreCompatible(modules, byId)
   checkInstallFoldersDoNotClash(modules)
   checkVolumeNamesAreUnique(modules)
-  checkPortPresetsAgree(modules)
 }

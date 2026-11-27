@@ -5,6 +5,7 @@ import {
   removeEveryAmpulImage,
   removeEveryAmpulVolume,
 } from '../containers/removal.ts'
+import { stopAllPortForwarding } from '../forwarding/portForwarding.ts'
 import { deleteAllProjectSettings, listProjectNames } from '../projects/projectStore.ts'
 import { ampulPaths, displayPath } from '../system/platform.ts'
 import { LogFile } from '../tasks/LogFile.ts'
@@ -38,7 +39,13 @@ async function run(invocation: Invocation): Promise<number> {
 
   const result = await runTasks(
     [
-      { title: 'Remove every ampul container', run: () => removeEveryAmpulContainer(engine) },
+      {
+        title: 'Remove every ampul container',
+        run: async () => {
+          await stopAllPortForwarding()
+          await removeEveryAmpulContainer(engine)
+        },
+      },
       { title: 'Remove every ampul image', run: () => removeEveryAmpulImage(engine) },
       { title: 'Remove every ampul volume', run: () => removeEveryAmpulVolume(engine) },
       { title: 'Remove the project settings', run: deleteAllProjectSettings },

@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-const highestPortNumber = 65_535
-
 const repositoriesSourceSchema = z.object({
   kind: z.literal('repositories'),
   repositories: z.array(z.string().min(1)),
@@ -22,13 +20,10 @@ export const codeSourceSchema = z.union([
   passThroughSourceSchema,
 ])
 
-const portNumberSchema = z.int().min(1).max(highestPortNumber)
-
 export const projectSettingsSchema = z.object({
   name: z.string().min(1),
   codeSource: codeSourceSchema,
   modules: z.array(z.string()),
-  ports: z.array(portNumberSchema),
 })
 
 export type RepositoriesSource = z.infer<typeof repositoriesSourceSchema>

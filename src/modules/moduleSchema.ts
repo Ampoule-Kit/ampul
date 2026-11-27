@@ -50,21 +50,6 @@ export const moduleContainerSchema = z.strictObject({
   volumes: z.array(moduleVolumeSchema).optional(),
 })
 
-const portNumber = z.int().min(1).max(65_535)
-
-export const portPresetSchema = z
-  .strictObject({
-    id: simpleName,
-    label: z.string().min(1),
-    port: portNumber,
-    lastPort: portNumber.optional(),
-    section: z.string().min(1),
-    description: z.string().min(1),
-  })
-  .refine((preset) => preset.lastPort === undefined || preset.lastPort > preset.port, {
-    message: 'lastPort must be above port',
-  })
-
 export const moduleFileSourceSchema = z.strictObject({
   $schema: z.string().optional(),
   label: z.string().min(1),
@@ -78,7 +63,6 @@ export const moduleFileSourceSchema = z.strictObject({
   environment: z.record(z.string(), z.string()).optional(),
   path: z.array(z.string().min(1)).optional(),
   container: moduleContainerSchema.optional(),
-  portPresets: z.array(portPresetSchema).optional(),
   latestVersion: latestVersionSchema.optional(),
   check: z.string().min(1),
 })
@@ -96,7 +80,6 @@ export const moduleFileSchema = moduleFileSourceSchema.transform((source) => ({
     volumes: source.container?.volumes ?? [],
   },
   mutuallyExclusiveWith: source.mutuallyExclusiveWith ?? [],
-  portPresets: source.portPresets ?? [],
 }))
 
 export const moduleCatalogFileSchema = z.strictObject({
@@ -104,7 +87,6 @@ export const moduleCatalogFileSchema = z.strictObject({
 })
 
 export type LatestVersionSource = z.infer<typeof latestVersionSchema>
-export type ModulePortPreset = z.infer<typeof portPresetSchema>
 export type ModuleVolume = z.infer<typeof moduleVolumeSchema>
 export type ModuleDownload = z.infer<typeof moduleDownloadSchema>
 export type ModuleFileSource = z.infer<typeof moduleFileSourceSchema>

@@ -17,7 +17,6 @@ export function moduleForTests(
     path: [],
     mutuallyExclusiveWith: [],
     container: { privileged: false, volumes: [] },
-    portPresets: [],
     hasSetup: false,
     ...overrides,
   }

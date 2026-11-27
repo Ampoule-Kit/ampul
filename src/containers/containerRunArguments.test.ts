@@ -8,19 +8,17 @@ const project: ProjectSettings = {
   name: 'api',
   codeSource: { kind: 'repositories', repositories: [] },
   modules: [],
-  ports: [3000, 3001, 3002, 4200],
 }
 
-const noHostSetup = { isRootlessPodman: false, hostMounts: [], modules: [] }
+const noHostSetup = { isRootlessPodman: false, hostMounts: [], modules: [], tunnelToken: 'abc' }
 
 describe('containerRunArguments', () => {
-  it('publishes consecutive ports as one range on the host loopback address', () => {
+  it('publishes only the tunnel port, on a free port of the host loopback address', () => {
     const runArguments = containerRunArguments(project, noHostSetup)
-    assert.ok(runArguments.includes('127.0.0.1:3000-3002:61000-61002'))
-    assert.ok(runArguments.includes('127.0.0.1:4200:61003'))
-    assert.ok(
-      runArguments.includes('AMPUL_PORT_FORWARDS=3000:61000 3001:61001 3002:61002 4200:61003'),
-    )
+    const published = runArguments.filter((_, index) => runArguments[index - 1] === '--publish')
+    assert.deepEqual(published, ['127.0.0.1::61000'])
+    assert.ok(runArguments.includes('AMPUL_TUNNEL_PORT=61000'))
+    assert.ok(runArguments.includes('AMPUL_TUNNEL_TOKEN=abc'))
   })
 
   it('runs privileged with the volumes of the modules only when a module asks for them', () => {

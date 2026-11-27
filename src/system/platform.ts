@@ -38,6 +38,7 @@ export const ampulPaths = {
   dotfiles: path.join(configFolder, 'dotfiles'),
   projects: path.join(homeDirectory, '.ampul', 'projects'),
   logs: path.join(stateRoot(), 'ampul', 'logs'),
+  forwarding: path.join(stateRoot(), 'ampul', 'forwarding'),
   cache: path.join(cacheRoot(), 'ampul'),
 }
 

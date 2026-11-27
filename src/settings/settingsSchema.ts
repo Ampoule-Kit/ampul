@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { runtimeNames } from '../engine/runtimeNames.ts'
 
 const longestLinuxUserName = 32
+const highestPort = 65_535
 const linuxUserNamePattern = /^[a-z_][a-z0-9_-]*$/
 
 export const runtimeChoices = ['auto', ...runtimeNames] as const
@@ -18,6 +19,7 @@ const containerUserSchema = z
 export const ampulSettingsSchema = z.strictObject({
   runtime: z.enum(runtimeChoices).default('auto'),
   containerUser: containerUserSchema.default('dev'),
+  ignoredPorts: z.array(z.int().min(1).max(highestPort)).default([]),
 })
 
 export const settingsFileSchema = ampulSettingsSchema.extend({

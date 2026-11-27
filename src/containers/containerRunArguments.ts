@@ -1,6 +1,11 @@
+import {
+  tunnelContainerPort,
+  tunnelPortVariable,
+  tunnelPublishArgument,
+  tunnelTokenVariable,
+} from '../forwarding/tunnel.ts'
 import type { ModuleDefinition } from '../modules/ModuleDefinition.ts'
 import type { ProjectSettings } from '../projects/ProjectSettings.ts'
-import { formatPortRange, portForwards, portsInRange } from '../projects/ports.ts'
 import { type HostMount, volumeArgument } from './hostConfigMounts.ts'
 import {
   containerHome,
@@ -11,12 +16,11 @@ import {
   sharedCacheVolume,
 } from './naming.ts'
 
-const portForwardsVariable = 'AMPUL_PORT_FORWARDS'
-
 export interface ContainerRunContext {
   isRootlessPodman: boolean
   hostMounts: HostMount[]
   modules: ModuleDefinition[]
+  tunnelToken: string
 }
 
 function identityArguments(project: ProjectSettings): string[] {
@@ -54,16 +58,15 @@ function moduleArguments(project: ProjectSettings, context: ContainerRunContext)
   ]
 }
 
-function portArguments(project: ProjectSettings): string[] {
-  const forwards = portForwards(project.ports)
-  const publishArguments = forwards.flatMap(({ host, container }) => [
+function tunnelArguments(context: ContainerRunContext): string[] {
+  return [
     '--publish',
-    `127.0.0.1:${formatPortRange(host)}:${formatPortRange(container)}`,
-  ])
-  const forwardPairs = forwards.flatMap(({ host, container }) =>
-    portsInRange(host).map((hostPort, offset) => `${hostPort}:${container.first + offset}`),
-  )
-  return [...publishArguments, '--env', `${portForwardsVariable}=${forwardPairs.join(' ')}`]
+    tunnelPublishArgument(),
+    '--env',
+    `${tunnelPortVariable}=${tunnelContainerPort}`,
+    '--env',
+    `${tunnelTokenVariable}=${context.tunnelToken}`,
+  ]
 }
 
 export function containerRunArguments(
@@ -81,7 +84,7 @@ export function containerRunArguments(
     ...userNamespaceArguments(context),
     ...hostMountArguments(context),
     ...moduleArguments(project, context),
-    ...portArguments(project),
+    ...tunnelArguments(context),
     imageName(project.name),
   ]
 }
