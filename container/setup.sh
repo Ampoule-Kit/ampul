@@ -28,7 +28,7 @@ warn() {
 
 remove_links_to_deleted_config() {
   local link
-  find "$HOME" \( -path "$AMPUL_DIR" -o -path "$HOST_DIR" -o -path "$HOME/home" -o -path "$HOME/.cache" -o -path "$HOME/.local" \) -prune \
+  find "$HOME" \( -path "$AMPUL_DIR" -o -path "$HOST_DIR" -o -path "$HOME/work" -o -path "$HOME/.cache" -o -path "$HOME/.local" \) -prune \
     -o -xtype l -lname '*.ampul/*' -print0 |
     while IFS= read -r -d '' link; do
       rm "$link"

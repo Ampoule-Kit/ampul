@@ -16,7 +16,7 @@ export function repositoryUrlProblem(url: string, otherRepositories: string[]): 
     (other) => repositoryFolderName(other) === folderName,
   )
   if (clashingRepository) {
-    return `${clashingRepository} already clones into ~/home/${folderName}.`
+    return `${clashingRepository} already clones into ~/work/${folderName}.`
   }
   return undefined
 }
@@ -30,7 +30,7 @@ export function mountedFolderProblem(folder: string, otherFolders: string[]): st
   }
   const clashingFolder = otherFolders.find((other) => path.basename(other) === folderName)
   if (clashingFolder) {
-    return `${displayPath(clashingFolder)} is already mounted at ~/home/${folderName}.`
+    return `${displayPath(clashingFolder)} is already mounted at ~/work/${folderName}.`
   }
   return undefined
 }

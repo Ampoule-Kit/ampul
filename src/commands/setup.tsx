@@ -47,7 +47,7 @@ export const setupCommand: CommandDefinition = {
   flags: [],
   description: [
     `Copies your dotfiles from ${displayPath(ampulPaths.dotfiles)} into the container and links each file into the home folder at the same place, so dotfiles/.bashrc becomes ~/.bashrc. It then runs each tool’s own setup script (modules/<tool>/setup.sh), and links the git and SSH config of this machine.`,
-    'Nothing else is touched, so ~/home and running work are safe. Links to dotfiles you deleted are removed. Run it after changing your dotfiles or your SSH config.',
+    'Nothing else is touched, so the code in ~/work and running processes are safe. Links to dotfiles you deleted are removed. Run it after changing your dotfiles or your SSH config.',
     'Adding or removing a tool needs ampul config, then ampul rebuild.',
   ],
   examples: [{ command: 'ampul setup api', explanation: 'Refresh the dotfiles in api.' }],

@@ -41,7 +41,7 @@ export function cloneTasks(
   if (source.kind !== 'repositories') return []
   return [
     {
-      title: `Clone ${pluralize(source.repositories.length, 'repository', 'repositories')} into ~/home`,
+      title: `Clone ${pluralize(source.repositories.length, 'repository', 'repositories')} into ~/work`,
       run: async (context) => {
         const outcome = await cloneRepositories(engine, project, source.repositories, context)
         onCloneFailures(outcome.failedRepositories)

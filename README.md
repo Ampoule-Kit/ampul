@@ -64,19 +64,19 @@ You can review everything before it builds, and press Esc to go back a step at a
 
 ## Your code
 
-Your code is in `~/home` inside the container, and every shell starts there. You choose how it gets there:
+Your code is in `~/work` inside the container, and every shell starts there. You choose how it gets there:
 
 | Option                 | What you get in the container                                     | Good for                                                      |
 | ---------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------- |
-| Clone git repositories | A fresh clone of each repository in `~/home/<repository name>`    | A clean start, or code you don't have on your machine yet     |
-| Mount folders          | Each folder you pick from your machine, in `~/home/<folder name>` | Repositories and projects you already work on                 |
-| Pass-through           | Your whole home folder from your machine, as `~/home`             | Reaching all your own folders, as if you were on your machine |
+| Clone git repositories | A fresh clone of each repository in `~/work/<repository name>`    | A clean start, or code you don't have on your machine yet     |
+| Mount folders          | Each folder you pick from your machine, in `~/work/<folder name>` | Repositories and projects you already work on                 |
+| Pass-through           | Your whole home folder from your machine, as `~/work`             | Reaching all your own folders, as if you were on your machine |
 
 **Cloned repositories live only in the container.** Push your work before running `ampul rebuild` or `ampul rm`, as both throw the clones away and clone them again from scratch.
 
 **Mounted folders stay on your machine.** The container works on the real folders, so a change on either side shows up on the other straight away. Rebuilding or removing a project never deletes them.
 
-**Pass-through keeps the container's own setup.** Your home folder appears as `~/home`, not in place of the container's home folder, so the container still uses your [ampul dotfiles](#dotfiles). Your hidden folders, such as `.ssh` and `.config`, are visible inside `~/home` too.
+**Pass-through keeps the container's own setup.** Your home folder appears as `~/work`, not in place of the container's home folder, so the container still uses your [ampul dotfiles](#dotfiles). Your hidden folders, such as `.ssh` and `.config`, are visible inside `~/work` too.
 
 ## Commands
 
@@ -84,7 +84,7 @@ Your code is in `~/home` inside the container, and every shell starts there. You
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `ampul`                | Shows every project and its status. Enter connects; `s` stops, `e` configures, `r` rebuilds, `x` removes, `n` creates. |
 | `ampul new [name]`     | Creates a project.                                                                                                     |
-| `ampul start [name]`   | Starts a project if needed and opens a shell in `~/home`. Use `-d` to only start it.                                   |
+| `ampul start [name]`   | Starts a project if needed and opens a shell in `~/work`. Use `-d` to only start it.                                   |
 | `ampul stop [name]`    | Stops a project. Use `--all` to stop every project.                                                                    |
 | `ampul ls`             | Lists your projects, their status, ports and code. Use `--json` for scripts.                                           |
 | `ampul config [name]`  | Changes where a project's code comes from, its tools or its ports.                                                     |

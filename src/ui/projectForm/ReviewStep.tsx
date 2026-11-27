@@ -57,12 +57,12 @@ function setupStepDescription(project: ProjectSettings): string {
 
 function codeStepDescription(source: CodeSource): string {
   if (source.kind === 'repositories') {
-    return `Clone ${pluralize(source.repositories.length, 'repository', 'repositories')} into ~/home.`
+    return `Clone ${pluralize(source.repositories.length, 'repository', 'repositories')} into ~/work.`
   }
   if (source.kind === 'folders') {
-    return `Mount ${pluralize(source.folders.length, 'folder')} from this machine into ~/home.`
+    return `Mount ${pluralize(source.folders.length, 'folder')} from this machine into ~/work.`
   }
-  return 'Mount your home folder from this machine at ~/home.'
+  return 'Mount your home folder from this machine at ~/work.'
 }
 
 function plannedSteps(project: ProjectSettings): string[] {
