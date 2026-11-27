@@ -5,7 +5,7 @@ import { moduleCatalog } from '../../modules/moduleCatalog.ts'
 import { installationOrder, privilegedModuleLabels } from '../../modules/moduleSelection.ts'
 import { describeCodeSource } from '../../projects/codeSources.ts'
 import type { CodeSource, ProjectSettings } from '../../projects/ProjectSettings.ts'
-import { describePorts, describeTools } from '../../projects/projectSummary.ts'
+import { describeTools } from '../../projects/projectSummary.ts'
 import { joinInProse, pluralize } from '../../text/prose.ts'
 import { Question } from '../components/Question.tsx'
 import { SelectList, type SelectOption } from '../components/SelectList.tsx'
@@ -68,9 +68,7 @@ function codeStepDescription(source: CodeSource): string {
 function plannedSteps(project: ProjectSettings): string[] {
   return [
     `Build the image ${imageName(project.name)}. The first build downloads every tool and takes a few minutes; later builds reuse the cache.`,
-    project.ports.length > 0
-      ? `Create the container and forward ${pluralize(project.ports.length, 'port')} to this machine.`
-      : 'Create the container.',
+    'Create the container. Every port an app listens on in it is forwarded to localhost on this machine.',
     setupStepDescription(project),
     codeStepDescription(project.codeSource),
   ]
@@ -114,10 +112,6 @@ function codeSourceText(settings: ProjectSettings): string {
   return describeCodeSource(settings.codeSource)
 }
 
-function portsText(settings: ProjectSettings): string {
-  return describePorts(settings.ports)
-}
-
 export function ReviewStep({
   draft,
   jumpTo,
@@ -159,11 +153,6 @@ export function ReviewStep({
           label="Tools"
           value={describeTools(project)}
           changed={hasChanged(original, describeTools, project)}
-        />
-        <SummaryRow
-          label="Ports"
-          value={portsText(project)}
-          changed={hasChanged(original, portsText, project)}
         />
         <SummaryRow label="Runtime" value={context.runtimeDescription} />
       </Box>

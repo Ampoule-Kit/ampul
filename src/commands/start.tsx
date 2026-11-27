@@ -52,6 +52,7 @@ export const startCommand: CommandDefinition = {
   description: [
     'Starts the project’s container when it is stopped, then opens a bash login shell in ~/work. Run it again from another terminal to open a second shell in the same container.',
     'Leaving the shell (exit or ctrl+d) keeps the container running, so servers and builds you started in the background carry on. Stop it with ampul stop.',
+    'While the container runs, every port an app listens on in it is forwarded to localhost on this machine, as soon as the app starts listening.',
     'When the container engine is not running, ampul start offers to start it, for example the Podman machine on macOS.',
   ],
   examples: [

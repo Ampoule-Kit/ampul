@@ -52,7 +52,6 @@ A module carries no dotfiles or tool config: those belong to the user, in `~/.co
 | `environment`           | Environment variables for the container. `{home}` becomes the user's home folder.                                                                    |
 | `path`                  | Folders to put at the front of `PATH`. `{home}` works here too.                                                                                      |
 | `container`             | What the container needs at run time: `privileged: true`, and `volumes` that keep data across rebuilds, described below.                             |
-| `portPresets`           | Ports the tool's apps usually listen on, offered on the ports screen when the module is selected, described below.                                   |
 
 ### downloads
 
@@ -96,23 +95,6 @@ The page at `url` is read, and the highest version captured by the regular expre
 
 A privileged module makes the whole container privileged, and ampul warns about it before creating the project. Each volume is created for the project as `ampul-<project>-<name>`, mounted at `path`, kept across rebuilds and removed with `ampul rm`. `contents` is how `ampul rebuild` and `ampul rm` describe what it holds. Volume names must be unique across all modules.
 
-### portPresets
-
-```json
-"portPresets": [
-  {
-    "id": "my-tool-web",
-    "label": "My Tool dev server",
-    "port": 5000,
-    "lastPort": 5001,
-    "section": "Web apps",
-    "description": "What listens on these ports."
-  }
-]
-```
-
-`lastPort` makes it a range. Presets are grouped by `section`. Several modules can offer the same preset, such as side-by-side versions of one SDK, as long as every copy is identical.
-
 ## Checks
 
 ampul checks the modules when it loads them, and `npm test` does too. It refuses:
@@ -123,5 +105,4 @@ ampul checks the modules when it loads them, and `npm test` does too. It refuses
 - a module that needs, directly or through its requirements, two mutually exclusive modules
 - two modules that install to the same folder and could be selected together
 - two modules with a volume of the same name
-- two copies of a port preset that differ, or two presets with the same label
 - a download without a checksum for both architectures

@@ -38,6 +38,7 @@ export const ampulPaths = {
   dotfiles: path.join(configFolder, 'dotfiles'),
   projects: path.join(homeDirectory, '.ampul', 'projects'),
   logs: path.join(stateRoot(), 'ampul', 'logs'),
+  forwarding: path.join(stateRoot(), 'ampul', 'forwarding'),
   cache: path.join(cacheRoot(), 'ampul'),
 }
 
@@ -49,6 +50,11 @@ export function hostUserId(): number {
 export function hostGroupId(): number {
   const { gid } = os.userInfo()
   return gid >= 0 ? gid : fallbackUserId
+}
+
+export function hostTimeZone(): string | undefined {
+  const { timeZone } = Intl.DateTimeFormat().resolvedOptions()
+  return timeZone && timeZone !== 'Etc/Unknown' ? timeZone : undefined
 }
 
 export function isRunningAsRoot(): boolean {

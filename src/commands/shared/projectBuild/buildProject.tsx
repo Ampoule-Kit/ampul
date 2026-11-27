@@ -1,4 +1,5 @@
 import type { ContainerEngine } from '../../../engine/ContainerEngine.ts'
+import { ensurePortForwarding } from '../../../forwarding/portForwarding.ts'
 import type { ProjectSettings } from '../../../projects/ProjectSettings.ts'
 import { LogFile } from '../../../tasks/LogFile.ts'
 import { askYesOrNo } from '../../../ui/askYesOrNo.tsx'
@@ -37,6 +38,7 @@ export async function buildProject(
     new LogFile(project.name, 'build'),
   )
   if (!result.succeeded) throw result.problem
+  await ensurePortForwarding(engine, project.name)
 
   const unclonedRepositories = await retryFailedClones(engine, project, failedClones, interactive)
   printElement(

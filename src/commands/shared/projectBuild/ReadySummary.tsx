@@ -1,7 +1,6 @@
 import { Box, Text } from 'ink'
 import { codeSourceFolderNames, repositoryFolderName } from '../../../projects/codeSources.ts'
 import type { ProjectSettings } from '../../../projects/ProjectSettings.ts'
-import { formatPortRange, type PortRange, portRanges } from '../../../projects/ports.ts'
 import { homeDirectory } from '../../../system/platform.ts'
 import { pluralize } from '../../../text/prose.ts'
 import { Bullet, Callout } from '../../../ui/components/Callout.tsx'
@@ -11,12 +10,6 @@ interface ReadySummaryProps {
   project: ProjectSettings
   unclonedRepositories: string[]
   warnings: string[]
-}
-
-function portForwardDescription(range: PortRange): string {
-  const ports = formatPortRange(range)
-  const noun = range.first === range.last ? 'port' : 'ports'
-  return `localhost:${ports} on this machine reaches ${noun} ${ports} in the container`
 }
 
 export function ReadySummary({ project, unclonedRepositories, warnings }: ReadySummaryProps) {
@@ -33,9 +26,7 @@ export function ReadySummary({ project, unclonedRepositories, warnings }: ReadyS
       {project.codeSource.kind === 'pass-through' && (
         <Bullet>~/work is your home folder on this machine, {homeDirectory}</Bullet>
       )}
-      {portRanges(project.ports).map((range) => (
-        <Bullet key={range.first}>{portForwardDescription(range)}</Bullet>
-      ))}
+      <Bullet>Every port an app listens on in the container is forwarded to localhost</Bullet>
       {unclonedRepositories.map((repository) => (
         <Bullet key={repository} color={colors.warning}>
           Not cloned: {repository}. Clone it yourself after connecting.

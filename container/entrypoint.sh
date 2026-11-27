@@ -20,16 +20,14 @@ run_module_start_scripts() {
   done <"$INSTALLED_MODULES"
 }
 
-forward_published_ports() {
-  local forward
-  for forward in ${AMPUL_PORT_FORWARDS:-}; do
-    socat "TCP-LISTEN:${forward#*:},fork,reuseaddr" "TCP:127.0.0.1:${forward%%:*}" >>"$LOG_DIR/port-forwards.log" 2>&1 &
-  done
+start_port_tunnel() {
+  [ -n "${AMPUL_TUNNEL_PORT:-}" ] || return 0
+  socat "TCP-LISTEN:$AMPUL_TUNNEL_PORT,fork,reuseaddr" EXEC:/opt/ampul/port-tunnel.sh,nofork >>"$LOG_DIR/port-forwards.log" 2>&1 &
 }
 
 mkdir -p "$LOG_DIR"
 start_ssh_agent
 run_module_start_scripts
-forward_published_ports
+start_port_tunnel
 
 exec sleep infinity

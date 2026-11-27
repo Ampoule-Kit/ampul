@@ -26,29 +26,12 @@
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "DOTNET_NOLOGO": "1",
     "NUGET_PACKAGES": "{home}/.cache/nuget",
-    "ASPNETCORE_ENVIRONMENT": "Development"
+    "ASPNETCORE_ENVIRONMENT": "Development",
+    "SSL_CERT_DIR": "{home}/.aspnet/dev-certs/trust:/usr/lib/ssl/certs"
   },
   "path": [
     "/opt/dotnet",
     "{home}/.dotnet/tools"
-  ],
-  "portPresets": [
-    {
-      "id": "aspnet",
-      "label": "ASP.NET Core",
-      "port": 5000,
-      "lastPort": 5001,
-      "section": "Web apps",
-      "description": "Kestrel’s defaults: HTTP on 5000 and HTTPS on 5001. Projects made with dotnet new pick their own ports in Properties/launchSettings.json."
-    },
-    {
-      "id": "aspire-dashboard",
-      "label": ".NET Aspire dashboard",
-      "port": 18888,
-      "lastPort": 18890,
-      "section": "Web apps",
-      "description": "The Aspire dashboard on 18888, and its OpenTelemetry endpoints on 18889 (gRPC) and 18890 (HTTP). An AppHost made with dotnet new picks its own dashboard port in Properties/launchSettings.json; add that one under other ports."
-    }
   ],
   "latestVersion": {
     "url": "https://builds.dotnet.microsoft.com/dotnet/release-metadata/11.0/releases.json",

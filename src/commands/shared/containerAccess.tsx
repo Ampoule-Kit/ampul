@@ -3,9 +3,9 @@ import { containerState } from '../../containers/containerState.ts'
 import { containerName } from '../../containers/naming.ts'
 import { shellCommand, startContainer } from '../../containers/projectLifecycle.ts'
 import type { ContainerEngine } from '../../engine/ContainerEngine.ts'
+import { ensurePortForwarding } from '../../forwarding/portForwarding.ts'
 import { Problem } from '../../problems/Problem.ts'
 import type { ProjectSettings } from '../../projects/ProjectSettings.ts'
-import { formatPortRange, portRanges } from '../../projects/ports.ts'
 import { LogFile } from '../../tasks/LogFile.ts'
 import { runTasks } from '../../ui/runTasks.tsx'
 import { printElement } from '../../ui/terminal.tsx'
@@ -28,7 +28,10 @@ export async function ensureContainerRunning(
   project: ProjectSettings,
 ): Promise<'already running' | 'started'> {
   const state = await containerState(engine, project.name)
-  if (state === 'running') return 'already running'
+  if (state === 'running') {
+    await ensurePortForwarding(engine, project.name)
+    return 'already running'
+  }
   if (state === 'missing') throw containerMissing(project)
 
   const result = await runTasks(
@@ -47,6 +50,7 @@ export async function ensureContainerRunning(
     new LogFile(project.name, 'start'),
   )
   if (!result.succeeded) throw result.problem
+  await ensurePortForwarding(engine, project.name)
   return 'started'
 }
 
@@ -54,11 +58,7 @@ export async function openShell(
   engine: ContainerEngine,
   project: ProjectSettings,
 ): Promise<number> {
-  const details = [
-    '~/work',
-    ...portRanges(project.ports).map((range) => `localhost:${formatPortRange(range)}`),
-    'leave with exit or ctrl+d',
-  ]
+  const details = ['~/work', 'ports forwarded automatically', 'leave with exit or ctrl+d']
   printElement(
     <Text>
       <Text color={colors.accent}>{symbols.arrow}</Text> Connecting to{' '}

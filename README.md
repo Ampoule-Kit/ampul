@@ -20,7 +20,7 @@ That is the idea behind the name: each project lives in its own sealed container
 
 - **Your machine stays clean.** Every tool, SDK and setting lives in the container. On your machine, ampul keeps only its [settings](#configuration), your dotfiles and the settings of each project.
 - **Rebuilds are repeatable.** Every tool is pinned to a version and checked against its checksum, so a rebuild months from now gives you the same environment.
-- **It feels like home.** Your dotfiles, git config, credentials and SSH keys come with you into every container.
+- **It feels like home.** Your dotfiles, git config, credentials, SSH keys and time zone come with you into every container.
 - **It guides you.** A terminal UI walks you through each step, shows progress as it builds, and tells you how to fix anything that goes wrong.
 
 ## Requirements
@@ -58,9 +58,8 @@ ampul              # see all your projects and manage them with single keys
 1. **Your code.** Clone git repositories, use folders already on your machine, or bring your whole home folder along. See [your code](#your-code) for how each one works.
 2. **A name**, suggested from your code.
 3. **Extra tools**, such as Go, Rust, .NET SDKs, Java, cloud command lines, database clients or a container engine.
-4. **Ports** to reach from your machine at `localhost`. Pick common ones (Angular, Vite, ASP.NET Core, Spring Boot, PostgreSQL, Redis and more) or add your own, such as `3000-3009`.
 
-You can review everything before it builds, and press Esc to go back a step at any time. When it's done, ampul offers to connect you.
+Ports need no answer: every port an app listens on in the container is [forwarded to your machine](#ports) on its own. You can review everything before it builds, and press Esc to go back a step at any time. When it's done, ampul offers to connect you.
 
 ## Your code
 
@@ -86,8 +85,8 @@ Your code is in `~/work` inside the container, and every shell starts there. You
 | `ampul new [name]`     | Creates a project.                                                                                                     |
 | `ampul start [name]`   | Starts a project if needed and opens a shell in `~/work`. Use `-d` to only start it.                                   |
 | `ampul stop [name]`    | Stops a project. Use `--all` to stop every project.                                                                    |
-| `ampul ls`             | Lists your projects, their status, ports and code. Use `--json` for scripts.                                           |
-| `ampul config [name]`  | Changes where a project's code comes from, its tools or its ports.                                                     |
+| `ampul ls`             | Lists your projects, their status, forwarded ports and code. Use `--json` for scripts.                                 |
+| `ampul config [name]`  | Changes where a project's code comes from or its tools.                                                                |
 | `ampul rebuild [name]` | Rebuilds a project with fresh config, cloning its repositories again.                                                  |
 | `ampul setup [name]`   | Reapplies your dotfiles, git and SSH without rebuilding.                                                               |
 | `ampul rm [name]`      | Removes a project and everything that belongs to it. Mounted folders on your machine are kept.                         |
@@ -101,53 +100,53 @@ Leave out the project name and ampul lets you pick from a list. Before deleting 
 
 Every container runs Ubuntu 24.04 with git, curl, ssh, sudo, jq and bash completion, whatever system you run ampul on. You choose the rest:
 
-| Tool                 | Category                 | Version                       | Default | Notes                                                                                                                         |
-| -------------------- | ------------------------ | ----------------------------- | :-----: | ----------------------------------------------------------------------------------------------------------------------------- |
-| Neovim               | Editor                   | 0.12.6                        |   Yes   | Installs the plugins pinned in your Neovim config. Brings Node.js, tree-sitter CLI, ripgrep, fd and build-essential.          |
-| tree-sitter CLI      | Editor                   | 0.27.2                        |   Yes   | Builds Neovim's syntax parsers. Brings build-essential.                                                                       |
-| Helix                | Editor                   | 25.07.1                       |   No    | Modal editor, `hx`, with language server support built in.                                                                    |
-| lazygit              | Terminal tools           | 0.66.3                        |   Yes   | Terminal UI for git.                                                                                                          |
-| Yazi                 | Terminal tools           | 26.9.1                        |   Yes   | Terminal file manager.                                                                                                        |
-| Zellij               | Terminal tools           | 0.46.1                        |   Yes   | Terminal multiplexer.                                                                                                         |
-| tmux                 | Terminal tools           | Ubuntu package                |   No    | Terminal multiplexer, if you prefer it to Zellij.                                                                             |
-| lsd                  | Terminal tools           | 1.2.0                         |   Yes   | `ls` with colours and icons.                                                                                                  |
-| ripgrep              | Terminal tools           | Ubuntu package                |   Yes   | Fast recursive search, `rg`.                                                                                                  |
-| fd                   | Terminal tools           | Ubuntu package                |   Yes   | A fast, friendly `find`.                                                                                                      |
-| fzf                  | Terminal tools           | Ubuntu package                |   Yes   | Fuzzy finder.                                                                                                                 |
-| yq                   | Terminal tools           | 4.54.3                        |   No    | jq for YAML, JSON, TOML and XML.                                                                                              |
-| Claude Code          | AI                       | 2.1.332                       |   Yes   | Coding agent for the terminal. Start it with `claude`.                                                                        |
-| Codex CLI            | AI                       | 0.172.0                       |   No    | OpenAI's coding agent. Start it with `codex`.                                                                                 |
-| Gemini CLI           | AI                       | 0.71.1                        |   No    | Google's coding agent. Start it with `gemini`. Brings Node.js.                                                                |
-| Node.js              | Languages                | 26.13.1                       |   Yes   | With npm.                                                                                                                     |
-| build-essential      | Languages                | Ubuntu package                |   Yes   | gcc, g++ and make, for native npm packages and Python wheels.                                                                 |
-| Python               | Languages                | Ubuntu package                |   No    | Python 3 with pip, venv and development headers.                                                                              |
-| Java (Temurin)       | Languages                | 25.0.5.1+2                    |   No    | Eclipse Temurin JDK with `JAVA_HOME` set.                                                                                     |
-| Go                   | Languages                | 1.27.4                        |   No    | Module cache kept across rebuilds. `go install` puts tools in `~/go/bin`.                                                     |
-| Rust                 | Languages                | 1.100.0, rustup 1.29.3        |   No    | With clippy, rustfmt and rust-analyzer. Brings build-essential.                                                               |
-| Kotlin               | Languages                | 2.4.21                        |   No    | The `kotlinc` compiler. Brings Java.                                                                                          |
-| Zig                  | Languages                | 0.17.1                        |   No    | Also a C and C++ compiler, with `zig cc`.                                                                                     |
-| Bun                  | Languages                | 1.4.5                         |   No    | JavaScript runtime and package manager, `bun` and `bunx`.                                                                     |
-| pnpm                 | Build tools              | 12.23.0                       |   No    | Node.js package manager. Brings Node.js.                                                                                      |
-| uv                   | Build tools              | 0.13.10                       |   No    | Python package and project manager, `uv` and `uvx`. Installs its own Python versions.                                         |
-| Maven                | Build tools              | 3.10.2                        |   No    | Brings Java.                                                                                                                  |
-| Gradle               | Build tools              | 9.9.2                         |   No    | For projects without a Gradle wrapper, and for `gradle init`. Brings Java.                                                    |
-| CMake and Ninja      | Build tools              | cmake 4.5.1, ninja 1.13.2     |   No    | For C and C++ projects. Brings build-essential.                                                                               |
-| .NET 11 SDK          | .NET                     | 11.0.100                      |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                                                 |
-| .NET 10 SDK          | .NET                     | 10.0.404                      |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                                                 |
-| .NET 8 SDK           | .NET                     | 8.0.428                       |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                                                 |
-| .NET 6 SDK           | .NET                     | 6.0.428                       |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                                                 |
-| kubectl              | Cloud and infrastructure | 1.37.3                        |   No    | Kubernetes command line.                                                                                                      |
-| k3d                  | Cloud and infrastructure | 5.9.0                         |   No    | Local k3s Kubernetes clusters in containers. Brings the container engine and kubectl.                                         |
-| Terraform            | Cloud and infrastructure | 1.17.2                        |   No    | Infrastructure as code. Update checks are turned off.                                                                         |
-| Ansible              | Cloud and infrastructure | 15.0.0, core 2.22.0           |   No    | With the community collections, on its own Python 3.14. Brings uv.                                                            |
-| Azure CLI            | Cloud and infrastructure | 2.93.0                        |   No    | The `az` command. Telemetry is turned off.                                                                                    |
-| AWS CLI              | Cloud and infrastructure | 2.42.4                        |   No    | The `aws` command, version 2.                                                                                                 |
-| PostgreSQL client    | Databases                | 19.0                          |   No    | `psql`, `pg_dump` and `pg_restore`, from the PostgreSQL project's packages.                                                   |
-| MongoDB Shell        | Databases                | 2.14.3                        |   No    | The `mongosh` shell.                                                                                                          |
-| Playwright libraries | Testing                  | Playwright 1.65.1             |   No    | System libraries for Playwright's browsers. Your project's Playwright downloads the browsers into `~/.cache`. Brings Node.js. |
-| Godot                | Game engines             | 4.7.2-stable                  |   No    | For GDScript projects. Pick this or Godot (.NET), not both.                                                                   |
-| Godot (.NET)         | Game engines             | 4.7.2-stable                  |   No    | C# scripting. Brings the .NET 8 SDK.                                                                                          |
-| Container engine     | Containers               | docker 29.10.1, compose 5.8.0 |   No    | Podman (Ubuntu package) with the docker CLI and compose. The container runs privileged.                                       |
+| Tool                 | Category                 | Version                       | Default | Notes                                                                                                                                                           |
+| -------------------- | ------------------------ | ----------------------------- | :-----: | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Neovim               | Editor                   | 0.12.6                        |   Yes   | Installs the plugins pinned in your Neovim config. Brings Node.js, tree-sitter CLI, ripgrep, fd and build-essential.                                            |
+| tree-sitter CLI      | Editor                   | 0.27.2                        |   Yes   | Builds Neovim's syntax parsers. Brings build-essential.                                                                                                         |
+| Helix                | Editor                   | 25.07.1                       |   No    | Modal editor, `hx`, with language server support built in.                                                                                                      |
+| lazygit              | Terminal tools           | 0.66.3                        |   Yes   | Terminal UI for git.                                                                                                                                            |
+| Yazi                 | Terminal tools           | 26.9.1                        |   Yes   | Terminal file manager.                                                                                                                                          |
+| Zellij               | Terminal tools           | 0.46.1                        |   Yes   | Terminal multiplexer.                                                                                                                                           |
+| tmux                 | Terminal tools           | Ubuntu package                |   No    | Terminal multiplexer, if you prefer it to Zellij.                                                                                                               |
+| lsd                  | Terminal tools           | 1.2.0                         |   Yes   | `ls` with colours and icons.                                                                                                                                    |
+| ripgrep              | Terminal tools           | Ubuntu package                |   Yes   | Fast recursive search, `rg`.                                                                                                                                    |
+| fd                   | Terminal tools           | Ubuntu package                |   Yes   | A fast, friendly `find`.                                                                                                                                        |
+| fzf                  | Terminal tools           | Ubuntu package                |   Yes   | Fuzzy finder.                                                                                                                                                   |
+| yq                   | Terminal tools           | 4.54.3                        |   No    | jq for YAML, JSON, TOML and XML.                                                                                                                                |
+| Claude Code          | AI                       | 2.1.332                       |   Yes   | Coding agent for the terminal. Start it with `claude`.                                                                                                          |
+| Codex CLI            | AI                       | 0.172.0                       |   No    | OpenAI's coding agent. Start it with `codex`.                                                                                                                   |
+| Gemini CLI           | AI                       | 0.71.1                        |   No    | Google's coding agent. Start it with `gemini`. Brings Node.js.                                                                                                  |
+| Node.js              | Languages                | 26.13.1                       |   Yes   | With npm.                                                                                                                                                       |
+| build-essential      | Languages                | Ubuntu package                |   Yes   | gcc, g++ and make, for native npm packages and Python wheels.                                                                                                   |
+| Python               | Languages                | Ubuntu package                |   No    | Python 3 with pip, venv and development headers.                                                                                                                |
+| Java (Temurin)       | Languages                | 25.0.5.1+2                    |   No    | Eclipse Temurin JDK with `JAVA_HOME` set.                                                                                                                       |
+| Go                   | Languages                | 1.27.4                        |   No    | Module cache kept across rebuilds. `go install` puts tools in `~/go/bin`.                                                                                       |
+| Rust                 | Languages                | 1.100.0, rustup 1.29.3        |   No    | With clippy, rustfmt and rust-analyzer. Brings build-essential.                                                                                                 |
+| Kotlin               | Languages                | 2.4.21                        |   No    | The `kotlinc` compiler. Brings Java.                                                                                                                            |
+| Zig                  | Languages                | 0.17.1                        |   No    | Also a C and C++ compiler, with `zig cc`.                                                                                                                       |
+| Bun                  | Languages                | 1.4.5                         |   No    | JavaScript runtime and package manager, `bun` and `bunx`.                                                                                                       |
+| pnpm                 | Build tools              | 12.23.0                       |   No    | Node.js package manager. Brings Node.js.                                                                                                                        |
+| uv                   | Build tools              | 0.13.10                       |   No    | Python package and project manager, `uv` and `uvx`. Installs its own Python versions.                                                                           |
+| Maven                | Build tools              | 3.10.2                        |   No    | Brings Java.                                                                                                                                                    |
+| Gradle               | Build tools              | 9.9.2                         |   No    | For projects without a Gradle wrapper, and for `gradle init`. Brings Java.                                                                                      |
+| CMake and Ninja      | Build tools              | cmake 4.5.1, ninja 1.13.2     |   No    | For C and C++ projects. Brings build-essential.                                                                                                                 |
+| .NET 11 SDK          | .NET                     | 11.0.100                      |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds. Trusts the ASP.NET Core dev certificate made by `dotnet dev-certs https --trust`. |
+| .NET 10 SDK          | .NET                     | 10.0.404                      |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds. Trusts the ASP.NET Core dev certificate made by `dotnet dev-certs https --trust`. |
+| .NET 8 SDK           | .NET                     | 8.0.428                       |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds. Trusts the ASP.NET Core dev certificate made by `dotnet dev-certs https --trust`. |
+| .NET 6 SDK           | .NET                     | 6.0.428                       |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds. Trusts the ASP.NET Core dev certificate made by `dotnet dev-certs https --trust`. |
+| kubectl              | Cloud and infrastructure | 1.37.3                        |   No    | Kubernetes command line.                                                                                                                                        |
+| k3d                  | Cloud and infrastructure | 5.9.0                         |   No    | Local k3s Kubernetes clusters in containers. Brings the container engine and kubectl.                                                                           |
+| Terraform            | Cloud and infrastructure | 1.17.2                        |   No    | Infrastructure as code. Update checks are turned off.                                                                                                           |
+| Ansible              | Cloud and infrastructure | 15.0.0, core 2.22.0           |   No    | With the community collections, on its own Python 3.14. Brings uv.                                                                                              |
+| Azure CLI            | Cloud and infrastructure | 2.93.0                        |   No    | The `az` command. Telemetry is turned off.                                                                                                                      |
+| AWS CLI              | Cloud and infrastructure | 2.42.4                        |   No    | The `aws` command, version 2.                                                                                                                                   |
+| PostgreSQL client    | Databases                | 19.0                          |   No    | `psql`, `pg_dump` and `pg_restore`, from the PostgreSQL project's packages.                                                                                     |
+| MongoDB Shell        | Databases                | 2.14.3                        |   No    | The `mongosh` shell.                                                                                                                                            |
+| Playwright libraries | Testing                  | Playwright 1.65.1             |   No    | System libraries for Playwright's browsers. Your project's Playwright downloads the browsers into `~/.cache`. Brings Node.js.                                   |
+| Godot                | Game engines             | 4.7.2-stable                  |   No    | For GDScript projects. Pick this or Godot (.NET), not both.                                                                                                     |
+| Godot (.NET)         | Game engines             | 4.7.2-stable                  |   No    | C# scripting. Brings the .NET 8 SDK.                                                                                                                            |
+| Container engine     | Containers               | docker 29.10.1, compose 5.8.0 |   No    | Podman (Ubuntu package) with the docker CLI and compose. The container runs privileged.                                                                         |
 
 Selecting a tool also selects the tools it brings, so they are installed together.
 
@@ -162,13 +161,17 @@ Containers use the git and SSH setup from your home folder (`~`):
 
 ### Ports
 
-Each port you choose is available on your machine at `localhost`. Your apps don't need to listen on `0.0.0.0`, so dev servers that bind to localhost by default, such as Angular, Vite and ASP.NET, work as they are.
+Every port an app listens on in the container is available on your machine at `localhost`, under the same number, as soon as the app starts listening. When the app stops, so does the forward. There is nothing to choose up front, so tools that pick their ports at random, such as Aspire, work as they are, and links they show, such as those in the Aspire dashboard, open on your machine. Your apps don't need to listen on `0.0.0.0`, so dev servers that bind to localhost by default, such as Angular, Vite and ASP.NET, work as they are too.
 
-A project can forward up to 100 ports. Ports 61000 to 61099 are reserved for ampul. You are warned when two projects use the same port.
+Ports are forwarded while the project runs: `ampul start` begins and `ampul stop` ends it. `ampul ls` shows which ports are forwarded right now. Behind it, a small ampul process for each running project watches the ports in the container and reaches them through a single port the container publishes on your machine's loopback address.
+
+- Ports below 1024 aren't forwarded, and neither is port 61000, which ampul uses inside the container.
+- A port that another program on your machine already uses isn't forwarded. `ampul ls` shows it as in use here, and ampul forwards it as soon as it is free. When two running projects use the same port, the one that listened first keeps it.
+- To keep a port inside the container, add it to [`ignoredPorts`](#settingsjson).
 
 ### Containers inside the container
 
-Select the container engine to run Podman, docker and docker compose inside your project. Databases and services started by tools such as Aspire, docker compose or Testcontainers then run inside the project, just as they would on a normal machine. Their images and data are kept across rebuilds and removed with `ampul rm`.
+Select the container engine to run Podman, docker and docker compose inside your project. Databases and services started by tools such as Aspire, docker compose or Testcontainers then run inside the project, just as they would on a normal machine, and the ports they publish are forwarded to your machine like any other. Their images and data are kept across rebuilds and removed with `ampul rm`.
 
 ### What survives a rebuild
 
@@ -237,7 +240,8 @@ ampul writes every setting into the file, with its current value:
 {
   "ampulVersion": "1.0.3",
   "runtime": "auto",
-  "containerUser": "dev"
+  "containerUser": "dev",
+  "ignoredPorts": []
 }
 ```
 
@@ -246,6 +250,7 @@ ampul writes every setting into the file, with its current value:
 | `ampulVersion`  | The version of ampul that last wrote the file. ampul keeps it up to date.                                                 |         |
 | `runtime`       | `auto` uses Podman when it is installed, otherwise Docker. `podman` or `docker` always uses that one.                     | `auto`  |
 | `containerUser` | Your user in the containers: lowercase letters, digits, `-` and `_`. Run `ampul rebuild` for a project to use a new name. | `dev`   |
+| `ignoredPorts`  | Ports that are never [forwarded](#ports) to your machine, such as `[9229]`. Applies to projects started after the change. | `[]`    |
 
 ampul checks the file every time it starts. A file that isn't JSON, a setting it doesn't know or a value of the wrong type stops it with a message saying what to fix. A setting you remove comes back with its default.
 
@@ -255,7 +260,7 @@ To choose a runtime for a single command, set the `AMPUL_RUNTIME` environment va
 
 ## Platform notes
 
-Everything above works the same on every system. The differences are in how you set up the container engine, which folders it can mount, and where ampul keeps its files. Logs hold the last ten builds, setups and removals for each project.
+Everything above works the same on every system. The differences are in how you set up the container engine, which folders it can mount, and where ampul keeps its files. Logs hold the last ten builds, setups, removals and port forwarding runs for each project.
 
 ### macOS
 
@@ -300,8 +305,8 @@ Start with `ampul doctor`. It checks everything ampul depends on and tells you h
 | The installer says Node.js is too old | Install Node.js 26 or newer, for example with your Node.js version manager, then run `npm run cli:install` again. |
 | The container engine is not running   | Let ampul start the Podman machine when it offers, or run the command `ampul doctor` shows.                       |
 | Builds or containers get killed       | The container engine is out of memory. `ampul doctor` shows how to give the Podman machine more.                  |
-| A port is already in use              | Another program or project is using it. Stop it, or change the project's ports with `ampul config`.               |
-| A forwarded port doesn't answer       | Check that your app is running, then read `/tmp/ampul/port-forwards.log` in the container.                        |
+| A port shows as in use here           | Another program or project on your machine uses it. Stop that one, and ampul forwards the port within seconds.    |
+| A port isn't forwarded                | Check that your app runs, then read the project's `ports` log and `/tmp/ampul/port-forwards.log` inside.          |
 | A Neovim tool didn't install          | Read `/tmp/ampul/setup.log` in the container, then run `:Mason` or `:Lazy restore`, or `ampul setup <name>`.      |
 | Your dotfiles could not be linked     | Read `/tmp/ampul/setup.log` in the container. It names the file or folder in the way.                             |
 | settings.json is not valid            | Fix what the message lists, or delete the file and answer the first-run questions again.                          |
