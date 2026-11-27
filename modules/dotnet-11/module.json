@@ -26,7 +26,8 @@
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "DOTNET_NOLOGO": "1",
     "NUGET_PACKAGES": "{home}/.cache/nuget",
-    "ASPNETCORE_ENVIRONMENT": "Development"
+    "ASPNETCORE_ENVIRONMENT": "Development",
+    "SSL_CERT_DIR": "{home}/.aspnet/dev-certs/trust:/usr/lib/ssl/certs"
   },
   "path": [
     "/opt/dotnet",
