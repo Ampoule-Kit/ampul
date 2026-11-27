@@ -97,8 +97,10 @@ jobs:
           archive="ampul-$VERSION-$TARGET"
           if [ "$RUNNER_OS" = "Windows" ]; then
             7z a -tzip -mx=9 "release/$archive.zip" ./dist/ampul.exe > /dev/null
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+            tar --options xz:compression-level=9 -C dist -cJf "release/$archive.tar.xz" ampul
           else
-            tar -C dist -czf "release/$archive.tar.gz" ampul
+            XZ_OPT=-9 tar -C dist -cJf "release/$archive.tar.xz" ampul
           fi
           ls -l release
 
