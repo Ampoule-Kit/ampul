@@ -1,0 +1,29 @@
+{
+  "label": "k3d",
+  "description": "Runs k3s Kubernetes clusters in containers, for local testing. It needs the container engine and kubectl, which are selected with it.",
+  "version": "5.9.0",
+  "selectedByDefault": false,
+  "requires": [
+    "container-engine",
+    "kubectl"
+  ],
+  "downloads": [
+    {
+      "url": "https://github.com/k3d-io/k3d/releases/download/v{version}/k3d-linux-{arch}",
+      "architectures": {
+        "arm64": "arm64",
+        "amd64": "amd64"
+      },
+      "sha256": {
+        "arm64": "03cde5cf23e6e8e67de5a039ecf26e5b85aca82fba3e5d13dadf904cd218a250",
+        "amd64": "06d8f25bc3a971c4eb29e0ff08429b180402db0f4dec838c9eac427e296800a0"
+      },
+      "installTo": "/opt/k3d",
+      "fileName": "k3d",
+      "commands": [
+        "k3d"
+      ]
+    }
+  ],
+  "check": "k3d version"
+}

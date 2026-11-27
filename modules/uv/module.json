@@ -1,0 +1,25 @@
+{
+  "label": "uv",
+  "description": "Astral's fast Python package and project manager, the uv and uvx commands. It installs its own Python versions, so it works without the Python module.",
+  "version": "0.13.10",
+  "selectedByDefault": false,
+  "downloads": [
+    {
+      "url": "https://github.com/astral-sh/uv/releases/download/{version}/uv-{arch}.tar.gz",
+      "architectures": {
+        "arm64": "aarch64-unknown-linux-gnu",
+        "amd64": "x86_64-unknown-linux-gnu"
+      },
+      "sha256": {
+        "arm64": "14590f644805a6234ffe071154340669e38137f38e60aa9629690119704107d2",
+        "amd64": "bf65ac1a0af10f92c522d91ac096c7c0a39657647b155577e7836c2cbbb4526c"
+      },
+      "installTo": "/opt/uv",
+      "commands": [
+        "uv",
+        "uvx"
+      ]
+    }
+  ],
+  "check": "uv --version && uvx --version"
+}

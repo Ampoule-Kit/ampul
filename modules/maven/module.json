@@ -1,0 +1,31 @@
+{
+  "label": "Maven",
+  "description": "Apache Maven, for building Java and Kotlin projects. It runs on Java, which is selected with it.",
+  "version": "3.10.2",
+  "selectedByDefault": false,
+  "requires": [
+    "java"
+  ],
+  "downloads": [
+    {
+      "url": "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/{version}/apache-maven-{version}-bin.tar.gz",
+      "architectures": {
+        "arm64": "any",
+        "amd64": "any"
+      },
+      "sha512": {
+        "arm64": "57d2db6b37e7582119137ade544557bba741b29e62109ef81539a2bdfd6d0e641fdd5d8edb014af1816d0510deac6fac8f347433b3a1aa36316ba85aa77b8119",
+        "amd64": "57d2db6b37e7582119137ade544557bba741b29e62109ef81539a2bdfd6d0e641fdd5d8edb014af1816d0510deac6fac8f347433b3a1aa36316ba85aa77b8119"
+      },
+      "installTo": "/opt/maven"
+    }
+  ],
+  "path": [
+    "/opt/maven/bin"
+  ],
+  "latestVersion": {
+    "url": "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/maven-metadata.xml",
+    "match": "<version>(3\\.[0-9]+\\.[0-9]+)</version>"
+  },
+  "check": "mvn --version"
+}

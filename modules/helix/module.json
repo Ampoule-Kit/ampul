@@ -1,0 +1,27 @@
+{
+  "label": "Helix",
+  "description": "The Helix modal editor, the hx command, with tree-sitter highlighting and language server support built in.",
+  "version": "25.07.1",
+  "selectedByDefault": false,
+  "downloads": [
+    {
+      "url": "https://github.com/helix-editor/helix/releases/download/{version}/helix-{version}-{arch}-linux.tar.xz",
+      "architectures": {
+        "arm64": "aarch64",
+        "amd64": "x86_64"
+      },
+      "sha256": {
+        "arm64": "ce23fa8d395e633e3e54c052012f11965d91d8d5c2bfa659685f50430b4f8175",
+        "amd64": "3f08e63ecd388fff657ad39722f88bb03dcf326f1f2da2700d99e1dc40ab2e8b"
+      },
+      "installTo": "/opt/helix",
+      "commands": [
+        "hx"
+      ]
+    }
+  ],
+  "environment": {
+    "HELIX_RUNTIME": "/opt/helix/runtime"
+  },
+  "check": "hx --version && hx --health rust >/dev/null"
+}

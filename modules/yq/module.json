@@ -1,0 +1,25 @@
+{
+  "label": "yq",
+  "description": "jq for YAML, JSON, TOML and XML, the yq command.",
+  "version": "4.54.3",
+  "selectedByDefault": false,
+  "downloads": [
+    {
+      "url": "https://github.com/mikefarah/yq/releases/download/v{version}/yq_linux_{arch}",
+      "architectures": {
+        "arm64": "arm64",
+        "amd64": "amd64"
+      },
+      "sha256": {
+        "arm64": "89f69310b61b68d1245065a1241d1fc843f7a36cd6103ffd77ad987613bd1b67",
+        "amd64": "129534601871538efe0ba4c5e62a34fb1d5f469bcb975c4fddeb467d82974973"
+      },
+      "installTo": "/opt/yq",
+      "fileName": "yq",
+      "commands": [
+        "yq"
+      ]
+    }
+  ],
+  "check": "yq --version"
+}

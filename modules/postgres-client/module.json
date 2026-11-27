@@ -1,0 +1,61 @@
+{
+  "label": "PostgreSQL client",
+  "description": "psql, pg_dump and the other PostgreSQL client tools, from the PostgreSQL project's own packages. They work with servers of their version and older.",
+  "version": "19.0-2.pgdg24.04+1",
+  "selectedByDefault": false,
+  "downloads": [
+    {
+      "url": "https://apt-archive.postgresql.org/pub/repos/apt/pool/main/p/postgresql-{version:major}/postgresql-client-{version:major}_{version}_{arch}.deb",
+      "architectures": {
+        "arm64": "arm64",
+        "amd64": "amd64"
+      },
+      "sha256": {
+        "arm64": "a86a9be308e83fe5bcae67abc7cc94f5a9e683c08185bd7d91d71f2c351be3e6",
+        "amd64": "92cb001d8fe485449a02e8646a13a561a632104e5bacf0cbb70c0bff9013e04e"
+      },
+      "installTo": "/opt/postgres-client",
+      "sharedFolder": true,
+      "fileName": "postgresql-client.deb"
+    },
+    {
+      "url": "https://apt-archive.postgresql.org/pub/repos/apt/pool/main/p/postgresql-{version:major}/libpq5_{version}_{arch}.deb",
+      "architectures": {
+        "arm64": "arm64",
+        "amd64": "amd64"
+      },
+      "sha256": {
+        "arm64": "3cc1506cc4948580941f07e62dc175fcdd439e16a245d4e5f0f07bd7cd353083",
+        "amd64": "d1fce6ced54ff6ced4f8f4ef04d2f5519007a26286731571cfc195406301f31f"
+      },
+      "installTo": "/opt/postgres-client",
+      "sharedFolder": true,
+      "fileName": "libpq5.deb"
+    },
+    {
+      "name": "common",
+      "version": "297.pgdg24.04+1",
+      "url": "https://apt-archive.postgresql.org/pub/repos/apt/pool/main/p/postgresql-common/postgresql-client-common_{version}_{arch}.deb",
+      "architectures": {
+        "arm64": "all",
+        "amd64": "all"
+      },
+      "sha256": {
+        "arm64": "01c7d14b3cf73a67c7ec68be5b43751ff722bfd46f7bada887944b1493f648f0",
+        "amd64": "01c7d14b3cf73a67c7ec68be5b43751ff722bfd46f7bada887944b1493f648f0"
+      },
+      "installTo": "/opt/postgres-client",
+      "sharedFolder": true,
+      "fileName": "postgresql-client-common.deb",
+      "latestVersion": {
+        "url": "https://apt.postgresql.org/pub/repos/apt/dists/noble-pgdg/main/binary-amd64/Packages",
+        "match": "pool/main/p/postgresql-common/postgresql-client-common_([^_]+)_all\\.deb"
+      }
+    }
+  ],
+  "latestVersion": {
+    "url": "https://apt.postgresql.org/pub/repos/apt/dists/noble-pgdg/main/binary-amd64/Packages",
+    "match": "pool/main/p/postgresql-[0-9]+/postgresql-client-[0-9]+_([^_]+)_amd64\\.deb"
+  },
+  "check": "psql --version && pg_dump --version"
+}
