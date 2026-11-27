@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { displayPath } from '../system/platform.ts'
+import { displayPath, isWindows } from '../system/platform.ts'
 import type { CodeSource } from './ProjectSettings.ts'
 
 export function repositoryFolderName(url: string): string {
@@ -24,6 +24,10 @@ export function repositoryUrlProblem(url: string, otherRepositories: string[]): 
 export function mountedFolderProblem(folder: string, otherFolders: string[]): string | undefined {
   const folderName = path.basename(folder)
   if (!folderName) return `${folder} has no folder name to mount it under.`
+  const pathAfterDriveLetter = isWindows ? folder.slice(2) : folder
+  if (pathAfterDriveLetter.includes(':')) {
+    return `${displayPath(folder)} has a colon in its path, which containers cannot mount. Rename it or pick another folder.`
+  }
   const clashingFolder = otherFolders.find((other) => path.basename(other) === folderName)
   if (clashingFolder) {
     return `${displayPath(clashingFolder)} is already mounted at ~/home/${folderName}.`

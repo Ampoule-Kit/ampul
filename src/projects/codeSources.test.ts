@@ -34,6 +34,10 @@ describe('mounted folders', () => {
     assert.equal(mountedFolderProblem(path.join('code', 'web'), [apiFolder]), undefined)
   })
 
+  it('rejects folders with a colon in their path', () => {
+    assert.match(mountedFolderProblem('/code/a:b', []) ?? '', /colon/)
+  })
+
   it('turns a copied folder from earlier settings into a mounted one', () => {
     assert.deepEqual(
       codeSourceSchema.parse({ kind: 'folder', folder: '/code/api', onlyGitFiles: true }),

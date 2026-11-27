@@ -71,6 +71,38 @@ function missingFolder(project: ProjectSettings, folder: string): Problem {
   })
 }
 
+const emptyFoldersScript = 'for folder; do [ -n "$(ls -A "$folder")" ] || echo "$folder"; done'
+
+function hasEntries(folder: string): boolean {
+  try {
+    return fs.readdirSync(folder).length > 0
+  } catch {
+    return false
+  }
+}
+
+export async function foldersMountedEmpty(
+  engine: ContainerEngine,
+  project: ProjectSettings,
+  mounts: HostMount[],
+): Promise<string[]> {
+  const mountsToCheck = mounts.filter((mount) => hasEntries(mount.hostPath))
+  if (mountsToCheck.length === 0) return []
+  const { stdout } = await engine.capture([
+    'exec',
+    containerName(project.name),
+    'bash',
+    '-c',
+    emptyFoldersScript,
+    'check',
+    ...mountsToCheck.map((mount) => mount.containerPath),
+  ])
+  const emptyContainerPaths = new Set(stdout.split('\n').filter(Boolean))
+  return mountsToCheck
+    .filter((mount) => emptyContainerPaths.has(mount.containerPath))
+    .map((mount) => mount.hostPath)
+}
+
 function folderMount(hostPath: string, containerPath: string): HostMount {
   return { hostPath, containerPath, readOnly: false }
 }

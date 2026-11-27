@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { Box, Text } from 'ink'
 import { useState } from 'react'
+import { folderSharingWarning } from '../../containers/folderSharing.ts'
 import {
   completeFolderPath,
   isGitRepositoryRoot,
@@ -19,15 +20,24 @@ import type { ProjectDraft } from './ProjectDraft.ts'
 const shownMatches = 6
 
 function MountedFolder({ folder }: { folder: string }) {
+  const sharingWarning = folderSharingWarning(folder)
   return (
-    <Text>
-      <Text color={colors.success}>{symbols.success}</Text> {displayPath(folder)}
-      <Text color={colors.muted}>
-        {isGitRepositoryRoot(folder) ? ' · git repository' : ''}
-        {'  '}
-        {symbols.arrow} ~/home/{path.basename(folder)}
+    <Box flexDirection="column">
+      <Text>
+        <Text color={colors.success}>{symbols.success}</Text> {displayPath(folder)}
+        <Text color={colors.muted}>
+          {isGitRepositoryRoot(folder) ? ' · git repository' : ''}
+          {'  '}
+          {symbols.arrow} ~/home/{path.basename(folder)}
+        </Text>
       </Text>
-    </Text>
+      {sharingWarning && (
+        <Text color={colors.warning}>
+          {'  '}
+          {symbols.warning} {sharingWarning}
+        </Text>
+      )}
+    </Box>
   )
 }
 

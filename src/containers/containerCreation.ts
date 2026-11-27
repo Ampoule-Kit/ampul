@@ -5,7 +5,8 @@ import { formatPortList } from '../projects/ports.ts'
 import type { TaskContext } from '../tasks/TaskRunner.ts'
 import { isPortAlreadyInUse, outputLines } from './containerErrors.ts'
 import { containerRunArguments, usesInnerContainerEngine } from './containerRunArguments.ts'
-import { hostConfigMounts } from './hostConfigMounts.ts'
+import { unsharedFoldersIn, unsharedFoldersProblem } from './folderSharing.ts'
+import { type HostMount, hostConfigMounts } from './hostConfigMounts.ts'
 import {
   cacheLabel,
   containerName,
@@ -13,7 +14,7 @@ import {
   projectLabel,
   sharedCacheVolume,
 } from './naming.ts'
-import { codeMounts } from './projectCode.ts'
+import { codeMounts, foldersMountedEmpty } from './projectCode.ts'
 
 async function createVolumeIfMissing(
   engine: ContainerEngine,
@@ -33,7 +34,7 @@ export async function createContainer(
   project: ProjectSettings,
   context: TaskContext,
 ): Promise<void> {
-  const mounts = [...(await hostConfigMounts()), ...codeMounts(project)]
+  const folderMounts = codeMounts(project)
   await createVolumeIfMissing(engine, sharedCacheVolume, `${cacheLabel}=true`)
   if (usesInnerContainerEngine(project)) {
     await createVolumeIfMissing(
@@ -44,14 +45,29 @@ export async function createContainer(
   }
   const runArguments = containerRunArguments(project, {
     isRootlessPodman: await engine.isRootlessPodman(),
-    hostMounts: mounts,
+    hostMounts: [...(await hostConfigMounts()), ...folderMounts],
   })
   const { exitCode, stderr } = await engine.capture(runArguments)
   context.output(stderr)
-  if (exitCode !== 0) throw containerCreationFailed(project, stderr)
+  if (exitCode !== 0) throw containerCreationFailed(engine, project, folderMounts, stderr)
+
+  const emptyFolders = await foldersMountedEmpty(engine, project, folderMounts)
+  if (emptyFolders.length > 0) throw unsharedFoldersProblem(engine, project, emptyFolders)
 }
 
-function containerCreationFailed(project: ProjectSettings, errorOutput: string): Problem {
+function containerCreationFailed(
+  engine: ContainerEngine,
+  project: ProjectSettings,
+  folderMounts: HostMount[],
+  errorOutput: string,
+): Problem {
+  const unsharedFolders = unsharedFoldersIn(
+    errorOutput,
+    folderMounts.map((mount) => mount.hostPath),
+  )
+  if (unsharedFolders.length > 0) {
+    return unsharedFoldersProblem(engine, project, unsharedFolders, errorOutput)
+  }
   if (isPortAlreadyInUse(errorOutput)) {
     return new Problem('A port is already in use on this machine', {
       explanation: `One of the ports ${formatPortList(project.ports)} is taken by another program or project.`,

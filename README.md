@@ -200,7 +200,7 @@ Everything above works the same on every system. The differences are in how you 
 - **Podman** runs containers inside a Linux virtual machine, called the Podman machine. Install it with `brew install podman`; ampul offers to create and start the machine for you.
 - **Memory:** builds need it, so give the Podman machine at least 4 GB, or 6 to 8 GB for larger projects. `ampul doctor` checks this and shows the command to change it.
 - **Docker:** use Docker Desktop or Colima, and make sure it is running before you use ampul.
-- **Mounted folders:** Podman and Docker can see the folders in your home folder out of the box. To mount a folder somewhere else, such as an external drive under `/Volumes`, add it to the shared folders in their settings first.
+- **Mounted folders:** Podman and Docker can see the folders in your home folder out of the box. To mount a folder somewhere else, such as an external drive under `/Volumes`, add it to the shared folders in their settings first. ampul warns you when you pick such a folder, and tells you how to share it if the container can't see it.
 
 | What           | Location                                                       |
 | -------------- | -------------------------------------------------------------- |
@@ -219,7 +219,7 @@ File locations are the same as on macOS.
 
 - **Podman:** install [Podman Desktop](https://podman.io). Like on macOS, it runs containers inside a Podman machine, which ampul offers to create and start. The same memory advice applies.
 - **Docker:** use Docker Desktop, and make sure it is running before you use ampul.
-- **Mounted folders** can be on any local drive, such as `C:\Users\you\code`.
+- **Mounted folders** can be on any drive that is part of your computer, such as `C:\Users\you\code`. Network drives can't be mounted.
 
 | What           | Location                           |
 | -------------- | ---------------------------------- |
@@ -239,7 +239,7 @@ Start with `ampul doctor`. It checks everything ampul depends on and tells you h
 | A port is already in use              | Another program or project is using it. Stop it, or change the project's ports with `ampul config`.               |
 | A forwarded port doesn't answer       | Check that your app is running, then read `/tmp/ampul/port-forwards.log` in the container.                        |
 | A Neovim tool didn't install          | Read `/tmp/ampul/setup.log` in the container, then run `:Mason` or `:Lazy restore`, or `ampul setup <name>`.      |
-| A mounted folder is empty             | On macOS, make sure Podman or Docker is allowed to share that folder. See [platform notes](#platform-notes).      |
+| The container cannot see a folder     | ampul tells you how to share it with Podman or Docker on your system. See [platform notes](#platform-notes).      |
 | A mounted folder no longer exists     | You moved or deleted it. Point the project at its new place with `ampul config`, then run `ampul rebuild`.        |
 | The inner container engine misbehaves | Read `/tmp/ampul/container-engine.log` in the container.                                                          |
 
