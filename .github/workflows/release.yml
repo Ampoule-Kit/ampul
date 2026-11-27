@@ -87,16 +87,20 @@ jobs:
           echo "$reported"
           [ "$reported" = "ampul $VERSION" ] || { echo "::error::Expected 'ampul $VERSION', got '$reported'"; exit 1; }
 
-      - name: Name the binary for its platform
+      - name: Package the binary for its platform
         shell: bash
         env:
           VERSION: ${{ needs.version.outputs.version }}
           TARGET: ${{ matrix.target }}
         run: |
-          extension=""
-          if [ "$RUNNER_OS" = "Windows" ]; then extension=".exe"; fi
           mkdir -p release
-          mv "dist/ampul$extension" "release/ampul-$VERSION-$TARGET$extension"
+          archive="ampul-$VERSION-$TARGET"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            7z a -tzip -mx=9 "release/$archive.zip" ./dist/ampul.exe > /dev/null
+          else
+            tar -C dist -czf "release/$archive.tar.gz" ampul
+          fi
+          ls -l release
 
       - uses: actions/upload-artifact@v7
         with:
