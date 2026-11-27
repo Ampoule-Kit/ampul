@@ -18,7 +18,7 @@ function usageLine(command: CommandDefinition): string {
   const commandArguments = command.arguments
     .map((argument) => (argument.required ? `<${argument.name}>` : `[${argument.name}]`))
     .join(' ')
-  return `ampul ${command.name}${options}${commandArguments ? ` ${commandArguments}` : ''}`
+  return `${command.name}${options}${commandArguments ? ` ${commandArguments}` : ''}`
 }
 
 function renderPage(title: string, sections: Section[]): string {
@@ -37,7 +37,7 @@ function renderPage(title: string, sections: Section[]): string {
 export function commandManualPage(command: CommandDefinition): string {
   const sections: Section[] = [
     { heading: 'NAME', body: wrap(`ampul ${command.name} — ${command.summary}`, indent) },
-    { heading: 'SYNOPSIS', body: [indent + usageLine(command)] },
+    { heading: 'SYNOPSIS', body: [`${indent}ampul ${usageLine(command)}`] },
     { heading: 'DESCRIPTION', body: paragraphs(command.description) },
   ]
   if (command.arguments.length > 0) {
@@ -100,9 +100,7 @@ export function overviewManualPage(commands: CommandDefinition[]): string {
     },
     {
       heading: 'COMMANDS',
-      body: definitionList(
-        commands.map((command) => [usageLine(command).slice(4), command.summary]),
-      ),
+      body: definitionList(commands.map((command) => [usageLine(command), command.summary])),
     },
     {
       heading: 'GLOBAL OPTIONS',
