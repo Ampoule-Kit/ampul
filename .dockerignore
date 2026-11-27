@@ -2,5 +2,4 @@
 !image
 !container
 !modules
-modules/*/config
 modules/*/setup.sh

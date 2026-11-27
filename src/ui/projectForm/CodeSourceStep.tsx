@@ -21,7 +21,7 @@ const codeSourceOptions: SelectOption<CodeSource['kind']>[] = [
     value: 'pass-through',
     label: 'Pass through your home folder',
     description:
-      'Your home folder on this machine is mounted at ~/home, so all your own folders are there. The container keeps its own dotfiles and tool config in ~.',
+      'Your home folder on this machine is mounted at ~/home, so all your own folders are there. Your ampul dotfiles are linked into the container’s own home folder, ~.',
   },
 ]
 

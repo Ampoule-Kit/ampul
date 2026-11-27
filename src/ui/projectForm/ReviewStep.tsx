@@ -52,7 +52,7 @@ function setupStepDescription(project: ProjectSettings): string {
     .filter((module) => module.hasSetup)
     .map((module) => module.label)
   const toolSetup = toolsWithSetup.length > 0 ? `, then set up ${joinInProse(toolsWithSetup)}` : ''
-  return `Link your dotfiles and each tool’s config, and your git and SSH config${toolSetup}.`
+  return `Link your dotfiles, and your git and SSH config${toolSetup}.`
 }
 
 function codeStepDescription(source: CodeSource): string {

@@ -1,10 +1,9 @@
 import { Problem, type ProblemFix } from '../problems/Problem.ts'
+import { ampulSettings } from '../settings/settingsStore.ts'
 import { environmentVariable } from '../system/environment.ts'
 import { findExecutable } from '../system/executables.ts'
 import { ampulPaths, displayPath, isLinux, isMacOS } from '../system/platform.ts'
-import { preferences } from '../system/preferences.ts'
-
-export type RuntimeName = 'podman' | 'docker'
+import { type RuntimeName, runtimeDisplayNames, runtimeNames } from './runtimeNames.ts'
 
 export interface RuntimeSelection {
   name: RuntimeName
@@ -12,13 +11,7 @@ export interface RuntimeSelection {
   reason: string
 }
 
-const runtimeNames: readonly RuntimeName[] = ['podman', 'docker']
 const runtimeEnvironmentVariable = 'AMPUL_RUNTIME'
-
-export const runtimeDisplayNames: Record<RuntimeName, string> = {
-  podman: 'Podman',
-  docker: 'Docker',
-}
 
 function isRuntimeName(value: string): value is RuntimeName {
   return runtimeNames.some((runtimeName) => runtimeName === value)
@@ -32,9 +25,9 @@ function requestedRuntime(): { name: string; origin: string } | undefined {
       origin: `the ${runtimeEnvironmentVariable} environment variable`,
     }
   }
-  const configured = preferences().runtime
-  if (configured) return { name: configured, origin: displayPath(ampulPaths.preferences) }
-  return undefined
+  const { runtime } = ampulSettings()
+  if (runtime === 'auto') return undefined
+  return { name: runtime, origin: displayPath(ampulPaths.settings) }
 }
 
 export function selectRuntime(): RuntimeSelection {
@@ -66,7 +59,7 @@ function selectRequestedRuntime(name: string, origin: string): RuntimeSelection 
   if (!executable) {
     throw new Problem(`${runtimeDisplayNames[name]} is not installed`, {
       explanation: `${origin} asks for ${name}, but there is no ${name} command on your PATH.`,
-      fixes: [...installFixes(name), { description: `Or remove the setting from ${origin}` }],
+      fixes: [...installFixes(name), { description: `Or change ${origin}` }],
     })
   }
   return { name, executable, reason: `Chosen in ${origin}.` }

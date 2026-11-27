@@ -18,7 +18,7 @@ That is the idea behind the name: each project lives in its own sealed container
 
 ## Why ampul
 
-- **Your machine stays clean.** Every tool, SDK and setting lives in the container. ampul keeps only its own settings in a single [config folder](#platform-notes).
+- **Your machine stays clean.** Every tool, SDK and setting lives in the container. On your machine, ampul keeps only its [settings](#configuration), your dotfiles and the settings of each project.
 - **Rebuilds are repeatable.** Every tool is pinned to a version and checked against its checksum, so a rebuild months from now gives you the same environment.
 - **It feels like home.** Your dotfiles, git config, credentials and SSH keys come with you into every container.
 - **It guides you.** A terminal UI walks you through each step, shows progress as it builds, and tells you how to fix anything that goes wrong.
@@ -42,6 +42,8 @@ npm run cli:install
 This builds a single `ampul` binary and installs it to your user's program folder (see [platform notes](#platform-notes)). To install it somewhere else, set the `AMPUL_BIN_DIR` environment variable to that folder before running the install.
 
 When it finishes, it runs `ampul doctor` to check that your machine is ready. To update ampul, pull the repo and run `npm run cli:install` again.
+
+The first time ampul runs, it asks which container runtime to use and what to call your user in the containers, and saves the answers in [`settings.json`](#settingsjson).
 
 ## Quick start
 
@@ -74,7 +76,7 @@ Your code is in `~/home` inside the container, and every shell starts there. You
 
 **Mounted folders stay on your machine.** The container works on the real folders, so a change on either side shows up on the other straight away. Rebuilding or removing a project never deletes them.
 
-**Pass-through keeps the container's own setup.** Your home folder appears as `~/home`, not in place of the container's home folder, so the container still uses its own dotfiles and tool config. Your hidden folders, such as `.ssh` and `.config`, are visible inside `~/home` too.
+**Pass-through keeps the container's own setup.** Your home folder appears as `~/home`, not in place of the container's home folder, so the container still uses your [ampul dotfiles](#dotfiles). Your hidden folders, such as `.ssh` and `.config`, are visible inside `~/home` too.
 
 ## Commands
 
@@ -87,7 +89,7 @@ Your code is in `~/home` inside the container, and every shell starts there. You
 | `ampul ls`             | Lists your projects, their status, ports and code. Use `--json` for scripts.                                           |
 | `ampul config [name]`  | Changes where a project's code comes from, its tools or its ports.                                                     |
 | `ampul rebuild [name]` | Rebuilds a project with fresh config, cloning its repositories again.                                                  |
-| `ampul setup [name]`   | Reapplies your dotfiles, tool config, git and SSH without rebuilding.                                                  |
+| `ampul setup [name]`   | Reapplies your dotfiles, git and SSH without rebuilding.                                                               |
 | `ampul rm [name]`      | Removes a project and everything that belongs to it. Mounted folders on your machine are kept.                         |
 | `ampul purge`          | Removes every ampul project, container, image and volume.                                                              |
 | `ampul doctor`         | Checks that your machine is ready and explains how to fix anything that isn't.                                         |
@@ -99,32 +101,32 @@ Leave out the project name and ampul lets you pick from a list. Before deleting 
 
 Every container runs Ubuntu 24.04 with git, curl, ssh, sudo, jq and bash completion, whatever system you run ampul on. You choose the rest:
 
-| Tool             | Category       | Version                       | Default | Notes                                                                                                                          |
-| ---------------- | -------------- | ----------------------------- | :-----: | ------------------------------------------------------------------------------------------------------------------------------ |
-| Neovim           | Editor         | 0.12.6                        |   Yes   | NvChad, with language servers for TypeScript, ESLint and C#. Brings Node.js, tree-sitter CLI, ripgrep, fd and build-essential. |
-| tree-sitter CLI  | Editor         | 0.27.2                        |   Yes   | Builds Neovim's syntax parsers. Brings build-essential.                                                                        |
-| lazygit          | Terminal tools | 0.66.3                        |   Yes   | Terminal UI for git. Start it with `lg`.                                                                                       |
-| Yazi             | Terminal tools | 26.9.1                        |   Yes   | Terminal file manager. Start it with `y`.                                                                                      |
-| Zellij           | Terminal tools | 0.46.1                        |   Yes   | Terminal multiplexer. `z` attaches to the `DEV` session.                                                                       |
-| lsd              | Terminal tools | 1.2.0                         |   Yes   | `ls` with colours and icons. `ls` runs `lsd -Alh`.                                                                             |
-| ripgrep          | Terminal tools | Ubuntu package                |   Yes   | Fast recursive search, `rg`.                                                                                                   |
-| fd               | Terminal tools | Ubuntu package                |   Yes   | A fast, friendly `find`.                                                                                                       |
-| fzf              | Terminal tools | Ubuntu package                |   Yes   | Fuzzy finder.                                                                                                                  |
-| Claude Code      | AI             | 2.1.332                       |   Yes   | Coding agent for the terminal. Start it with `claude`.                                                                         |
-| Node.js          | Languages      | 26.13.1                       |   Yes   | With npm.                                                                                                                      |
-| build-essential  | Languages      | Ubuntu package                |   Yes   | gcc, g++ and make, for native npm packages and Python wheels.                                                                  |
-| Python           | Languages      | Ubuntu package                |   No    | Python 3 with pip, venv and development headers.                                                                               |
-| Java (Temurin)   | Languages      | 25.0.5.1+2                    |   No    | Eclipse Temurin JDK with `JAVA_HOME` set.                                                                                      |
-| .NET 10 SDK      | .NET           | 10.0.404                      |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                                                  |
-| .NET 8 SDK       | .NET           | 8.0.428                       |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                                                  |
-| .NET 6 SDK       | .NET           | 6.0.428                       |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                                                  |
-| Godot            | Game engines   | 4.7.2-stable                  |   No    | For GDScript projects. Pick this or Godot (.NET), not both.                                                                    |
-| Godot (.NET)     | Game engines   | 4.7.2-stable                  |   No    | C# scripting. Brings the .NET 8 SDK.                                                                                           |
-| Container engine | Containers     | docker 29.10.1, compose 5.8.0 |   No    | Podman (Ubuntu package) with the docker CLI and compose. The container runs privileged.                                        |
+| Tool             | Category       | Version                       | Default | Notes                                                                                                                |
+| ---------------- | -------------- | ----------------------------- | :-----: | -------------------------------------------------------------------------------------------------------------------- |
+| Neovim           | Editor         | 0.12.6                        |   Yes   | Installs the plugins pinned in your Neovim config. Brings Node.js, tree-sitter CLI, ripgrep, fd and build-essential. |
+| tree-sitter CLI  | Editor         | 0.27.2                        |   Yes   | Builds Neovim's syntax parsers. Brings build-essential.                                                              |
+| lazygit          | Terminal tools | 0.66.3                        |   Yes   | Terminal UI for git.                                                                                                 |
+| Yazi             | Terminal tools | 26.9.1                        |   Yes   | Terminal file manager.                                                                                               |
+| Zellij           | Terminal tools | 0.46.1                        |   Yes   | Terminal multiplexer.                                                                                                |
+| lsd              | Terminal tools | 1.2.0                         |   Yes   | `ls` with colours and icons.                                                                                         |
+| ripgrep          | Terminal tools | Ubuntu package                |   Yes   | Fast recursive search, `rg`.                                                                                         |
+| fd               | Terminal tools | Ubuntu package                |   Yes   | A fast, friendly `find`.                                                                                             |
+| fzf              | Terminal tools | Ubuntu package                |   Yes   | Fuzzy finder.                                                                                                        |
+| Claude Code      | AI             | 2.1.332                       |   Yes   | Coding agent for the terminal. Start it with `claude`.                                                               |
+| Node.js          | Languages      | 26.13.1                       |   Yes   | With npm.                                                                                                            |
+| build-essential  | Languages      | Ubuntu package                |   Yes   | gcc, g++ and make, for native npm packages and Python wheels.                                                        |
+| Python           | Languages      | Ubuntu package                |   No    | Python 3 with pip, venv and development headers.                                                                     |
+| Java (Temurin)   | Languages      | 25.0.5.1+2                    |   No    | Eclipse Temurin JDK with `JAVA_HOME` set.                                                                            |
+| .NET 10 SDK      | .NET           | 10.0.404                      |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                                        |
+| .NET 8 SDK       | .NET           | 8.0.428                       |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                                        |
+| .NET 6 SDK       | .NET           | 6.0.428                       |   No    | Installs side by side with other .NET SDKs. NuGet cache kept across rebuilds.                                        |
+| Godot            | Game engines   | 4.7.2-stable                  |   No    | For GDScript projects. Pick this or Godot (.NET), not both.                                                          |
+| Godot (.NET)     | Game engines   | 4.7.2-stable                  |   No    | C# scripting. Brings the .NET 8 SDK.                                                                                 |
+| Container engine | Containers     | docker 29.10.1, compose 5.8.0 |   No    | Podman (Ubuntu package) with the docker CLI and compose. The container runs privileged.                              |
 
 Selecting a tool also selects the tools it brings, so they are installed together.
 
-You work as the user `dev`, with passwordless `sudo`.
+You work as the user `dev`, or the `containerUser` in your [settings](#settingsjson), with passwordless `sudo`.
 
 ### Git and SSH
 
@@ -148,7 +150,7 @@ Select the container engine to run Podman, docker and docker compose inside your
 | Kept                                                 | Replaced                                    |
 | ---------------------------------------------------- | ------------------------------------------- |
 | Package caches in `~/.cache`                         | Cloned repositories, which are cloned again |
-| Mounted folders, which stay on your machine          | Dotfiles, tool config and installed tools   |
+| Mounted folders, which stay on your machine          | Installed tools, and links to your dotfiles |
 | Images and data of containers run inside the project | Everything else in the container            |
 | Project settings                                     |                                             |
 
@@ -156,11 +158,19 @@ Select the container engine to run Podman, docker and docker compose inside your
 
 ### Dotfiles
 
-Your bash profile lives in [`dotfiles/`](dotfiles), and each tool's config lives with its module in [`modules/`](modules), such as `modules/neovim/config/`. To apply a change:
+ampul ships no dotfiles. Yours live in `~/.config/ampul/dotfiles`, laid out exactly like a home folder: each file in it is linked into the home folder of every container, at the same place.
+
+| On your machine                                  | In the container          |
+| ------------------------------------------------ | ------------------------- |
+| `~/.config/ampul/dotfiles/.bashrc`               | `~/.bashrc`               |
+| `~/.config/ampul/dotfiles/.config/nvim/init.lua` | `~/.config/nvim/init.lua` |
+
+Every project gets all of your dotfiles, whichever tools it has. Your file takes the place of the one Ubuntu puts in the home folder, such as `.bashrc`; where you have none, Ubuntu's stays. Tools with a setup step use your config for it: with a Neovim config, setup installs the plugins pinned in its `lazy-lock.json`.
+
+To apply a change to a running project:
 
 ```sh
-npm run cli:install    # rebuild ampul with your changes
-ampul setup api        # apply them to a running project
+ampul setup api
 ```
 
 ### Add a tool
@@ -186,12 +196,35 @@ The new version is downloaded, its checksums are recorded and verified, and it i
 
 ## Configuration
 
-ampul reads these settings from its [config folder](#platform-notes):
+| Path                            | What it holds                                                 |
+| ------------------------------- | ------------------------------------------------------------- |
+| `~/.config/ampul/settings.json` | Your settings, described below.                               |
+| `~/.config/ampul/dotfiles/`     | Your [dotfiles](#dotfiles).                                   |
+| `~/.ampul/projects/<name>.json` | A project's settings. Change them with `ampul config <name>`. |
 
-| Setting                | Meaning                                                                                                                    |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `config.json`          | Optional. Set `"runtime"` to `"podman"` or `"docker"` to choose a runtime, and `"containerUser"` to rename the `dev` user. |
-| `projects/<name>.json` | A project's settings. Change them with `ampul config <name>`.                                                              |
+`~/.config/ampul` holds nothing about any one project, so you can keep it in a git repository and bring the same settings and dotfiles to every machine. Project settings stay apart in `~/.ampul/projects`. [Platform notes](#platform-notes) list where these folders are on each system.
+
+### settings.json
+
+ampul writes every setting into the file, with its current value:
+
+```json
+{
+  "ampulVersion": "1.0.3",
+  "runtime": "auto",
+  "containerUser": "dev"
+}
+```
+
+| Setting         | Meaning                                                                                                                   | Default |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `ampulVersion`  | The version of ampul that last wrote the file. ampul keeps it up to date.                                                 |         |
+| `runtime`       | `auto` uses Podman when it is installed, otherwise Docker. `podman` or `docker` always uses that one.                     | `auto`  |
+| `containerUser` | Your user in the containers: lowercase letters, digits, `-` and `_`. Run `ampul rebuild` for a project to use a new name. | `dev`   |
+
+ampul checks the file every time it starts. A file that isn't JSON, a setting it doesn't know or a value of the wrong type stops it with a message saying what to fix. A setting you remove comes back with its default.
+
+After an update, ampul reads the file as it is and, when it still fits, records the new version in it. When a setting has changed in a way the file no longer fits, ampul says the file does not work with this version and lists what to fix. Delete the file to answer the first-run questions again.
 
 To choose a runtime for a single command, set the `AMPUL_RUNTIME` environment variable to `podman` or `docker`.
 
@@ -206,11 +239,12 @@ Everything above works the same on every system. The differences are in how you 
 - **Docker:** use Docker Desktop or Colima, and make sure it is running before you use ampul.
 - **Mounted folders:** Podman and Docker can see the folders in your home folder out of the box. To mount a folder somewhere else, such as an external drive under `/Volumes`, add it to the shared folders in their settings first. ampul warns you when you pick such a folder, and tells you how to share it if the container can't see it.
 
-| What           | Location                                                       |
-| -------------- | -------------------------------------------------------------- |
-| `ampul` binary | `~/.local/bin`                                                 |
-| Config folder  | `~/.config/ampul`, or `$XDG_CONFIG_HOME/ampul`                 |
-| Logs           | `~/.local/state/ampul/logs/<name>`, or under `$XDG_STATE_HOME` |
+| What             | Location                                                       |
+| ---------------- | -------------------------------------------------------------- |
+| `ampul` binary   | `~/.local/bin`                                                 |
+| Config folder    | `~/.config/ampul`, or `$XDG_CONFIG_HOME/ampul`                 |
+| Project settings | `~/.ampul/projects`                                            |
+| Logs             | `~/.local/state/ampul/logs/<name>`, or under `$XDG_STATE_HOME` |
 
 ### Linux
 
@@ -225,11 +259,12 @@ File locations are the same as on macOS.
 - **Docker:** use Docker Desktop, and make sure it is running before you use ampul.
 - **Mounted folders** can be on any drive that is part of your computer, such as `C:\Users\you\code`. Network drives can't be mounted.
 
-| What           | Location                           |
-| -------------- | ---------------------------------- |
-| `ampul` binary | `%LOCALAPPDATA%\Programs\ampul`    |
-| Config folder  | `%APPDATA%\ampul`                  |
-| Logs           | `%LOCALAPPDATA%\ampul\logs\<name>` |
+| What             | Location                           |
+| ---------------- | ---------------------------------- |
+| `ampul` binary   | `%LOCALAPPDATA%\Programs\ampul`    |
+| Config folder    | `%USERPROFILE%\.config\ampul`      |
+| Project settings | `%USERPROFILE%\.ampul\projects`    |
+| Logs             | `%LOCALAPPDATA%\ampul\logs\<name>` |
 
 ## Troubleshooting
 
@@ -243,6 +278,8 @@ Start with `ampul doctor`. It checks everything ampul depends on and tells you h
 | A port is already in use              | Another program or project is using it. Stop it, or change the project's ports with `ampul config`.               |
 | A forwarded port doesn't answer       | Check that your app is running, then read `/tmp/ampul/port-forwards.log` in the container.                        |
 | A Neovim tool didn't install          | Read `/tmp/ampul/setup.log` in the container, then run `:Mason` or `:Lazy restore`, or `ampul setup <name>`.      |
+| Your dotfiles could not be linked     | Read `/tmp/ampul/setup.log` in the container. It names the file or folder in the way.                             |
+| settings.json is not valid            | Fix what the message lists, or delete the file and answer the first-run questions again.                          |
 | The container cannot see a folder     | ampul tells you how to share it with Podman or Docker on your system. See [platform notes](#platform-notes).      |
 | A mounted folder no longer exists     | You moved or deleted it. Point the project at its new place with `ampul config`, then run `ampul rebuild`.        |
 | The inner container engine misbehaves | Read `/tmp/ampul/container-engine.log` in the container.                                                          |
@@ -253,7 +290,7 @@ Start with `ampul doctor`. It checks everything ampul depends on and tells you h
 npm run cli:uninstall
 ```
 
-This offers to remove all your projects first, then deletes the `ampul` binary. Your clone of the repo is left as it is.
+This offers to remove all your projects first, then deletes the `ampul` binary. Your settings and dotfiles in `~/.config/ampul` and your clone of the repo are left as they are.
 
 ## License
 

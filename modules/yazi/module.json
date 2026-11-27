@@ -1,6 +1,6 @@
 {
   "label": "Yazi",
-  "description": "A terminal file manager, themed with this repo's Catppuccin config. Start it with y.",
+  "description": "A terminal file manager.",
   "version": "26.9.1",
   "selectedByDefault": true,
   "downloads": [

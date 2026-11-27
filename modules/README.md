@@ -26,13 +26,14 @@ The latest version comes from the module's `latestVersion` when it has one, and 
 
 ## The folder
 
-| File          | When it runs                                                                                                  |
-| ------------- | ------------------------------------------------------------------------------------------------------------- |
-| `module.json` | Required. What the module is and how it installs, described below.                                            |
-| `install.sh`  | At image build, as root, after the packages and downloads are in place.                                       |
-| `config/`     | Linked into the container's home with stow, such as `config/.config/<tool>/` or `config/.bashrc.d/<tool>.sh`. |
-| `setup.sh`    | In the container after the config is linked, as the user. `step` and `warn` are available.                    |
-| `start.sh`    | Each time the container starts, as the user, for services the tool needs. `$LOG_DIR` is set.                  |
+| File          | When it runs                                                                                   |
+| ------------- | ---------------------------------------------------------------------------------------------- |
+| `module.json` | Required. What the module is and how it installs, described below.                             |
+| `install.sh`  | At image build, as root, after the packages and downloads are in place.                        |
+| `setup.sh`    | In the container after your dotfiles are linked, as the user. `step` and `warn` are available. |
+| `start.sh`    | Each time the container starts, as the user, for services the tool needs. `$LOG_DIR` is set.   |
+
+A module carries no dotfiles or tool config: those belong to the user, in `~/.config/ampul/dotfiles`. A `setup.sh` that works on the user's config should skip its steps when that config is not there.
 
 ## module.json
 

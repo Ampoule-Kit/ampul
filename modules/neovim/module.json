@@ -1,6 +1,6 @@
 {
   "label": "Neovim",
-  "description": "The Neovim editor with NvChad, language servers for TypeScript, ESLint and C#, formatters and treesitter parsers, all from this repo's config.",
+  "description": "The Neovim editor. When your dotfiles have a Neovim config, setup installs the plugins pinned in its lazy-lock.json.",
   "version": "0.12.6",
   "selectedByDefault": true,
   "requires": [

@@ -10,8 +10,7 @@
       "**",
       "!**/dist",
       "!**/node_modules",
-      "!**/package-lock.json",
-      "!**/lazy-lock.json"
+      "!**/package-lock.json"
     ]
   },
   "formatter": {

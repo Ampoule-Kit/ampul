@@ -5,8 +5,8 @@ import { moduleCatalog } from '../modules/moduleCatalog.ts'
 import { installationOrder } from '../modules/moduleSelection.ts'
 import { Problem } from '../problems/Problem.ts'
 import type { ProjectSettings } from '../projects/ProjectSettings.ts'
-import { resourceDirectory, resourcePath } from '../resources/resourceDirectory.ts'
-import { homeDirectory } from '../system/platform.ts'
+import { resourcePath } from '../resources/resourceDirectory.ts'
+import { ampulPaths, homeDirectory } from '../system/platform.ts'
 import type { TaskContext } from '../tasks/TaskRunner.ts'
 import { archiveOf, replaceContainerFolder } from './archives.ts'
 import { containerHome, containerName, containerUser } from './naming.ts'
@@ -25,12 +25,30 @@ function projectModules(project: ProjectSettings): ModuleDefinition[] {
   return installationOrder(project.modules, moduleCatalog())
 }
 
-function configEntries(modules: ModuleDefinition[]): string[] {
-  return [
-    'dotfiles',
-    ...modules.filter((module) => module.hasConfig).map((module) => `modules/${module.id}/config`),
-    ...modules.filter((module) => module.hasSetup).map((module) => `modules/${module.id}/setup.sh`),
-  ]
+function containerAmpulFolder(): string {
+  return `${containerHome()}/.ampul`
+}
+
+async function copyFolderIntoContainer(
+  engine: ContainerEngine,
+  project: ProjectSettings,
+  context: TaskContext,
+  hostFolder: string,
+  containerFolder: string,
+): Promise<void> {
+  const { exitCode, errorOutput } = await replaceContainerFolder(
+    engine,
+    project.name,
+    containerFolder,
+    archiveOf(hostFolder),
+  )
+  context.output(errorOutput)
+  if (exitCode !== 0) {
+    throw new Problem('Your dotfiles and the tools’ setup could not be copied into the container', {
+      outputTail: errorOutput.trim().split('\n'),
+      fixes: [{ description: 'Try the setup again', command: `ampul setup ${project.name}` }],
+    })
+  }
 }
 
 export async function copyConfigIntoContainer(
@@ -38,19 +56,21 @@ export async function copyConfigIntoContainer(
   project: ProjectSettings,
   context: TaskContext,
 ): Promise<void> {
-  const { exitCode, errorOutput } = await replaceContainerFolder(
+  fs.mkdirSync(ampulPaths.dotfiles, { recursive: true })
+  await copyFolderIntoContainer(
     engine,
-    project.name,
-    `${containerHome()}/.ampul`,
-    archiveOf(resourceDirectory(), configEntries(projectModules(project))),
+    project,
+    context,
+    ampulPaths.dotfiles,
+    `${containerAmpulFolder()}/dotfiles`,
   )
-  context.output(errorOutput)
-  if (exitCode !== 0) {
-    throw new Problem('The dotfiles and tool config could not be copied into the container', {
-      outputTail: errorOutput.trim().split('\n'),
-      fixes: [{ description: 'Try the setup again', command: `ampul setup ${project.name}` }],
-    })
-  }
+  await copyFolderIntoContainer(
+    engine,
+    project,
+    context,
+    resourcePath('modules'),
+    `${containerAmpulFolder()}/modules`,
+  )
 }
 
 export async function runContainerSetup(

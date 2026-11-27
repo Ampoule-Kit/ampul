@@ -1,4 +1,4 @@
-import { preferences } from '../system/preferences.ts'
+import { ampulSettings } from '../settings/settingsStore.ts'
 
 export const projectLabel = 'ampul.project'
 export const cacheLabel = 'ampul.cache'
@@ -23,7 +23,7 @@ export function projectNameFromContainerName(name: string): string | undefined {
 }
 
 export function containerUser(): string {
-  return preferences().containerUser
+  return ampulSettings().containerUser
 }
 
 export function containerHome(): string {

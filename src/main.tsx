@@ -5,6 +5,7 @@ import { runHome } from './commands/home.tsx'
 import { allCommands, commandNamed, unknownCommand } from './commands/registry.ts'
 import { asProblem } from './problems/Problem.ts'
 import { UserCancelled } from './problems/UserCancelled.ts'
+import { ensureSettings } from './settings/onboarding.tsx'
 import { ProblemView } from './ui/components/ProblemView.tsx'
 import { isInteractiveTerminal, printElement, printErrorElement } from './ui/terminal.tsx'
 import { colors } from './ui/theme.ts'
@@ -14,13 +15,18 @@ const cancelledExitCode = 130
 const failureExitCode = 1
 const versionFlags = new Set(['--version', '-v', 'version'])
 const helpFlags = new Set(['--help', '-h'])
+const commandsThatNeedNoSettings = new Set(['help'])
 
-function dispatch(args: string[]): Promise<number> | number {
+async function dispatch(args: string[]): Promise<number> {
   const [commandName, ...rest] = args
+  const interactive = isInteractiveTerminal()
   if (!commandName) {
-    if (isInteractiveTerminal()) return runHome()
-    process.stdout.write(overviewManualPage(allCommands()))
-    return 0
+    if (!interactive) {
+      process.stdout.write(overviewManualPage(allCommands()))
+      return 0
+    }
+    await ensureSettings(interactive)
+    return runHome()
   }
   if (versionFlags.has(commandName)) {
     process.stdout.write(`ampul ${ampulVersion}\n`)
@@ -38,7 +44,8 @@ function dispatch(args: string[]): Promise<number> | number {
     process.stdout.write(commandManualPage(command))
     return 0
   }
-  return command.run({ positionals, flags, interactive: isInteractiveTerminal() })
+  if (!commandsThatNeedNoSettings.has(command.name)) await ensureSettings(interactive)
+  return command.run({ positionals, flags, interactive })
 }
 
 async function main(): Promise<void> {

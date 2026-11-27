@@ -1,6 +1,6 @@
 {
   "label": "Zellij",
-  "description": "A terminal multiplexer with this repo's layouts. z attaches to the DEV session, creating it when needed.",
+  "description": "A terminal multiplexer.",
   "version": "0.46.1",
   "selectedByDefault": true,
   "downloads": [

@@ -28,7 +28,11 @@ async function run(invocation: Invocation): Promise<number> {
       'Every ampul image and volume, including the shared package cache',
       `All project settings in ${displayPath(ampulPaths.projects)}`,
     ],
-    kept: ['Every folder on this machine', 'This ampul command; run the uninstaller to remove it'],
+    kept: [
+      'Every folder on this machine',
+      `Your settings and dotfiles in ${displayPath(ampulPaths.config)}`,
+      'This ampul command; run the uninstaller to remove it',
+    ],
     yesLabel: 'Remove everything',
   })
 

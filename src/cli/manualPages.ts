@@ -94,7 +94,7 @@ export function overviewManualPage(commands: CommandDefinition[]): string {
     {
       heading: 'DESCRIPTION',
       body: paragraphs([
-        'ampul creates a container for each of your projects, with the tools you pick, your dotfiles and their config, git and SSH already in place, and the code cloned or copied inside it.',
+        'ampul creates a container for each of your projects, with the tools you pick, your dotfiles, git and SSH already in place, and the code cloned or copied inside it.',
         'Run ampul on its own to see your projects and act on them, or run one of the commands below. Commands that need a project ask you to pick one when you leave the name out.',
       ]),
     },
@@ -114,18 +114,22 @@ export function overviewManualPage(commands: CommandDefinition[]): string {
     {
       heading: 'FILES',
       body: definitionList([
-        [displayPath(ampulPaths.projects), 'One settings file per project.'],
         [
-          displayPath(ampulPaths.preferences),
-          'Optional: {"runtime": "podman" | "docker", "containerUser": "dev"}.',
+          displayPath(ampulPaths.settings),
+          'Your settings: runtime (auto, podman or docker) and containerUser. ampul creates it the first time it runs.',
         ],
+        [
+          displayPath(ampulPaths.dotfiles),
+          'Your dotfiles, laid out like a home folder and linked into every container.',
+        ],
+        [displayPath(ampulPaths.projects), 'One settings file per project.'],
         [displayPath(ampulPaths.logs), 'Full output of every build and setup, per project.'],
       ]),
     },
     {
       heading: 'ENVIRONMENT',
       body: definitionList([
-        ['AMPUL_RUNTIME', 'podman or docker. Overrides the runtime ampul would pick.'],
+        ['AMPUL_RUNTIME', 'podman or docker. Overrides the runtime in settings.json.'],
         ['NO_COLOR', 'Turns colors off.'],
       ]),
     },
