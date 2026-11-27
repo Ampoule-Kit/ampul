@@ -4,7 +4,8 @@
       "title": "Editor",
       "modules": [
         "neovim",
-        "tree-sitter"
+        "tree-sitter",
+        "helix"
       ]
     },
     {
@@ -13,16 +14,20 @@
         "lazygit",
         "yazi",
         "zellij",
+        "tmux",
         "lsd",
         "ripgrep",
         "fd",
-        "fzf"
+        "fzf",
+        "yq"
       ]
     },
     {
       "title": "AI",
       "modules": [
-        "claude-code"
+        "claude-code",
+        "codex-cli",
+        "gemini-cli"
       ]
     },
     {
@@ -31,15 +36,55 @@
         "node",
         "build-essential",
         "python",
-        "java"
+        "java",
+        "go",
+        "rust",
+        "kotlin",
+        "zig",
+        "bun"
+      ]
+    },
+    {
+      "title": "Build tools",
+      "modules": [
+        "pnpm",
+        "uv",
+        "maven",
+        "gradle",
+        "cmake-ninja"
       ]
     },
     {
       "title": ".NET",
       "modules": [
+        "dotnet-11",
         "dotnet-10",
         "dotnet-8",
         "dotnet-6"
+      ]
+    },
+    {
+      "title": "Cloud and infrastructure",
+      "modules": [
+        "kubectl",
+        "k3d",
+        "terraform",
+        "ansible",
+        "azure-cli",
+        "aws-cli"
+      ]
+    },
+    {
+      "title": "Databases",
+      "modules": [
+        "postgres-client",
+        "mongosh"
+      ]
+    },
+    {
+      "title": "Testing",
+      "modules": [
+        "playwright-deps"
       ]
     },
     {

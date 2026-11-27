@@ -1,0 +1,25 @@
+{
+  "label": "AWS CLI",
+  "description": "Amazon's command line for AWS, the aws command, version 2.",
+  "version": "2.42.4",
+  "selectedByDefault": false,
+  "downloads": [
+    {
+      "url": "https://awscli.amazonaws.com/awscli-exe-linux-{arch}-{version}.zip",
+      "architectures": {
+        "arm64": "aarch64",
+        "amd64": "x86_64"
+      },
+      "sha256": {
+        "arm64": "d0203a83caa162118c128ad16bc6c11835e998bd23763a3b195aeb323c78d010",
+        "amd64": "8998885d7fc32370c50efc2e44746c34b222a03d70015113a5554f98be79165c"
+      },
+      "installTo": "/opt/aws-cli-installer"
+    }
+  ],
+  "latestVersion": {
+    "url": "https://raw.githubusercontent.com/aws/aws-cli/v2/CHANGELOG.rst",
+    "match": "^([0-9]+\\.[0-9]+\\.[0-9]+)$"
+  },
+  "check": "aws --version"
+}

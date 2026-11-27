@@ -1,0 +1,29 @@
+{
+  "label": "kubectl",
+  "description": "The Kubernetes command line, for working with clusters.",
+  "version": "1.37.3",
+  "selectedByDefault": false,
+  "downloads": [
+    {
+      "url": "https://dl.k8s.io/release/v{version}/bin/linux/{arch}/kubectl",
+      "architectures": {
+        "arm64": "arm64",
+        "amd64": "amd64"
+      },
+      "sha256": {
+        "arm64": "da160b41491cc5c5e575d78bb665810fb900f70fad666d834094b24ec56d304f",
+        "amd64": "9a1b55af2795b25dd288dbef62387db9b5530087ab918d28c6ad067f2e3cb07c"
+      },
+      "installTo": "/opt/kubectl",
+      "fileName": "kubectl",
+      "commands": [
+        "kubectl"
+      ]
+    }
+  ],
+  "latestVersion": {
+    "url": "https://dl.k8s.io/release/stable.txt",
+    "match": "^v([0-9]+\\.[0-9]+\\.[0-9]+)"
+  },
+  "check": "kubectl version --client"
+}

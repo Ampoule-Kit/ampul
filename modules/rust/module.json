@@ -1,0 +1,42 @@
+{
+  "label": "Rust",
+  "description": "rustup with the stable Rust toolchain: rustc, cargo, clippy, rustfmt and rust-analyzer. It builds with build-essential, which is selected with it.",
+  "version": "1.100.0",
+  "selectedByDefault": false,
+  "requires": [
+    "build-essential"
+  ],
+  "downloads": [
+    {
+      "name": "rustup",
+      "version": "1.29.3",
+      "url": "https://static.rust-lang.org/rustup/archive/{version}/{arch}/rustup-init",
+      "architectures": {
+        "arm64": "aarch64-unknown-linux-gnu",
+        "amd64": "x86_64-unknown-linux-gnu"
+      },
+      "sha256": {
+        "arm64": "9f608c142e0e38a78957d0661ba1dfaf0b6fb37184cfaa4b9a0aa57af6184282",
+        "amd64": "b1c8cb14e30889e7e2999e6b69e62d9e9b9ffc0f4df8180564d306d9680e6c55"
+      },
+      "installTo": "/opt/rustup-init",
+      "fileName": "rustup-init",
+      "latestVersion": {
+        "url": "https://static.rust-lang.org/rustup/release-stable.toml",
+        "match": "^version = '([0-9]+\\.[0-9]+\\.[0-9]+)'"
+      }
+    }
+  ],
+  "environment": {
+    "RUSTUP_HOME": "/opt/rustup",
+    "CARGO_HOME": "/opt/cargo"
+  },
+  "path": [
+    "/opt/cargo/bin"
+  ],
+  "latestVersion": {
+    "url": "https://static.rust-lang.org/dist/channel-rust-stable.toml",
+    "match": "^\\[pkg\\.rust\\]\\nversion = \"([0-9]+\\.[0-9]+\\.[0-9]+) "
+  },
+  "check": "rustc --version && cargo --version && cargo clippy --version && rust-analyzer --version"
+}

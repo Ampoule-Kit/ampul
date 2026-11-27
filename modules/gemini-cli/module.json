@@ -1,0 +1,30 @@
+{
+  "label": "Gemini CLI",
+  "description": "Google's coding agent for the terminal. Start it with gemini. It runs on Node.js, which is selected with it.",
+  "version": "0.71.1",
+  "selectedByDefault": false,
+  "requires": [
+    "node"
+  ],
+  "downloads": [
+    {
+      "url": "https://github.com/google-gemini/gemini-cli/releases/download/v{version}/gemini-cli-bundle.zip",
+      "architectures": {
+        "arm64": "any",
+        "amd64": "any"
+      },
+      "sha256": {
+        "arm64": "2761ebcdf6a0e5610e80a6541596ba9c71cdcf13ce837f3a7cba8c3763ff7f62",
+        "amd64": "2761ebcdf6a0e5610e80a6541596ba9c71cdcf13ce837f3a7cba8c3763ff7f62"
+      },
+      "installTo": "/opt/gemini-cli",
+      "commands": [
+        {
+          "path": "gemini.js",
+          "as": "gemini"
+        }
+      ]
+    }
+  ],
+  "check": "gemini --version"
+}

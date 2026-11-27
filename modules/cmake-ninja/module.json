@@ -1,0 +1,44 @@
+{
+  "label": "CMake and Ninja",
+  "description": "CMake and the Ninja build system, for C and C++ projects. They build with build-essential, which is selected with them.",
+  "version": "4.5.1",
+  "selectedByDefault": false,
+  "requires": [
+    "build-essential"
+  ],
+  "downloads": [
+    {
+      "url": "https://github.com/Kitware/CMake/releases/download/v{version}/cmake-{version}-linux-{arch}.tar.gz",
+      "architectures": {
+        "arm64": "aarch64",
+        "amd64": "x86_64"
+      },
+      "sha256": {
+        "arm64": "3bec208f11ed96c173032eeaf97937c54dd246acefee22acd7794a6b4e70d536",
+        "amd64": "83b71181fb62b4fe8f26067a9321448572e7a43bd04ff6c7f54a24c33698f16d"
+      },
+      "installTo": "/opt/cmake"
+    },
+    {
+      "name": "ninja",
+      "version": "1.13.2",
+      "url": "https://github.com/ninja-build/ninja/releases/download/v{version}/ninja-{arch}.zip",
+      "architectures": {
+        "arm64": "linux-aarch64",
+        "amd64": "linux"
+      },
+      "sha256": {
+        "arm64": "fd2cacc8050a7f12a16a2e48f9e06fca5c14fc4c2bee2babb67b58be17a607fc",
+        "amd64": "5749cbc4e668273514150a80e387a957f933c6ed3f5f11e03fb30955e2bbead6"
+      },
+      "installTo": "/opt/ninja",
+      "commands": [
+        "ninja"
+      ]
+    }
+  ],
+  "path": [
+    "/opt/cmake/bin"
+  ],
+  "check": "cmake --version && ninja --version"
+}
