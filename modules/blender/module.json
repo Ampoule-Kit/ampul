@@ -1,0 +1,9 @@
+{
+  "label": "Blender",
+  "description": "Blender for headless rendering and Python scripting with blender -b.",
+  "selectedByDefault": false,
+  "packages": [
+    "blender"
+  ],
+  "check": "blender -b --factory-startup --python-expr 'import bpy; print(bpy.app.version_string)'"
+}

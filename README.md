@@ -146,6 +146,7 @@ Every container runs Ubuntu 24.04 with git, curl, ssh, sudo, jq and bash complet
 | Playwright libraries | Testing                  | Playwright 1.65.1             |   No    | System libraries for Playwright's browsers. Your project's Playwright downloads the browsers into `~/.cache`. Brings Node.js.                                   |
 | Godot                | Game engines             | 4.7.2-stable                  |   No    | For GDScript projects. Pick this or Godot (.NET), not both.                                                                                                     |
 | Godot (.NET)         | Game engines             | 4.7.2-stable                  |   No    | C# scripting. Brings the .NET 8 SDK.                                                                                                                            |
+| Blender              | 3D                       | Ubuntu package                |   No    | Headless rendering and Python scripting with `blender -b`. Built without OpenImageDenoise on arm64, so turn off Cycles denoising there.                         |
 | Container engine     | Containers               | docker 29.10.1, compose 5.8.0 |   No    | Podman (Ubuntu package) with the docker CLI and compose. The container runs privileged.                                                                         |
 
 Selecting a tool also selects the tools it brings, so they are installed together.
