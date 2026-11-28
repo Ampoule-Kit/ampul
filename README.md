@@ -105,7 +105,7 @@ Every container runs Ubuntu 26.04 with git, curl, ssh, sudo, jq and bash complet
 
 ### Tools
 
-✅ is selected for new projects, ❌ is yours to add. Where a tool lists several versions, you pick one when you create the project, and the newest, listed first, is picked to start with. The .NET SDK installs any mix of its versions side by side.
+✅ is selected for new projects, ➖ is yours to add when you want it. Where a tool lists several versions, you pick one when you create the project, and the newest, listed first, is picked to start with. The .NET SDK installs any mix of its versions side by side.
 
 #### Editor
 
@@ -113,7 +113,7 @@ Every container runs Ubuntu 26.04 with git, curl, ssh, sudo, jq and bash complet
 | ------------------- | :-----: | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | **Neovim**          |   ✅    | **0.12** · 0.12.6<br>**0.11** · 0.11.7 | Installs the plugins pinned in your Neovim config. Brings Node.js, tree-sitter CLI, ripgrep, fd and build-essential. |
 | **tree-sitter CLI** |   ✅    | 0.27.2                                 | Builds Neovim's syntax parsers. Brings build-essential.                                                              |
-| **Helix**           |   ❌    | 25.07.1                                | Modal editor, `hx`, with language server support built in.                                                           |
+| **Helix**           |   ➖    | 25.07.1                                | Modal editor, `hx`, with language server support built in.                                                           |
 
 #### Terminal tools
 
@@ -122,20 +122,20 @@ Every container runs Ubuntu 26.04 with git, curl, ssh, sudo, jq and bash complet
 | **lazygit** |   ✅    | 0.66.3         | Terminal UI for git.                              |
 | **Yazi**    |   ✅    | 26.9.1         | Terminal file manager.                            |
 | **Zellij**  |   ✅    | 0.46.1         | Terminal multiplexer.                             |
-| **tmux**    |   ❌    | Ubuntu package | Terminal multiplexer, if you prefer it to Zellij. |
+| **tmux**    |   ➖    | Ubuntu package | Terminal multiplexer, if you prefer it to Zellij. |
 | **lsd**     |   ✅    | 1.2.0          | `ls` with colours and icons.                      |
 | **ripgrep** |   ✅    | Ubuntu package | Fast recursive search, `rg`.                      |
 | **fd**      |   ✅    | Ubuntu package | A fast, friendly `find`.                          |
 | **fzf**     |   ✅    | Ubuntu package | Fuzzy finder.                                     |
-| **yq**      |   ❌    | 4.54.3         | jq for YAML, JSON, TOML and XML.                  |
+| **yq**      |   ➖    | 4.54.3         | jq for YAML, JSON, TOML and XML.                  |
 
 #### AI
 
 | Tool            | Default | Versions | Notes                                                          |
 | --------------- | :-----: | -------- | -------------------------------------------------------------- |
 | **Claude Code** |   ✅    | 2.1.332  | Coding agent for the terminal. Start it with `claude`.         |
-| **Codex CLI**   |   ❌    | 0.172.0  | OpenAI's coding agent. Start it with `codex`.                  |
-| **Gemini CLI**  |   ❌    | 0.71.1   | Google's coding agent. Start it with `gemini`. Brings Node.js. |
+| **Codex CLI**   |   ➖    | 0.172.0  | OpenAI's coding agent. Start it with `codex`.                  |
+| **Gemini CLI**  |   ➖    | 0.71.1   | Google's coding agent. Start it with `gemini`. Brings Node.js. |
 
 #### Languages
 
@@ -143,71 +143,71 @@ Every container runs Ubuntu 26.04 with git, curl, ssh, sudo, jq and bash complet
 | ------------------- | :-----: | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | **Node.js**         |   ✅    | **26 LTS** · 26.13.1<br>**24 LTS** · 24.22.3<br>**22 LTS** · 22.23.5            | With npm.                                                                 |
 | **build-essential** |   ✅    | Ubuntu package                                                                  | gcc, g++ and make, for native npm packages and Python wheels.             |
-| **Python**          |   ❌    | Ubuntu package                                                                  | Python 3 with pip, venv and development headers.                          |
-| **Java (Temurin)**  |   ❌    | **25 LTS** · 25.0.5.1+2<br>**21 LTS** · 21.0.13.1+2<br>**17 LTS** · 17.0.21.1+2 | Eclipse Temurin JDK with `JAVA_HOME` set.                                 |
-| **Go**              |   ❌    | **1.27** · 1.27.4<br>**1.26** · 1.26.11                                         | Module cache kept across rebuilds. `go install` puts tools in `~/go/bin`. |
-| **Rust**            |   ❌    | rust 1.100.0<br>rustup 1.29.3                                                   | With clippy, rustfmt and rust-analyzer. Brings build-essential.           |
-| **Kotlin**          |   ❌    | 2.4.21                                                                          | The `kotlinc` compiler. Brings Java.                                      |
-| **Zig**             |   ❌    | 0.17.1                                                                          | Also a C and C++ compiler, with `zig cc`.                                 |
-| **Bun**             |   ❌    | 1.4.5                                                                           | JavaScript runtime and package manager, `bun` and `bunx`.                 |
+| **Python**          |   ➖    | Ubuntu package                                                                  | Python 3 with pip, venv and development headers.                          |
+| **Java (Temurin)**  |   ➖    | **25 LTS** · 25.0.5.1+2<br>**21 LTS** · 21.0.13.1+2<br>**17 LTS** · 17.0.21.1+2 | Eclipse Temurin JDK with `JAVA_HOME` set.                                 |
+| **Go**              |   ➖    | **1.27** · 1.27.4<br>**1.26** · 1.26.11                                         | Module cache kept across rebuilds. `go install` puts tools in `~/go/bin`. |
+| **Rust**            |   ➖    | rust 1.100.0<br>rustup 1.29.3                                                   | With clippy, rustfmt and rust-analyzer. Brings build-essential.           |
+| **Kotlin**          |   ➖    | 2.4.21                                                                          | The `kotlinc` compiler. Brings Java.                                      |
+| **Zig**             |   ➖    | 0.17.1                                                                          | Also a C and C++ compiler, with `zig cc`.                                 |
+| **Bun**             |   ➖    | 1.4.5                                                                           | JavaScript runtime and package manager, `bun` and `bunx`.                 |
 
 #### Build tools
 
 | Tool                | Default | Versions                    | Notes                                                                                 |
 | ------------------- | :-----: | --------------------------- | ------------------------------------------------------------------------------------- |
-| **pnpm**            |   ❌    | 12.23.0                     | Node.js package manager. Brings Node.js.                                              |
-| **uv**              |   ❌    | 0.13.10                     | Python package and project manager, `uv` and `uvx`. Installs its own Python versions. |
-| **Maven**           |   ❌    | 3.10.2                      | Brings Java.                                                                          |
-| **Gradle**          |   ❌    | 9.9.2                       | For projects without a Gradle wrapper, and for `gradle init`. Brings Java.            |
-| **CMake and Ninja** |   ❌    | cmake 4.5.1<br>ninja 1.13.2 | For C and C++ projects. Brings build-essential.                                       |
+| **pnpm**            |   ➖    | 12.23.0                     | Node.js package manager. Brings Node.js.                                              |
+| **uv**              |   ➖    | 0.13.10                     | Python package and project manager, `uv` and `uvx`. Installs its own Python versions. |
+| **Maven**           |   ➖    | 3.10.2                      | Brings Java.                                                                          |
+| **Gradle**          |   ➖    | 9.9.2                       | For projects without a Gradle wrapper, and for `gradle init`. Brings Java.            |
+| **CMake and Ninja** |   ➖    | cmake 4.5.1<br>ninja 1.13.2 | For C and C++ projects. Brings build-essential.                                       |
 
 #### .NET
 
 | Tool         | Default | Versions                                                                                                     | Notes                                                                                                                                        |
 | ------------ | :-----: | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **.NET SDK** |   ❌    | **11 STS** · 11.0.100<br>**10 LTS** · 10.0.404<br>**8 LTS** · 8.0.428<br>**6 LTS, out of support** · 6.0.428 | Pick every SDK you need. NuGet cache kept across rebuilds. Trusts the ASP.NET Core dev certificate made by `dotnet dev-certs https --trust`. |
+| **.NET SDK** |   ➖    | **11 STS** · 11.0.100<br>**10 LTS** · 10.0.404<br>**8 LTS** · 8.0.428<br>**6 LTS, out of support** · 6.0.428 | Pick every SDK you need. NuGet cache kept across rebuilds. Trusts the ASP.NET Core dev certificate made by `dotnet dev-certs https --trust`. |
 
 #### Cloud and infrastructure
 
 | Tool          | Default | Versions                                                     | Notes                                                                                 |
 | ------------- | :-----: | ------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| **kubectl**   |   ❌    | **1.37** · 1.37.3<br>**1.36** · 1.36.7<br>**1.35** · 1.35.11 | Kubernetes command line. Pick the version of your cluster.                            |
-| **k3d**       |   ❌    | 5.9.0                                                        | Local k3s Kubernetes clusters in containers. Brings the container engine and kubectl. |
-| **Terraform** |   ❌    | **1.17** · 1.17.2<br>**1.16** · 1.16.7<br>**1.15** · 1.15.9  | Infrastructure as code. Update checks are turned off.                                 |
-| **Ansible**   |   ❌    | ansible 15.0.0<br>core 2.22.0                                | With the community collections, on its own Python 3.14. Brings uv.                    |
-| **Azure CLI** |   ❌    | 2.93.0                                                       | The `az` command. Telemetry is turned off.                                            |
-| **AWS CLI**   |   ❌    | 2.42.4                                                       | The `aws` command, version 2.                                                         |
+| **kubectl**   |   ➖    | **1.37** · 1.37.3<br>**1.36** · 1.36.7<br>**1.35** · 1.35.11 | Kubernetes command line. Pick the version of your cluster.                            |
+| **k3d**       |   ➖    | 5.9.0                                                        | Local k3s Kubernetes clusters in containers. Brings the container engine and kubectl. |
+| **Terraform** |   ➖    | **1.17** · 1.17.2<br>**1.16** · 1.16.7<br>**1.15** · 1.15.9  | Infrastructure as code. Update checks are turned off.                                 |
+| **Ansible**   |   ➖    | ansible 15.0.0<br>core 2.22.0                                | With the community collections, on its own Python 3.14. Brings uv.                    |
+| **Azure CLI** |   ➖    | 2.93.0                                                       | The `az` command. Telemetry is turned off.                                            |
+| **AWS CLI**   |   ➖    | 2.42.4                                                       | The `aws` command, version 2.                                                         |
 
 #### Databases
 
 | Tool                  | Default | Versions                                                                             | Notes                                                                                                                          |
 | --------------------- | :-----: | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| **PostgreSQL client** |   ❌    | **19** · 19.0<br>**18** · 18.7<br>**17** · 17.12<br>**16** · 16.16<br>**15** · 15.20 | `psql`, `pg_dump` and `pg_restore`, from the PostgreSQL project's packages. They work with servers of their version and older. |
-| **MongoDB Shell**     |   ❌    | 2.14.3                                                                               | The `mongosh` shell.                                                                                                           |
+| **PostgreSQL client** |   ➖    | **19** · 19.0<br>**18** · 18.7<br>**17** · 17.12<br>**16** · 16.16<br>**15** · 15.20 | `psql`, `pg_dump` and `pg_restore`, from the PostgreSQL project's packages. They work with servers of their version and older. |
+| **MongoDB Shell**     |   ➖    | 2.14.3                                                                               | The `mongosh` shell.                                                                                                           |
 
 #### Testing
 
 | Tool                     | Default | Versions | Notes                                                                                                                         |
 | ------------------------ | :-----: | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Playwright libraries** |   ❌    | 1.65.1   | System libraries for Playwright's browsers. Your project's Playwright downloads the browsers into `~/.cache`. Brings Node.js. |
+| **Playwright libraries** |   ➖    | 1.65.1   | System libraries for Playwright's browsers. Your project's Playwright downloads the browsers into `~/.cache`. Brings Node.js. |
 
 #### Game engines
 
 | Tool      | Default | Versions                                              | Notes                                                                     |
 | --------- | :-----: | ----------------------------------------------------- | ------------------------------------------------------------------------- |
-| **Godot** |   ❌    | **4.7** · 4.7.2<br>**4.6** · 4.6.3<br>**4.5** · 4.5.2 | GDScript or .NET (C#) builds of each. A .NET build brings the .NET 8 SDK. |
+| **Godot** |   ➖    | **4.7** · 4.7.2<br>**4.6** · 4.6.3<br>**4.5** · 4.5.2 | GDScript or .NET (C#) builds of each. A .NET build brings the .NET 8 SDK. |
 
 #### 3D
 
 | Tool        | Default | Versions       | Notes                                                                                                                                   |
 | ----------- | :-----: | -------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| **Blender** |   ❌    | Ubuntu package | Headless rendering and Python scripting with `blender -b`. Built without OpenImageDenoise on arm64, so turn off Cycles denoising there. |
+| **Blender** |   ➖    | Ubuntu package | Headless rendering and Python scripting with `blender -b`. Built without OpenImageDenoise on arm64, so turn off Cycles denoising there. |
 
 #### Containers
 
 | Tool                 | Default | Versions                        | Notes                                                                                   |
 | -------------------- | :-----: | ------------------------------- | --------------------------------------------------------------------------------------- |
-| **Container engine** |   ❌    | docker 29.10.1<br>compose 5.8.0 | Podman (Ubuntu package) with the docker CLI and compose. The container runs privileged. |
+| **Container engine** |   ➖    | docker 29.10.1<br>compose 5.8.0 | Podman (Ubuntu package) with the docker CLI and compose. The container runs privileged. |
 
 Selecting a tool also selects the tools it brings, so they are installed together.
 
