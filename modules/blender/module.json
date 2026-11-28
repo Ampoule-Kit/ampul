@@ -6,7 +6,8 @@
     "blender",
     "libegl1",
     "libgl1",
-    "libxkbcommon0"
+    "libxkbcommon0",
+    "mesa-vulkan-drivers"
   ],
   "check": "blender -b --factory-startup --python-expr 'import bpy; print(bpy.app.version_string)'"
 }
