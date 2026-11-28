@@ -22,7 +22,7 @@ function specificWarning(warning: string, failedTools: string[]): string {
 }
 
 function projectModules(project: ProjectSettings): ModuleDefinition[] {
-  return installationOrder(project.modules, moduleCatalog())
+  return installationOrder(project, moduleCatalog())
 }
 
 function containerAmpulFolder(): string {

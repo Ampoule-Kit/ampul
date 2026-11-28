@@ -3,7 +3,11 @@
   "description": "Blender for headless rendering and Python scripting with blender -b.",
   "selectedByDefault": false,
   "packages": [
-    "blender"
+    "blender",
+    "libegl1",
+    "libgl1",
+    "libxkbcommon0",
+    "mesa-vulkan-drivers"
   ],
   "check": "blender -b --factory-startup --python-expr 'import bpy; print(bpy.app.version_string)'"
 }

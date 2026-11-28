@@ -1,31 +1,86 @@
 {
   "label": "Terraform",
   "description": "HashiCorp's infrastructure as code tool, the terraform command.",
-  "version": "1.17.2",
   "selectedByDefault": false,
-  "downloads": [
-    {
-      "url": "https://releases.hashicorp.com/terraform/{version}/terraform_{version}_linux_{arch}.zip",
-      "architectures": {
-        "arm64": "arm64",
-        "amd64": "amd64"
-      },
-      "sha256": {
-        "arm64": "858e08c181a76b6b223e8c767a8e983922eebe2d062db949a2de66ce040c368c",
-        "amd64": "e6f16b2f0b137ee5729caa8c4e79a3bae4ee261acd198a1fcfa8584a6296605b"
-      },
-      "installTo": "/opt/terraform",
-      "commands": [
-        "terraform"
-      ]
-    }
-  ],
   "environment": {
     "CHECKPOINT_DISABLE": "1"
   },
-  "latestVersion": {
-    "url": "https://checkpoint-api.hashicorp.com/v1/check/terraform",
-    "match": "\"current_version\":\"([0-9]+\\.[0-9]+\\.[0-9]+)\""
-  },
+  "versions": [
+    {
+      "id": "1.17",
+      "version": "1.17.2",
+      "latestVersion": {
+        "url": "https://releases.hashicorp.com/terraform/",
+        "match": "terraform_(1\\.17\\.[0-9]+)<"
+      },
+      "downloads": [
+        {
+          "url": "https://releases.hashicorp.com/terraform/{version}/terraform_{version}_linux_{arch}.zip",
+          "architectures": {
+            "arm64": "arm64",
+            "amd64": "amd64"
+          },
+          "sha256": {
+            "arm64": "858e08c181a76b6b223e8c767a8e983922eebe2d062db949a2de66ce040c368c",
+            "amd64": "e6f16b2f0b137ee5729caa8c4e79a3bae4ee261acd198a1fcfa8584a6296605b"
+          },
+          "installTo": "/opt/terraform",
+          "commands": [
+            "terraform"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1.16",
+      "version": "1.16.7",
+      "latestVersion": {
+        "url": "https://releases.hashicorp.com/terraform/",
+        "match": "terraform_(1\\.16\\.[0-9]+)<"
+      },
+      "downloads": [
+        {
+          "url": "https://releases.hashicorp.com/terraform/{version}/terraform_{version}_linux_{arch}.zip",
+          "architectures": {
+            "arm64": "arm64",
+            "amd64": "amd64"
+          },
+          "sha256": {
+            "arm64": "2d6a3f1098de94f1672aaa4e6873ef91ade9eac38851d3a403e2009193208de4",
+            "amd64": "5454efcf7fc87f0c2113111b9a5c7182f0ca1c6f0f23a1e110a50770a8fe473b"
+          },
+          "installTo": "/opt/terraform",
+          "commands": [
+            "terraform"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1.15",
+      "version": "1.15.9",
+      "latestVersion": {
+        "url": "https://releases.hashicorp.com/terraform/",
+        "match": "terraform_(1\\.15\\.[0-9]+)<"
+      },
+      "downloads": [
+        {
+          "url": "https://releases.hashicorp.com/terraform/{version}/terraform_{version}_linux_{arch}.zip",
+          "architectures": {
+            "arm64": "arm64",
+            "amd64": "amd64"
+          },
+          "sha256": {
+            "arm64": "0afa6c29f61ca5ea270e950e43e50ecf2418b598507bf580e8ae76e1e6699b19",
+            "amd64": "76edd0b22d2f27d3d2e097cd793209646f719cf60f02ff3af626b07361137da1"
+          },
+          "installTo": "/opt/terraform",
+          "commands": [
+            "terraform"
+          ]
+        }
+      ]
+    }
+  ],
   "check": "terraform version"
 }

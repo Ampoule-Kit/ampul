@@ -40,7 +40,7 @@ export async function createContainer(
   context: TaskContext,
 ): Promise<void> {
   const folderMounts = codeMounts(project)
-  const modules = installationOrder(project.modules, moduleCatalog())
+  const modules = installationOrder(project, moduleCatalog())
   await createVolumeIfMissing(engine, sharedCacheVolume, `${cacheLabel}=true`)
   for (const volume of modules.flatMap((module) => module.container.volumes)) {
     await createVolumeIfMissing(

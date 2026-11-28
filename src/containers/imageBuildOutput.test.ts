@@ -25,13 +25,30 @@ describe('image build output', () => {
   })
 
   it('names the module a step installs', () => {
-    const modules = [{ id: 'runtime', label: 'Runtime' }]
+    const modules = [
+      {
+        id: 'runtime',
+        label: 'Runtime',
+        hasVersionChoice: false,
+        versionId: 'default',
+        versionLabel: '1.0',
+      },
+      { id: 'sdk', label: 'SDK', hasVersionChoice: true, versionId: '8', versionLabel: '8 LTS' },
+      { id: 'sdk', label: 'SDK', hasVersionChoice: true, versionId: '10', versionLabel: '10 LTS' },
+    ]
     assert.equal(
       describeBuildInstruction(
         'RUN --mount=type=cache /opt/ampul/install-module.sh runtime',
         modules,
       ),
       'Installing Runtime',
+    )
+    assert.equal(
+      describeBuildInstruction(
+        'RUN --mount=type=cache /opt/ampul/install-module.sh sdk 10',
+        modules,
+      ),
+      'Installing SDK 10 LTS',
     )
     assert.equal(
       describeBuildInstruction('FROM ubuntu AS base', modules),

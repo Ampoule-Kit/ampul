@@ -36,9 +36,18 @@ export function answeredSteps<Draft>(
   draft: Draft,
   beforeIndex = steps.length,
 ) {
+  const answered = steps.filter((step) => step.summary && !step.isSkipped?.(draft))
+  const titleWidth = Math.max(0, ...answered.map((step) => step.title.length))
   return steps.slice(0, beforeIndex).flatMap((step) => {
     if (!step.summary || step.isSkipped?.(draft)) return []
-    return [<AnsweredQuestion key={step.id} title={step.title} answer={step.summary(draft)} />]
+    return [
+      <AnsweredQuestion
+        key={step.id}
+        title={step.title}
+        answer={step.summary(draft)}
+        titleWidth={titleWidth}
+      />,
+    ]
   })
 }
 

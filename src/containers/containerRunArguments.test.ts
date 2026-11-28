@@ -8,6 +8,7 @@ const project: ProjectSettings = {
   name: 'api',
   codeSource: { kind: 'repositories', repositories: [] },
   modules: [],
+  moduleVersions: {},
 }
 
 const noHostSetup = {

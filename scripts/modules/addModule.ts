@@ -355,11 +355,19 @@ async function addModule(): Promise<void> {
     install,
     check,
   )
-  const moduleIds = [...modulesWithRequirements(requires), moduleId]
-  const modulesById = new Map(
-    modulesWithRequirements(requires).map((id) => [id, readModuleSource(id)]),
+  const requiredSteps = modulesWithRequirements(
+    requires.map((id) => ({ moduleId: id, versionId: undefined })),
   )
-  await runInstallTest(engine, moduleIds, modulesById, new Map([[moduleId, module]]), check)
+  const modulesById = new Map(
+    requiredSteps.map((step) => [step.moduleId, readModuleSource(step.moduleId)]),
+  )
+  await runInstallTest(
+    engine,
+    [...requiredSteps, { moduleId, versionId: undefined }],
+    modulesById,
+    new Map([[moduleId, module]]),
+    check,
+  )
 
   fs.mkdirSync(path.dirname(moduleFilePath(moduleId)), { recursive: true })
   writeJsonFile(moduleFilePath(moduleId), module)

@@ -31,7 +31,7 @@ async function run(invocation: Invocation): Promise<number> {
         ? 'The container, with the clones in ~/work, including unpushed work'
         : 'The container',
       'The image',
-      ...moduleVolumes(project.modules, moduleCatalog()).map((volume) => volume.contents),
+      ...moduleVolumes(project, moduleCatalog()).map((volume) => volume.contents),
       `The settings in ${displayPath(projectSettingsFile(project.name))}`,
     ],
     kept: ['The shared package cache, used by your other projects', 'Every folder on this machine'],

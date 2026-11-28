@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { z } from 'zod'
-import type { ModuleDefinition } from '../modules/ModuleDefinition.ts'
+import type { ModuleInstall } from '../modules/ModuleDefinition.ts'
 import { resourcePath } from '../resources/resourceDirectory.ts'
 import { ampulPaths } from '../system/platform.ts'
 import { containerHome } from './naming.ts'
@@ -21,16 +21,26 @@ function readImageFile(name: string): string {
   return fs.readFileSync(resourcePath('image', name), 'utf8').trim()
 }
 
-function moduleInstructions(module: ModuleDefinition): string {
+export function installCommand(install: ModuleInstall): string {
+  const versionArgument = install.hasVersionChoice ? ` ${install.versionId}` : ''
+  return `/opt/ampul/install-module.sh ${install.id}${versionArgument}`
+}
+
+function moduleInstructions(
+  install: ModuleInstall,
+  index: number,
+  installs: ModuleInstall[],
+): string {
+  const isFirstOfModule = installs.findIndex((other) => other.id === install.id) === index
   return [
-    `COPY modules/${module.id}/ /opt/ampul/modules/${module.id}/`,
-    `RUN ${downloadCacheMount} /opt/ampul/install-module.sh ${module.id}`,
+    ...(isFirstOfModule ? [`COPY modules/${install.id}/ /opt/ampul/modules/${install.id}/`] : []),
+    `RUN ${downloadCacheMount} ${installCommand(install)}`,
   ].join('\n')
 }
 
-function installedModulesInstruction(modules: ModuleDefinition[]): string | undefined {
+function installedModulesInstruction(modules: ModuleInstall[]): string | undefined {
   if (modules.length === 0) return undefined
-  const ids = modules.map((module) => module.id).join(' ')
+  const ids = [...new Set(modules.map((module) => module.id))].join(' ')
   return `RUN printf '%s\\n' ${ids} >${installedModulesFile}`
 }
 
@@ -38,7 +48,7 @@ function withHome(value: string): string {
   return value.replaceAll(homePlaceholder, containerHome())
 }
 
-function environmentInstruction(modules: ModuleDefinition[]): string | undefined {
+function environmentInstruction(modules: ModuleInstall[]): string | undefined {
   const variables = new Map<string, string>()
   for (const module of modules) {
     for (const [name, value] of Object.entries(module.environment)) {
@@ -52,7 +62,7 @@ function environmentInstruction(modules: ModuleDefinition[]): string | undefined
   return `ENV ${assignments.join(' \\\n    ')}`
 }
 
-export function containerfileFor(modules: ModuleDefinition[]): string {
+export function containerfileFor(modules: ModuleInstall[]): string {
   const sections = [
     readImageFile('base.Containerfile'),
     'FROM base AS ampul',
@@ -64,7 +74,7 @@ export function containerfileFor(modules: ModuleDefinition[]): string {
   return sections.filter(Boolean).join('\n\n') + '\n'
 }
 
-export function writeContainerfile(projectName: string, modules: ModuleDefinition[]): string {
+export function writeContainerfile(projectName: string, modules: ModuleInstall[]): string {
   const file = path.join(ampulPaths.cache, 'builds', `${projectName}.Containerfile`)
   fs.mkdirSync(path.dirname(file), { recursive: true })
   fs.writeFileSync(file, containerfileFor(modules))

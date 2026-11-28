@@ -1,4 +1,4 @@
-import type { ModuleDefinition } from '../modules/ModuleDefinition.ts'
+import type { ModuleInstall } from '../modules/ModuleDefinition.ts'
 
 export interface BuildStep {
   number: number
@@ -8,7 +8,7 @@ export interface BuildStep {
 
 const podmanStepPattern = /STEP (\d+)\/(\d+): (.*)$/
 const dockerStepPattern = /^#\d+ \[[\w-]*\s+(\d+)\/(\d+)\] (.*)$/
-const moduleInstallPattern = /install-module\.sh ([\w-]+)/
+const moduleInstallPattern = /install-module\.sh ([\w-]+)(?: ([\w.-]+))?/
 const outOfMemoryPattern = /out of memory|signal: killed|exit code: 137/i
 
 export function parseBuildStep(line: string): BuildStep | undefined {
@@ -24,11 +24,21 @@ export function isOutOfMemoryMessage(line: string): boolean {
 
 export function describeBuildInstruction(
   instruction: string,
-  modules: readonly Pick<ModuleDefinition, 'id' | 'label'>[],
+  modules: readonly Pick<
+    ModuleInstall,
+    'id' | 'label' | 'hasVersionChoice' | 'versionId' | 'versionLabel'
+  >[],
 ): string {
-  const installedModuleId = moduleInstallPattern.exec(instruction)?.[1]
-  const installedModule = modules.find((module) => module.id === installedModuleId)
-  if (installedModule) return `Installing ${installedModule.label}`
+  const [, installedModuleId, installedVersionId] = moduleInstallPattern.exec(instruction) ?? []
+  const installedModule = modules.find(
+    (module) =>
+      module.id === installedModuleId &&
+      (installedVersionId === undefined || module.versionId === installedVersionId),
+  )
+  if (installedModule) {
+    const version = installedModule.hasVersionChoice ? ` ${installedModule.versionLabel}` : ''
+    return `Installing ${installedModule.label}${version}`
+  }
   const keyword = instruction.split(' ')[0]?.toUpperCase()
   if (keyword === 'FROM') return 'Preparing the Ubuntu base image'
   if (keyword === 'COPY') return 'Copying the install scripts'

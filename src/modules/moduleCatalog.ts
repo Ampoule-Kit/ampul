@@ -10,6 +10,7 @@ import {
   modulesFolder,
 } from './moduleCatalogChecks.ts'
 import { type ModuleFile, moduleCatalogFileSchema, moduleFileSchema } from './moduleSchema.ts'
+import { moduleVersions } from './moduleVersions.ts'
 
 let cachedCatalog: ModuleCatalog | undefined
 
@@ -50,12 +51,19 @@ export function readModuleFile(id: string): ModuleFile {
 }
 
 function loadModule(id: string, section: string): ModuleDefinition {
-  const { $schema: _schemaReference, check: _checkCommand, ...definition } = readModuleFile(id)
+  const file = readModuleFile(id)
   return {
-    ...definition,
     id,
+    label: file.label,
+    description: file.description,
     section,
+    selectedByDefault: file.selectedByDefault,
+    mutuallyExclusiveWith: file.mutuallyExclusiveWith,
+    container: file.container,
     hasSetup: fs.existsSync(resourcePath(modulesFolder, id, 'setup.sh')),
+    hasVersionChoice: file.versions !== undefined,
+    multipleVersions: file.multipleVersions,
+    versions: moduleVersions(file),
   }
 }
 

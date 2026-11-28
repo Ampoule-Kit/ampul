@@ -3,8 +3,9 @@ import os from 'node:os'
 import path from 'node:path'
 import type { ContainerEngine } from '../../src/engine/ContainerEngine.ts'
 import type { ModuleFileSource } from '../../src/modules/moduleSchema.ts'
+import { moduleVersion } from '../../src/modules/moduleVersions.ts'
 import { repositoryRoot } from '../shared/repository.ts'
-import { modulesDirectory, writeJsonFile } from './moduleSources.ts'
+import { type InstallStep, modulesDirectory, writeJsonFile } from './moduleSources.ts'
 
 const installTestImage = 'ampul-install-test-base'
 const installTestCacheVolume = 'ampul-install-test-cache'
@@ -62,11 +63,12 @@ function withTestHome(value: string): string {
   return value.replaceAll('{home}', testHome)
 }
 
-function environmentExports(module: ModuleFileSource): string[] {
-  const variables = Object.entries(module.environment ?? {}).map(
+function environmentExports(module: ModuleFileSource, versionId: string | undefined): string[] {
+  const version = moduleVersion(module, versionId)
+  const variables = Object.entries(version.environment).map(
     ([name, value]) => `export ${name}='${withTestHome(value)}'`,
   )
-  const pathEntries = (module.path ?? []).map(withTestHome)
+  const pathEntries = version.path.map(withTestHome)
   return pathEntries.length > 0
     ? [...variables, `export PATH='${pathEntries.join(':')}':$PATH`]
     : variables
@@ -79,24 +81,30 @@ async function ensureCacheVolume(engine: ContainerEngine): Promise<void> {
   }
 }
 
+function describeStep(step: InstallStep): string {
+  return step.versionId === undefined ? step.moduleId : `${step.moduleId}@${step.versionId}`
+}
+
 export async function runInstallTest(
   engine: ContainerEngine,
-  moduleIds: string[],
+  steps: InstallStep[],
   modulesById: ReadonlyMap<string, ModuleFileSource>,
   overrides: ReadonlyMap<string, ModuleFileSource>,
   checkCommand: string,
 ): Promise<void> {
   const testScript = [
-    ...moduleIds.flatMap((moduleId) => {
+    ...steps.flatMap(({ moduleId, versionId }) => {
       const module = overrides.get(moduleId) ?? modulesById.get(moduleId)
+      const versionArgument = versionId === undefined ? '' : ` ${versionId}`
       return [
-        `/opt/ampul/install-module.sh ${moduleId}`,
-        ...(module ? environmentExports(module) : []),
+        `/opt/ampul/install-module.sh ${moduleId}${versionArgument}`,
+        ...(module ? environmentExports(module, versionId) : []),
       ]
     }),
     checkCommand,
   ].join(' && ')
-  console.log(`==> Testing: installing ${moduleIds.join(', ')}, then ${checkCommand}`)
+  const moduleIds = [...new Set(steps.map((step) => step.moduleId))]
+  console.log(`==> Testing: installing ${steps.map(describeStep).join(', ')}, then ${checkCommand}`)
   await ensureCacheVolume(engine)
   const stagingDirectory = stageModules(moduleIds, overrides)
   try {

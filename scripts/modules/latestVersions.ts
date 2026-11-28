@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { expandDownloadText } from '../../src/modules/downloadUrls.ts'
+import { expandDownloadText, type VersionedModule } from '../../src/modules/downloadUrls.ts'
 import type {
   LatestVersionSource,
   ModuleDownload,
@@ -9,6 +9,7 @@ import type {
 export interface VersionTarget {
   name: string
   moduleId: string
+  versionId: string | undefined
   downloadName: string | undefined
   currentVersion: string
   lookup: VersionLookup | undefined
@@ -24,7 +25,7 @@ const capturedForms = new Set<string | undefined>([undefined, 'url'])
 const releaseSchema = z.object({ tag_name: z.string() })
 
 function githubLookup(
-  module: ModuleFileSource,
+  module: VersionedModule,
   download: ModuleDownload,
 ): VersionLookup | undefined {
   const [, repositoryTemplate, tagTemplate] = githubReleaseUrl.exec(download.url) ?? []
@@ -37,7 +38,7 @@ function githubLookup(
 }
 
 function lookupFor(
-  module: ModuleFileSource,
+  module: VersionedModule,
   download: ModuleDownload | undefined,
   declared: LatestVersionSource | undefined,
 ): VersionLookup | undefined {
@@ -45,21 +46,33 @@ function lookupFor(
   return download ? githubLookup(module, download) : undefined
 }
 
-export function versionTargets(moduleId: string, module: ModuleFileSource): VersionTarget[] {
-  const downloads = module.downloads ?? []
-  const moduleTarget: VersionTarget[] =
-    module.version === undefined
+interface PinScope {
+  version?: string | undefined
+  latestVersion?: LatestVersionSource | undefined
+  downloads?: ModuleDownload[] | undefined
+}
+
+function scopeTargets(
+  moduleId: string,
+  versionId: string | undefined,
+  scope: PinScope,
+): VersionTarget[] {
+  const name = versionId === undefined ? moduleId : `${moduleId}@${versionId}`
+  const downloads = scope.downloads ?? []
+  const ownTarget: VersionTarget[] =
+    scope.version === undefined
       ? []
       : [
           {
-            name: moduleId,
+            name,
             moduleId,
+            versionId,
             downloadName: undefined,
-            currentVersion: module.version,
+            currentVersion: scope.version,
             lookup: lookupFor(
-              module,
+              scope,
               downloads.find((download) => download.version === undefined),
-              module.latestVersion,
+              scope.latestVersion,
             ),
           },
         ]
@@ -67,16 +80,26 @@ export function versionTargets(moduleId: string, module: ModuleFileSource): Vers
     download.name && download.version
       ? [
           {
-            name: `${moduleId}:${download.name}`,
+            name: `${name}:${download.name}`,
             moduleId,
+            versionId,
             downloadName: download.name,
             currentVersion: download.version,
-            lookup: lookupFor(module, download, download.latestVersion),
+            lookup: lookupFor(scope, download, download.latestVersion),
           },
         ]
       : [],
   )
-  return [...moduleTarget, ...downloadTargets]
+  return [...ownTarget, ...downloadTargets]
+}
+
+// A module pins its version and named downloads. A module with versions pins each version
+// as <module>@<version>, and the downloads every version shares on the module itself.
+export function versionTargets(moduleId: string, module: ModuleFileSource): VersionTarget[] {
+  return [
+    ...scopeTargets(moduleId, undefined, module),
+    ...(module.versions ?? []).flatMap((version) => scopeTargets(moduleId, version.id, version)),
+  ]
 }
 
 function versionParts(version: string): (number | string)[] {
@@ -96,7 +119,10 @@ function comparePartLists(first: string, second: string): number {
     if (a === undefined) return -1
     if (b === undefined) return 1
     if (typeof a === 'number' && typeof b === 'number') return a - b
-    return String(a).localeCompare(String(b))
+    // A number beats a word, so 4.7.2-stable is newer than 4.7-stable.
+    if (typeof a === 'number') return 1
+    if (typeof b === 'number') return -1
+    return a.localeCompare(b)
   }
   return 0
 }

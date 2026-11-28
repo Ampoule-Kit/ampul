@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { catalogForTests, moduleForTests } from '../modules/moduleForTests.ts'
-import { installationOrder } from '../modules/moduleSelection.ts'
+import { catalogForTests, moduleForTests, versionForTests } from '../modules/moduleForTests.ts'
+import { moduleInstalls, selectionOf } from '../modules/moduleSelection.ts'
 import { containerfileFor } from './containerfile.ts'
 import { containerHome } from './naming.ts'
 
@@ -15,7 +15,9 @@ describe('containerfileFor', () => {
     }),
     moduleForTests('unused'),
   ])
-  const containerfile = containerfileFor(installationOrder(['editor', 'language'], catalog))
+  const containerfile = containerfileFor(
+    moduleInstalls(selectionOf(['editor', 'language']), catalog),
+  )
 
   it('installs each module in its own cached step, requirements first', () => {
     const runtimeStep = containerfile.indexOf('install-module.sh runtime')
@@ -37,5 +39,25 @@ describe('containerfileFor', () => {
   it('records the installed modules in installation order, for their start scripts', () => {
     const line = containerfile.split('\n').find((each) => each.includes('installed-modules'))
     assert.equal(line, "RUN printf '%s\\n' runtime editor language >/opt/ampul/installed-modules")
+  })
+})
+
+describe('containerfileFor with module versions', () => {
+  const catalog = catalogForTests([
+    moduleForTests('sdk', {
+      hasVersionChoice: true,
+      multipleVersions: true,
+      versions: [versionForTests('10'), versionForTests('8')],
+    }),
+  ])
+  const containerfile = containerfileFor(
+    moduleInstalls(selectionOf(['sdk'], { sdk: ['10', '8'] }), catalog),
+  )
+
+  it('copies a module once and installs each of its versions in its own step', () => {
+    assert.equal(containerfile.match(/COPY modules\/sdk\//g)?.length, 1)
+    assert.match(containerfile, /install-module\.sh sdk 10\n/)
+    assert.match(containerfile, /install-module\.sh sdk 8\n/)
+    assert.match(containerfile, /printf '%s\\n' sdk >/)
   })
 })

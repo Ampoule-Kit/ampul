@@ -1,11 +1,7 @@
 import type { ContainerEngine } from '../engine/ContainerEngine.ts'
-import type { ModuleDefinition } from '../modules/ModuleDefinition.ts'
+import type { ModuleInstall } from '../modules/ModuleDefinition.ts'
 import { moduleCatalog } from '../modules/moduleCatalog.ts'
-import {
-  describeConflict,
-  installationOrder,
-  selectionConflicts,
-} from '../modules/moduleSelection.ts'
+import { describeConflict, moduleInstalls, selectionConflicts } from '../modules/moduleSelection.ts'
 import { Problem } from '../problems/Problem.ts'
 import type { ProjectSettings } from '../projects/ProjectSettings.ts'
 import { resourceDirectory } from '../resources/resourceDirectory.ts'
@@ -22,7 +18,7 @@ import { containerUser, imageName, projectLabel } from './naming.ts'
 function imageBuildArguments(
   engine: ContainerEngine,
   project: ProjectSettings,
-  modules: ModuleDefinition[],
+  modules: ModuleInstall[],
 ): string[] {
   return [
     'build',
@@ -52,14 +48,14 @@ export async function buildImage(
 ): Promise<void> {
   let sawOutOfMemory = false
   const catalog = moduleCatalog()
-  const [conflict] = selectionConflicts(project.modules, catalog)
+  const [conflict] = selectionConflicts(project, catalog)
   if (conflict) {
     throw new Problem(`${describeConflict(conflict)} in ${project.name}`, {
       explanation: 'Only one of them can be installed in a project.',
       fixes: [{ description: 'Choose one of them', command: `ampul config ${project.name}` }],
     })
   }
-  const modules = installationOrder(project.modules, catalog)
+  const modules = moduleInstalls(project, catalog)
   const exitCode = await engine.stream(imageBuildArguments(engine, project, modules), {
     environment: engine.runtime === 'docker' ? { DOCKER_BUILDKIT: '1' } : undefined,
     onOutput: context.output,

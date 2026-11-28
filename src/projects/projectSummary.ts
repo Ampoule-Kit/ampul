@@ -1,6 +1,6 @@
 import { readReport } from '../forwarding/forwarderFiles.ts'
 import { moduleCatalog } from '../modules/moduleCatalog.ts'
-import { describeModuleSelection } from '../modules/moduleSelection.ts'
+import { describeModuleSelection, describeVersionChoices } from '../modules/moduleSelection.ts'
 import type { ProjectSettings } from './ProjectSettings.ts'
 import { formatPortList } from './ports.ts'
 
@@ -17,5 +17,9 @@ export function describeForwardedPorts(projectName: string): string {
 }
 
 export function describeTools(project: ProjectSettings): string {
-  return describeModuleSelection(project.modules, moduleCatalog())
+  return describeModuleSelection(project, moduleCatalog())
+}
+
+export function describeVersions(project: ProjectSettings): string {
+  return describeVersionChoices(project, moduleCatalog())
 }

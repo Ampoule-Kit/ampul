@@ -1,4 +1,5 @@
 import { Box } from 'ink'
+import { moduleCatalog } from '../../modules/moduleCatalog.ts'
 import { Header } from '../components/Header.tsx'
 import { answeredSteps, Wizard, type WizardStep } from '../components/Wizard.tsx'
 import type { Finish } from '../terminal.tsx'
@@ -9,6 +10,12 @@ import { NameStep } from './NameStep.tsx'
 import type { ProjectDraft } from './ProjectDraft.ts'
 import { describeRepositories, RepositoriesStep } from './RepositoriesStep.tsx'
 import { type ProjectFormAction, type ReviewContext, ReviewStep } from './ReviewStep.tsx'
+import {
+  describeVersionsAnswer,
+  hasVersionsToChoose,
+  VersionsStep,
+  versionsAreChosen,
+} from './VersionsStep.tsx'
 
 export interface ProjectFormResult {
   action: ProjectFormAction
@@ -22,7 +29,7 @@ interface ProjectFormProps {
   finish: Finish<ProjectFormResult | undefined>
 }
 
-const stepsOfferedForChanges = new Set(['code', 'name', 'tools'])
+const stepsOfferedForChanges = new Set(['code', 'name', 'tools', 'versions'])
 
 function questionSteps(askForName: boolean): WizardStep<ProjectDraft>[] {
   return [
@@ -61,6 +68,14 @@ function questionSteps(askForName: boolean): WizardStep<ProjectDraft>[] {
       title: 'Tools',
       summary: describeModulesAnswer,
       render: (controls) => <ModulesStep {...controls} />,
+    },
+    {
+      id: 'versions',
+      title: 'Versions',
+      isSkipped: (draft) => !hasVersionsToChoose(draft, moduleCatalog()),
+      isComplete: versionsAreChosen,
+      summary: describeVersionsAnswer,
+      render: (controls) => <VersionsStep {...controls} />,
     },
   ]
 }

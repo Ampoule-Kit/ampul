@@ -17,6 +17,7 @@ npm run modules:outdated                                  # each module's versio
 npm run modules:update-version -- lazygit                 # pin the latest version
 npm run modules:update-version -- lazygit 0.67.0          # pin a given version
 npm run modules:update-version -- container-engine:compose  # pin one named download
+npm run modules:update-version -- node@24                 # pin one version of a module with versions
 npm run modules:update-version -- --all                   # pin every outdated module to its latest
 ```
 
@@ -37,21 +38,50 @@ A module carries no dotfiles or tool config: those belong to the user, in `~/.co
 
 ## module.json
 
-| Field                   | Meaning                                                                                                                                              |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `label`                 | Required. The name shown by `ampul new` and `ampul config`.                                                                                          |
-| `description`           | Required. One or two sentences shown with it.                                                                                                        |
-| `check`                 | Required. A command that proves the tool works once installed.                                                                                       |
-| `version`               | The version its downloads use, unless a download has its own.                                                                                        |
-| `latestVersion`         | Where updates find the latest `version`: `{ "url": ..., "match": ... }`, see below.                                                                  |
-| `selectedByDefault`     | Whether new projects get it.                                                                                                                         |
-| `requires`              | Ids of the modules it needs. They are selected with it and installed before it.                                                                      |
-| `mutuallyExclusiveWith` | Ids of modules it can never be selected with. It works both ways, so only one of the two needs to list the other. Selecting one unselects the other. |
-| `packages`              | Ubuntu packages to install with apt.                                                                                                                 |
-| `downloads`             | Release files to download, verify and unpack, described below.                                                                                       |
-| `environment`           | Environment variables for the container. `{home}` becomes the user's home folder.                                                                    |
-| `path`                  | Folders to put at the front of `PATH`. `{home}` works here too.                                                                                      |
-| `container`             | What the container needs at run time: `privileged: true`, and `volumes` that keep data across rebuilds, described below.                             |
+| Field                   | Meaning                                                                                                                                                     |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`                 | Required. The name shown by `ampul new` and `ampul config`.                                                                                                 |
+| `description`           | Required. One or two sentences shown with it.                                                                                                               |
+| `check`                 | Required. A command that proves the tool works once installed.                                                                                              |
+| `version`               | The version its downloads use, unless a download has its own.                                                                                               |
+| `latestVersion`         | Where updates find the latest `version`: `{ "url": ..., "match": ... }`, see below.                                                                         |
+| `selectedByDefault`     | Whether new projects get it.                                                                                                                                |
+| `requires`              | Ids of the modules it needs. They are selected with it and installed before it. `<module>@<version>` needs one version of a module with `multipleVersions`. |
+| `mutuallyExclusiveWith` | Ids of modules it can never be selected with. It works both ways, so only one of the two needs to list the other. Selecting one unselects the other.        |
+| `packages`              | Ubuntu packages to install with apt.                                                                                                                        |
+| `downloads`             | Release files to download, verify and unpack, described below.                                                                                              |
+| `environment`           | Environment variables for the container. `{home}` becomes the user's home folder.                                                                           |
+| `path`                  | Folders to put at the front of `PATH`. `{home}` works here too.                                                                                             |
+| `container`             | What the container needs at run time: `privileged: true`, and `volumes` that keep data across rebuilds, described below.                                    |
+| `versions`              | The versions to pick from, newest first, described below.                                                                                                   |
+| `multipleVersions`      | Lets a project install several of its `versions` side by side, such as .NET SDKs. Otherwise a project picks exactly one.                                    |
+
+### versions
+
+A module with `versions` offers a choice of releases, such as the LTS lines of Node.js. After picking the tools, `ampul new` and `ampul config` ask for the version of each; the first in the list is picked to start with, so keep the newest first. A project records the version ids it picked, so a rebuild keeps them.
+
+```json
+"versions": [
+  {
+    "id": "24",
+    "label": "24 LTS",
+    "version": "24.22.3",
+    "latestVersion": { "url": "https://nodejs.org/dist/index.json", "match": "\"version\":\"v(24\\.[0-9]+\\.[0-9]+)\"" },
+    "downloads": [ ... ]
+  }
+]
+```
+
+| Field                                       | Meaning                                                                                                                                 |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                                        | Required. What projects record, and what `<module>@<id>` pins. Name the release line, such as `24`, so a pin to a newer patch keeps it. |
+| `label`                                     | What the version picker shows. The `id` when left out.                                                                                  |
+| `version`                                   | The version its downloads use, pinned with `<module>@<id>`.                                                                             |
+| `latestVersion`                             | Where updates find the latest `version` of this line. Without it, the latest GitHub release is used.                                    |
+| `requires`, `packages`, `downloads`, `path` | Added to the module's own.                                                                                                              |
+| `environment`                               | Added to the module's own; a variable set in both takes the version's value.                                                            |
+
+A module with `versions` has no `version` or `latestVersion` of its own, and its own `downloads` are shared by every version, so each needs a `name` and `version`.
 
 ### downloads
 
@@ -101,8 +131,9 @@ ampul checks the modules when it loads them, and `npm test` does too. It refuses
 
 - a folder that `catalog.json` does not list, or lists twice
 - a requirement that does not exist, or modules that require each other in a circle
+- a requirement of a version that does not exist, or of one version of a module without `multipleVersions`
 - a module that is mutually exclusive with a module that does not exist
 - a module that needs, directly or through its requirements, two mutually exclusive modules
-- two modules that install to the same folder and could be selected together
+- two modules, or two versions of a module with `multipleVersions`, that install to the same folder and could be selected together
 - two modules with a volume of the same name
 - a download without a checksum for both architectures

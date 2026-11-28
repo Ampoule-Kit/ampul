@@ -29,6 +29,7 @@ const usage = `Usage: npm run modules:update-version                            
        npm run modules:update-version -- --outdated                     Also look up the latest version of each
        npm run modules:update-version -- <module> [<version>]           Pin a module to <version>, or to its latest
        npm run modules:update-version -- <module>:<download> [<version>] Pin one named download of a module
+       npm run modules:update-version -- <module>@<version-id> [<version>] Pin one version of a module with versions
        npm run modules:update-version -- --all                          Pin every outdated module to its latest
        npm run modules:update-version -- ubuntu <tag>                   Pin the base image to ubuntu:<tag>
 
@@ -43,10 +44,11 @@ Examples:
   npm run modules:update-version -- my-tool             Pin my-tool to its latest version
   npm run modules:update-version -- my-tool 1.2.3       Pin my-tool to 1.2.3
   npm run modules:update-version -- my-tool:plugin      Pin the download named plugin of my-tool
+  npm run modules:update-version -- node@24             Pin Node.js 24 to its latest release
 
-A new major line of a tool installed side by side (such as another SDK channel) is a new
-module: copy its folder in modules/, rename it, add it to modules/catalog.json, then pin it
-with this command.`
+A new line of a tool (such as another LTS release) is a new entry in the versions of its
+module.json: copy the entry of the line next to it, change its id, label and latestVersion,
+then pin it with this command.`
 
 const validVersion = /^[0-9A-Za-z][0-9A-Za-z.+_-]*$/
 const ubuntuTagInImage = /^.*:([^@]+)@.*$/
@@ -63,6 +65,9 @@ const manifestIndexSchema = z.object({
 })
 
 function describePins(module: ModuleFileSource): string {
+  if (module.versions) {
+    return module.versions.map((version) => version.version ?? version.id).join(', ')
+  }
   if (module.version) return module.version
   const namedDownloads = (module.downloads ?? []).filter((download) => download.name)
   if (namedDownloads.length > 0) {
@@ -159,21 +164,26 @@ async function updateUbuntu(tag: string, skipInstallTest: boolean): Promise<void
   console.log(`Pinned ubuntu to ${tag}.`)
 }
 
-function withVersion(
-  module: ModuleFileSource,
+interface PinScope {
+  version?: string | undefined
+  downloads?: ModuleDownload[] | undefined
+}
+
+function withVersion<Scope extends PinScope>(
+  scope: Scope,
   downloadName: string | undefined,
   version: string,
-): { updated: ModuleFileSource; downloadsToPin: number[] } {
-  const downloads = module.downloads ?? []
+): { updated: Scope; downloadsToPin: number[] } {
+  const downloads = scope.downloads ?? []
   if (downloadName !== undefined) {
     const index = downloads.findIndex((download) => download.name === downloadName)
     if (index < 0) throw new Error(`This module has no download named '${downloadName}'.`)
     const updatedDownloads = downloads.map((download, downloadIndex) =>
       downloadIndex === index ? { ...download, version } : download,
     )
-    return { updated: { ...module, downloads: updatedDownloads }, downloadsToPin: [index] }
+    return { updated: { ...scope, downloads: updatedDownloads }, downloadsToPin: [index] }
   }
-  if (module.version === undefined) {
+  if (scope.version === undefined) {
     const example = downloads.find((download) => download.name)?.name ?? 'name'
     throw new Error(
       `This module pins each download on its own. Pin one with <module>:<download>, such as <module>:${example}.`,
@@ -182,22 +192,22 @@ function withVersion(
   const downloadsToPin = downloads.flatMap((download, index) =>
     download.version === undefined ? [index] : [],
   )
-  return { updated: { ...module, version }, downloadsToPin }
+  return { updated: { ...scope, version }, downloadsToPin }
 }
 
-async function pinDownloads(
-  module: ModuleFileSource,
+async function pinDownloads<Scope extends PinScope>(
+  scope: Scope,
   downloadIndexes: number[],
-): Promise<ModuleFileSource> {
+): Promise<Scope> {
   const downloadDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ampul-pin-'))
   try {
-    const downloads: ModuleDownload[] = [...(module.downloads ?? [])]
+    const downloads: ModuleDownload[] = [...(scope.downloads ?? [])]
     for (const index of downloadIndexes) {
       const download = downloads[index]
       if (!download) continue
-      downloads[index] = (await pinDownload(module, download, downloadDirectory)).pinned
+      downloads[index] = (await pinDownload(scope, download, downloadDirectory)).pinned
     }
-    return { ...module, downloads }
+    return { ...scope, downloads }
   } finally {
     fs.rmSync(downloadDirectory, { recursive: true, force: true })
   }
@@ -205,19 +215,52 @@ async function pinDownloads(
 
 let installTestBaseIsBuilt = false
 
-async function testInstall(moduleId: string, module: ModuleFileSource): Promise<void> {
+async function testInstall(
+  moduleId: string,
+  versionIds: (string | undefined)[],
+  module: ModuleFileSource,
+): Promise<void> {
   const engine = await requireRunningEngine()
   if (!installTestBaseIsBuilt) {
     await buildInstallTestBase(engine, readBaseImage())
     installTestBaseIsBuilt = true
   }
-  const moduleIds = modulesWithRequirements([moduleId])
-  const modulesById = new Map(moduleIds.map((id) => [id, readModuleSource(id)]))
-  await runInstallTest(engine, moduleIds, modulesById, new Map([[moduleId, module]]), module.check)
+  const readSource = (id: string) => (id === moduleId ? module : readModuleSource(id))
+  for (const versionId of versionIds) {
+    const steps = modulesWithRequirements([{ moduleId, versionId }], readSource)
+    const modulesById = new Map(steps.map((step) => [step.moduleId, readSource(step.moduleId)]))
+    await runInstallTest(engine, steps, modulesById, new Map([[moduleId, module]]), module.check)
+  }
+}
+
+// Pinning a download every version shares tests the install of each version.
+function versionsToTest(module: ModuleFileSource, versionId: string | undefined) {
+  if (versionId !== undefined) return [versionId]
+  return module.versions?.map((version) => version.id) ?? [undefined]
+}
+
+function pinScope(module: ModuleFileSource, versionId: string | undefined): PinScope {
+  if (versionId === undefined) return module
+  const version = module.versions?.find((candidate) => candidate.id === versionId)
+  if (!version) throw new Error(`This module has no version '${versionId}'.`)
+  return version
+}
+
+function withPinnedScope(
+  module: ModuleFileSource,
+  versionId: string | undefined,
+  pinned: PinScope,
+): ModuleFileSource {
+  if (versionId === undefined) return { ...module, ...pinned }
+  const versions = module.versions ?? []
+  const index = versions.findIndex((version) => version.id === versionId)
+  const current = versions[index]
+  if (!current) throw new Error(`This module has no version '${versionId}'.`)
+  return { ...module, versions: versions.with(index, { ...current, ...pinned }) }
 }
 
 function findTarget(target: string): VersionTarget {
-  const [moduleId = ''] = target.split(':')
+  const [moduleId = ''] = target.split(/[:@]/)
   if (!moduleExists(moduleId)) {
     throw new Error(
       `There is no module named '${moduleId}'. Run npm run modules:update-version to list them.`,
@@ -239,7 +282,7 @@ async function updateModule(
   requestedVersion: string | undefined,
   skipInstallTest: boolean,
 ): Promise<void> {
-  const { moduleId, downloadName, currentVersion } = findTarget(target)
+  const { moduleId, versionId, downloadName, currentVersion } = findTarget(target)
   let version = requestedVersion
   if (version === undefined) {
     console.log(`==> Looking up the latest version of ${target}`)
@@ -251,10 +294,15 @@ async function updateModule(
     }
   }
   if (!validVersion.test(version)) throw new Error(`'${version}' is not a valid version.`)
-  const { updated, downloadsToPin } = withVersion(readModuleSource(moduleId), downloadName, version)
+  const module = readModuleSource(moduleId)
+  const { updated, downloadsToPin } = withVersion(
+    pinScope(module, versionId),
+    downloadName,
+    version,
+  )
   console.log(`==> Downloading ${target} ${version} for arm64 and amd64`)
-  const pinned = await pinDownloads(updated, downloadsToPin)
-  if (!skipInstallTest) await testInstall(moduleId, pinned)
+  const pinned = withPinnedScope(module, versionId, await pinDownloads(updated, downloadsToPin))
+  if (!skipInstallTest) await testInstall(moduleId, versionsToTest(pinned, versionId), pinned)
   writeJsonFile(moduleFilePath(moduleId), pinned)
   console.log(
     `Pinned ${target} to ${version} in modules/${moduleId}/module.json. Build it into ampul with npm run cli:install, then apply it with ampul rebuild <project>.`,

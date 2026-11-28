@@ -7,6 +7,7 @@ import {
   mutuallyExclusiveIds,
   requiringModuleLabels,
   selectionConflicts,
+  selectionOf,
 } from '../../modules/moduleSelection.ts'
 import { joinInProse } from '../../text/prose.ts'
 import { MultiSelectList, type MultiSelectOption } from '../components/MultiSelectList.tsx'
@@ -27,16 +28,27 @@ function moduleOptions(catalog: ModuleCatalog): MultiSelectOption<string>[] {
   }))
 }
 
-function requiredModuleReasons(selection: string[], catalog: ModuleCatalog): Map<string, string> {
+function requiredModuleReasons(
+  selection: string[],
+  draft: ProjectDraft,
+  catalog: ModuleCatalog,
+): Map<string, string> {
   const reasons = new Map<string, string>()
-  for (const [id, requiredBy] of requiringModuleLabels(selection, catalog)) {
+  for (const [id, requiredBy] of requiringModuleLabels(
+    selectionOf(selection, draft.moduleVersions),
+    catalog,
+  )) {
     reasons.set(id, `needed by ${joinInProse(requiredBy)}`)
   }
   return reasons
 }
 
-function selectionProblem(selection: string[], catalog: ModuleCatalog): string | undefined {
-  const [conflict] = selectionConflicts(selection, catalog)
+function selectionProblem(
+  selection: string[],
+  draft: ProjectDraft,
+  catalog: ModuleCatalog,
+): string | undefined {
+  const [conflict] = selectionConflicts(selectionOf(selection, draft.moduleVersions), catalog)
   return conflict && `${describeConflict(conflict)}, and one is needed by another selected tool`
 }
 
@@ -45,13 +57,13 @@ export function ModulesStep({ draft, submit, back }: StepControls<ProjectDraft>)
   return (
     <Question
       title="Which tools should the container have?"
-      explanation={`The everyday tools are selected to start with. A tool that another one needs stays selected while that one is. Always included: ${alwaysIncluded}.`}
+      explanation={`The everyday tools are selected to start with. A tool that another one needs stays selected while that one is. You pick versions next. Always included: ${alwaysIncluded}.`}
     >
       <MultiSelectList
         options={moduleOptions(catalog)}
         initialSelection={draft.modules}
-        requiredOptions={(selection) => requiredModuleReasons(selection, catalog)}
-        selectionProblem={(selection) => selectionProblem(selection, catalog)}
+        requiredOptions={(selection) => requiredModuleReasons(selection, draft, catalog)}
+        selectionProblem={(selection) => selectionProblem(selection, draft, catalog)}
         onSubmit={(modules) => submit({ modules })}
         onCancel={back}
       />
@@ -60,5 +72,5 @@ export function ModulesStep({ draft, submit, back }: StepControls<ProjectDraft>)
 }
 
 export function describeModulesAnswer(draft: ProjectDraft): string {
-  return describeModuleSelection(draft.modules, moduleCatalog())
+  return describeModuleSelection(draft, moduleCatalog())
 }

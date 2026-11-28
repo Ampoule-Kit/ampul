@@ -24,6 +24,7 @@ export const projectSettingsSchema = z.object({
   name: z.string().min(1),
   codeSource: codeSourceSchema,
   modules: z.array(z.string()),
+  moduleVersions: z.record(z.string(), z.array(z.string())).default({}),
 })
 
 export type RepositoriesSource = z.infer<typeof repositoriesSourceSchema>
