@@ -4,6 +4,7 @@ import { colorOrTerminalDefault, colors, symbols } from '../theme.ts'
 import { Description } from './Description.tsx'
 import { hintWhen, type KeyHint, KeyHints } from './KeyHints.tsx'
 import { toggleSelection } from './multiSelection.ts'
+import { labelColumnWidth, useListHeight } from './useListHeight.ts'
 import { useListNavigation } from './useListNavigation.ts'
 import { visibleWindow } from './visibleWindow.ts'
 
@@ -29,12 +30,17 @@ interface MultiSelectListProps<Value> {
 
 interface MultiSelectRowProps {
   label: string
+  labelWidth: number
   hint: string | undefined
   requiredReason: string | undefined
   isFocused: boolean
   isSelected: boolean
   isExclusive: boolean
 }
+
+// The question, the answers above it, the description and the key hints around the list.
+const reservedListRows = 22
+const mostListRows = 24
 
 function selectionMark(isSelected: boolean, isExclusive: boolean): string {
   if (isExclusive) return isSelected ? symbols.radioSelected : symbols.radioUnselected
@@ -43,6 +49,7 @@ function selectionMark(isSelected: boolean, isExclusive: boolean): string {
 
 function MultiSelectRow({
   label,
+  labelWidth,
   hint,
   requiredReason,
   isFocused,
@@ -56,18 +63,29 @@ function MultiSelectRow({
         {selectionMark(isSelected, isExclusive)}
       </Text>{' '}
       <Text {...colorOrTerminalDefault(isFocused ? colors.accent : undefined)} bold={isFocused}>
-        {label}
+        {hint || requiredReason ? label.padEnd(labelWidth) : label}
       </Text>
-      {hint && <Text color={colors.muted}> {hint}</Text>}
-      {requiredReason && <Text color={colors.muted}> · {requiredReason}</Text>}
+      {hint && <Text color={colors.muted}>{hint}</Text>}
+      {requiredReason && (
+        <Text color={colors.muted} dimColor>
+          {hint ? '  ' : ''}
+          {symbols.arrow} {requiredReason}
+        </Text>
+      )}
     </Text>
   )
 }
 
-function SectionHeading({ title, isFirstVisible }: { title: string; isFirstVisible: boolean }) {
+export function SectionHeading({
+  title,
+  isFirstVisible,
+}: {
+  title: string
+  isFirstVisible: boolean
+}) {
   return (
     <Box marginTop={isFirstVisible ? 0 : 1}>
-      <Text color={colors.muted} bold>
+      <Text color={colors.accent} bold>
         {title}
       </Text>
     </Box>
@@ -82,12 +100,14 @@ export function MultiSelectList<Value>({
   footer,
   requiredOptions,
   selectionProblem,
-  maxVisible = 12,
+  maxVisible,
 }: MultiSelectListProps<Value>) {
+  const listHeight = useListHeight(reservedListRows, mostListRows)
+  const labelWidth = labelColumnWidth(options.map((option) => option.label))
   const navigation = useListNavigation(options.length)
   const [selection, setSelection] = useState<Value[]>(initialSelection)
   const [lockedNotice, setLockedNotice] = useState<string>()
-  const visible = visibleWindow(options.length, navigation.focusedIndex, maxVisible)
+  const visible = visibleWindow(options.length, navigation.focusedIndex, maxVisible ?? listHeight)
   const requiredReasons = requiredOptions?.(selection) ?? new Map<Value, string>()
   const effectiveSelection = options
     .map((option) => option.value)
@@ -129,7 +149,7 @@ export function MultiSelectList<Value>({
         const startsSection =
           option.section !== undefined && option.section !== options[index - 1]?.section
         return (
-          <Fragment key={option.label}>
+          <Fragment key={String(index)}>
             {startsSection && (
               <SectionHeading
                 title={option.section ?? ''}
@@ -138,6 +158,7 @@ export function MultiSelectList<Value>({
             )}
             <MultiSelectRow
               label={option.label}
+              labelWidth={labelWidth}
               hint={option.hint}
               requiredReason={requiredReasons.get(option.value)}
               isFocused={index === navigation.focusedIndex}

@@ -8,6 +8,7 @@ export interface ProjectDraft {
   folders: string[]
   name: string
   modules: string[]
+  moduleVersions: Record<string, string[]>
 }
 
 export function emptyDraft(name = ''): ProjectDraft {
@@ -17,6 +18,7 @@ export function emptyDraft(name = ''): ProjectDraft {
     folders: [],
     name,
     modules: defaultModuleIds(moduleCatalog()),
+    moduleVersions: {},
   }
 }
 
@@ -28,6 +30,7 @@ export function draftFromSettings(settings: ProjectSettings): ProjectDraft {
     folders: source.kind === 'folders' ? source.folders : [],
     name: settings.name,
     modules: settings.modules,
+    moduleVersions: settings.moduleVersions,
   }
 }
 
@@ -35,7 +38,7 @@ export function settingsFromDraft(draft: ProjectDraft): ProjectSettings {
   return {
     name: draft.name,
     codeSource: draftCodeSource(draft),
-    modules: withRequiredModules(draft.modules, moduleCatalog()),
+    ...withRequiredModules(draft, moduleCatalog()),
   }
 }
 

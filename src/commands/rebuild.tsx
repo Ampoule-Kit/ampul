@@ -30,7 +30,7 @@ export async function confirmAndRebuild(
           ? []
           : ['The folders mounted in ~/work, which stay on this machine']),
         'The shared package cache (everything in ~/.cache)',
-        ...moduleVolumes(project.modules, moduleCatalog()).map((volume) => volume.contents),
+        ...moduleVolumes(project, moduleCatalog()).map((volume) => volume.contents),
         'The project settings',
       ],
       yesLabel: 'Rebuild',

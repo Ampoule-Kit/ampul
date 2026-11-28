@@ -1,30 +1,191 @@
 {
   "label": "Godot",
-  "description": "The Godot engine and editor, for GDScript projects.",
-  "version": "4.7.2-stable",
+  "description": "The Godot engine and editor. Pick a GDScript build, or a .NET build for C# scripting, which brings the .NET 8 SDK.",
   "selectedByDefault": false,
-  "mutuallyExclusiveWith": [
-    "godot-dotnet"
-  ],
   "packages": [
     "libfontconfig1"
   ],
-  "downloads": [
+  "versions": [
     {
-      "url": "https://github.com/godotengine/godot/releases/download/{version}/Godot_v{version}_linux.{arch}.zip",
-      "architectures": {
-        "arm64": "arm64",
-        "amd64": "x86_64"
+      "id": "4.7",
+      "label": "4.7 GDScript",
+      "version": "4.7.2-stable",
+      "latestVersion": {
+        "url": "https://api.github.com/repos/godotengine/godot/releases?per_page=100",
+        "match": "\"tag_name\":\\s*\"(4\\.7(?:\\.[0-9]+)?-stable)\""
       },
-      "sha256": {
-        "arm64": "5dd0d86405cf7e8adf79fb6377b38ba682a2846cb378ffe5364f38c01ad29b9d",
-        "amd64": "cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4"
-      },
-      "installTo": "/opt/godot",
-      "commands": [
+      "downloads": [
         {
-          "path": "Godot_v{version}_linux.{arch}",
-          "as": "godot"
+          "url": "https://github.com/godotengine/godot/releases/download/{version}/Godot_v{version}_linux.{arch}.zip",
+          "architectures": {
+            "arm64": "arm64",
+            "amd64": "x86_64"
+          },
+          "sha256": {
+            "arm64": "5dd0d86405cf7e8adf79fb6377b38ba682a2846cb378ffe5364f38c01ad29b9d",
+            "amd64": "cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4"
+          },
+          "installTo": "/opt/godot",
+          "commands": [
+            {
+              "path": "Godot_v{version}_linux.{arch}",
+              "as": "godot"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4.7-dotnet",
+      "label": "4.7 .NET (C#)",
+      "version": "4.7.2-stable",
+      "latestVersion": {
+        "url": "https://api.github.com/repos/godotengine/godot/releases?per_page=100",
+        "match": "\"tag_name\":\\s*\"(4\\.7(?:\\.[0-9]+)?-stable)\""
+      },
+      "requires": [
+        "dotnet@8"
+      ],
+      "downloads": [
+        {
+          "url": "https://github.com/godotengine/godot/releases/download/{version}/Godot_v{version}_mono_linux_{arch}.zip",
+          "architectures": {
+            "arm64": "arm64",
+            "amd64": "x86_64"
+          },
+          "sha256": {
+            "arm64": "0dc8ad63feacc6c19d7cb5c89ae828085b0ac3fa8039bc816a08a0537744e523",
+            "amd64": "129f82db7bafd54ae14bb5bb284041c73860e8c7a009a3a026ca5e946cbff247"
+          },
+          "installTo": "/opt/godot",
+          "commands": [
+            {
+              "path": "Godot_v{version}_mono_linux.{arch}",
+              "as": "godot"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4.6",
+      "label": "4.6 GDScript",
+      "version": "4.6.3-stable",
+      "latestVersion": {
+        "url": "https://api.github.com/repos/godotengine/godot/releases?per_page=100",
+        "match": "\"tag_name\":\\s*\"(4\\.6(?:\\.[0-9]+)?-stable)\""
+      },
+      "downloads": [
+        {
+          "url": "https://github.com/godotengine/godot/releases/download/{version}/Godot_v{version}_linux.{arch}.zip",
+          "architectures": {
+            "arm64": "arm64",
+            "amd64": "x86_64"
+          },
+          "sha256": {
+            "arm64": "90c70382eee1542904bf507b9bdc6e62a230ac73fd214bf3887a9e0a4d85aeed",
+            "amd64": "d0bc2113065e481c9c2c2b2c37daa4e8be3fe9e27f0ab9ab0b6096e9a37907f3"
+          },
+          "installTo": "/opt/godot",
+          "commands": [
+            {
+              "path": "Godot_v{version}_linux.{arch}",
+              "as": "godot"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4.6-dotnet",
+      "label": "4.6 .NET (C#)",
+      "version": "4.6.3-stable",
+      "latestVersion": {
+        "url": "https://api.github.com/repos/godotengine/godot/releases?per_page=100",
+        "match": "\"tag_name\":\\s*\"(4\\.6(?:\\.[0-9]+)?-stable)\""
+      },
+      "requires": [
+        "dotnet@8"
+      ],
+      "downloads": [
+        {
+          "url": "https://github.com/godotengine/godot/releases/download/{version}/Godot_v{version}_mono_linux_{arch}.zip",
+          "architectures": {
+            "arm64": "arm64",
+            "amd64": "x86_64"
+          },
+          "sha256": {
+            "arm64": "970d2fecb66d8cff7457903e291cac4293e2468d24375db58b747a0f8b6c58e4",
+            "amd64": "702a8a6785060203fd46373adf864586ecf0c377ac685d7107dde66b1eba0a9e"
+          },
+          "installTo": "/opt/godot",
+          "commands": [
+            {
+              "path": "Godot_v{version}_mono_linux.{arch}",
+              "as": "godot"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4.5",
+      "label": "4.5 GDScript",
+      "version": "4.5.2-stable",
+      "latestVersion": {
+        "url": "https://api.github.com/repos/godotengine/godot/releases?per_page=100",
+        "match": "\"tag_name\":\\s*\"(4\\.5(?:\\.[0-9]+)?-stable)\""
+      },
+      "downloads": [
+        {
+          "url": "https://github.com/godotengine/godot/releases/download/{version}/Godot_v{version}_linux.{arch}.zip",
+          "architectures": {
+            "arm64": "arm64",
+            "amd64": "x86_64"
+          },
+          "sha256": {
+            "arm64": "97ad6d1b74020bd591520e4f8810c6a07451af75eefa0932f57daeb805124618",
+            "amd64": "87f6e6be292929e363d15ed9052f277b2ba4e95ed994e1e099048097be2dfd03"
+          },
+          "installTo": "/opt/godot",
+          "commands": [
+            {
+              "path": "Godot_v{version}_linux.{arch}",
+              "as": "godot"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4.5-dotnet",
+      "label": "4.5 .NET (C#)",
+      "version": "4.5.2-stable",
+      "latestVersion": {
+        "url": "https://api.github.com/repos/godotengine/godot/releases?per_page=100",
+        "match": "\"tag_name\":\\s*\"(4\\.5(?:\\.[0-9]+)?-stable)\""
+      },
+      "requires": [
+        "dotnet@8"
+      ],
+      "downloads": [
+        {
+          "url": "https://github.com/godotengine/godot/releases/download/{version}/Godot_v{version}_mono_linux_{arch}.zip",
+          "architectures": {
+            "arm64": "arm64",
+            "amd64": "x86_64"
+          },
+          "sha256": {
+            "arm64": "b6f4ff345b1fd9d19dd96e03462aded42b19d6f355c195075e3ba826209bc95c",
+            "amd64": "9197371d3c4ceebb3ce750f8f4274a1b6f3eb75f25f17eb94fea9c1746081154"
+          },
+          "installTo": "/opt/godot",
+          "commands": [
+            {
+              "path": "Godot_v{version}_mono_linux.{arch}",
+              "as": "godot"
+            }
+          ]
         }
       ]
     }

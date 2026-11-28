@@ -7,6 +7,7 @@ import {
   moduleCatalogFileSchema,
   moduleFileSourceSchema,
 } from '../../src/modules/moduleSchema.ts'
+import { moduleVersion, parseRequirement } from '../../src/modules/moduleVersions.ts'
 import { repositoryRoot } from '../shared/repository.ts'
 
 export const modulesDirectory = path.join(repositoryRoot, 'modules')
@@ -55,15 +56,29 @@ export function writeBaseImage(image: string): void {
   writeJsonFile(baseImageFile, { image })
 }
 
-export function modulesWithRequirements(moduleIds: string[]): string[] {
-  const ordered: string[] = []
-  const placeAfterRequirements = (moduleId: string) => {
-    if (ordered.includes(moduleId)) return
-    for (const requiredId of readModuleSource(moduleId).requires ?? []) {
-      placeAfterRequirements(requiredId)
+export interface InstallStep {
+  moduleId: string
+  versionId: string | undefined
+}
+
+// The modules to install, requirements first. A module with versions gets the version
+// asked for, else its newest.
+export function modulesWithRequirements(
+  roots: InstallStep[],
+  readSource: (moduleId: string) => ModuleFileSource = readModuleSource,
+): InstallStep[] {
+  const ordered: InstallStep[] = []
+  const place = (moduleId: string, askedVersionId: string | undefined) => {
+    const source = readSource(moduleId)
+    const versionId =
+      source.versions === undefined ? undefined : moduleVersion(source, askedVersionId).id
+    if (ordered.some((step) => step.moduleId === moduleId && step.versionId === versionId)) return
+    for (const requirement of moduleVersion(source, versionId).requires) {
+      const required = parseRequirement(requirement)
+      place(required.moduleId, required.versionId)
     }
-    ordered.push(moduleId)
+    ordered.push({ moduleId, versionId })
   }
-  moduleIds.forEach(placeAfterRequirements)
+  for (const root of roots) place(root.moduleId, root.versionId)
   return ordered
 }

@@ -1,3 +1,21 @@
+# A module with versions is installed one version at a time. This writes the module as that
+# version sees it: the version's requirements, packages, downloads and path come after the
+# module's own, and its environment variables win.
+module_version_file() {
+  jq --arg id "$2" '
+    (((.versions // []) | map(select(.id == $id)) | first)
+      // error("the module has no version \($id)")) as $chosen
+    | del(.versions, .multipleVersions)
+    | .version = $chosen.version
+    | .requires = ((.requires // []) + ($chosen.requires // []))
+    | .packages = ((.packages // []) + ($chosen.packages // []))
+    | .downloads = ((.downloads // []) + ($chosen.downloads // []))
+    | .environment = ((.environment // {}) + ($chosen.environment // {}))
+    | .path = ((.path // []) + ($chosen.path // []))
+    | .versionId = $id
+  ' "$1"
+}
+
 is_archive() {
   case "$1" in *.tar.gz | *.tgz | *.tar.xz | *.zip) return 0 ;; *) return 1 ;; esac
 }

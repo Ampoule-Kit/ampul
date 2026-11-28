@@ -57,10 +57,7 @@
     {
       "title": ".NET",
       "modules": [
-        "dotnet-11",
-        "dotnet-10",
-        "dotnet-8",
-        "dotnet-6"
+        "dotnet"
       ]
     },
     {
@@ -90,8 +87,7 @@
     {
       "title": "Game engines",
       "modules": [
-        "godot",
-        "godot-dotnet"
+        "godot"
       ]
     },
     {

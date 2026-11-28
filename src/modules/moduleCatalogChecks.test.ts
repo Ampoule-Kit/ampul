@@ -3,13 +3,13 @@ import { describe, it } from 'node:test'
 import { Problem } from '../problems/Problem.ts'
 import type { ModuleDefinition } from './ModuleDefinition.ts'
 import { checkModuleCatalog } from './moduleCatalogChecks.ts'
-import { moduleForTests } from './moduleForTests.ts'
+import { type ModuleOverridesForTests, moduleForTests, versionForTests } from './moduleForTests.ts'
 import type { ModuleDownload } from './moduleSchema.ts'
 
 function module(
   id: string,
   requires: string[] = [],
-  overrides: Partial<ModuleDefinition> = {},
+  overrides: ModuleOverridesForTests = {},
 ): ModuleDefinition {
   return moduleForTests(id, { requires, ...overrides })
 }
@@ -101,6 +101,50 @@ describe('checkModuleCatalog', () => {
     assert.throws(
       () => check([module('a', [], withVolume), module('b', [], withVolume)]),
       /both have a volume named 'data'/,
+    )
+  })
+})
+
+const sdk = (overrides: ModuleOverridesForTests = {}) =>
+  module('sdk', [], {
+    hasVersionChoice: true,
+    versions: [
+      versionForTests('10', { downloads: [download('/opt/sdk', true)] }),
+      versionForTests('8', { downloads: [download('/opt/sdk', true)] }),
+    ],
+    multipleVersions: true,
+    ...overrides,
+  })
+
+it('accepts a requirement of one version of a module with multipleVersions', () => {
+  assert.doesNotThrow(() => check([module('engine', ['sdk@8']), sdk()]))
+})
+
+describe('checkModuleCatalog with versions', () => {
+  it('reports a requirement of a version that does not exist', () => {
+    assert.throws(
+      () => check([module('engine', ['sdk@6']), sdk()]),
+      /requires version '6' of 'sdk'/,
+    )
+  })
+
+  it('reports a requirement of one version of a module that installs one version at a time', () => {
+    assert.throws(
+      () => check([module('engine', ['sdk@8']), sdk({ multipleVersions: false })]),
+      /only installs one version at a time/,
+    )
+  })
+
+  it('lets the versions of a module that installs one at a time share a folder', () => {
+    const versions = [
+      versionForTests('2', { downloads: [download('/opt/tool')] }),
+      versionForTests('1', { downloads: [download('/opt/tool')] }),
+    ]
+    assert.doesNotThrow(() => check([module('tool', [], { hasVersionChoice: true, versions })]))
+    assert.throws(
+      () =>
+        check([module('tool', [], { hasVersionChoice: true, multipleVersions: true, versions })]),
+      /Versions '2' and '1' of 'tool' both install to \/opt\/tool/,
     )
   })
 })

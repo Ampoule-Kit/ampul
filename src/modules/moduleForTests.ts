@@ -1,24 +1,71 @@
-import type { ModuleCatalog, ModuleDefinition } from './ModuleDefinition.ts'
+import {
+  type ModuleCatalog,
+  type ModuleDefinition,
+  type ModuleVersionDefinition,
+  singleVersionId,
+} from './ModuleDefinition.ts'
+
+type VersionFields = {
+  [Field in keyof Omit<ModuleVersionDefinition, 'id' | 'label'>]?:
+    | ModuleVersionDefinition[Field]
+    | undefined
+}
+
+export function versionForTests(
+  id: string,
+  fields: VersionFields & { label?: string | undefined } = {},
+): ModuleVersionDefinition {
+  return {
+    id,
+    label: fields.label ?? id,
+    version: fields.version,
+    latestVersion: fields.latestVersion,
+    requires: fields.requires ?? [],
+    packages: fields.packages ?? [],
+    downloads: fields.downloads ?? [],
+    environment: fields.environment ?? {},
+    path: fields.path ?? [],
+  }
+}
+
+export type ModuleOverridesForTests = Partial<ModuleDefinition> & VersionFields
 
 export function moduleForTests(
   id: string,
-  overrides: Partial<ModuleDefinition> = {},
+  overrides: ModuleOverridesForTests = {},
 ): ModuleDefinition {
+  const {
+    version,
+    latestVersion,
+    requires,
+    packages,
+    downloads,
+    environment,
+    path,
+    ...moduleOverrides
+  } = overrides
+  const singleVersion = versionForTests(singleVersionId, {
+    version,
+    latestVersion,
+    requires,
+    packages,
+    downloads,
+    environment,
+    path,
+  })
   return {
     id,
     label: id,
     description: id,
     section: 'Tools',
     selectedByDefault: false,
-    requires: [],
-    packages: [],
-    downloads: [],
-    environment: {},
-    path: [],
     mutuallyExclusiveWith: [],
     container: { privileged: false, volumes: [] },
     hasSetup: false,
-    ...overrides,
+    hasVersionChoice: overrides.versions !== undefined,
+    multipleVersions: false,
+    versions: [singleVersion],
+    ...moduleOverrides,
   }
 }
 

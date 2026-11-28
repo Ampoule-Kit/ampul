@@ -4,6 +4,7 @@ import { useState } from 'react'
 export interface ListNavigation {
   focusedIndex: number
   handleNavigationKey: (input: string, key: Key) => boolean
+  focus: (index: number) => void
 }
 
 export function useListNavigation(itemCount: number, initialIndex = 0): ListNavigation {
@@ -20,5 +21,5 @@ export function useListNavigation(itemCount: number, initialIndex = 0): ListNavi
     return true
   }
 
-  return { focusedIndex, handleNavigationKey }
+  return { focusedIndex, handleNavigationKey, focus: setFocusedIndex }
 }

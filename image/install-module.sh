@@ -2,8 +2,14 @@
 . /opt/ampul/install-helpers.sh
 
 MODULE_ID=$1
+VERSION_ID=${2:-}
 MODULE_DIR=/opt/ampul/modules/$MODULE_ID
 MODULE_FILE=$MODULE_DIR/module.json
+
+if [ -n "$VERSION_ID" ]; then
+  MODULE_FILE=$(mktemp --suffix=.json)
+  module_version_file "$MODULE_DIR/module.json" "$VERSION_ID" >"$MODULE_FILE"
+fi
 
 install_packages() {
   local packages

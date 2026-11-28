@@ -10,6 +10,15 @@ const sha256Checksum = z.string().regex(/^[0-9a-f]{64}$/, 'a sha256 checksum is 
 const sha512Checksum = z.string().regex(/^[0-9a-f]{128}$/, 'a sha512 checksum is 128 hex digits')
 const moduleId = z.string().regex(/^[a-z][a-z0-9-]*$/, 'use lowercase letters, digits and dashes')
 const simpleName = z.string().regex(/^[a-z][a-z0-9-]*$/, 'use lowercase letters, digits and dashes')
+const versionId = z
+  .string()
+  .regex(/^[0-9a-z][0-9a-z.-]*$/, 'use lowercase letters, digits, dots and dashes')
+const requirement = z
+  .string()
+  .regex(
+    /^[a-z][a-z0-9-]*(@[0-9a-z][0-9a-z.-]*)?$/,
+    'name a module by its id, or one of its versions as <module>@<version>',
+  )
 
 export const latestVersionSchema = z.strictObject({
   url: z.url({ protocol: /^https$/ }),
@@ -50,26 +59,85 @@ export const moduleContainerSchema = z.strictObject({
   volumes: z.array(moduleVolumeSchema).optional(),
 })
 
-export const moduleFileSourceSchema = z.strictObject({
-  $schema: z.string().optional(),
-  label: z.string().min(1),
-  description: z.string().min(1),
+export const moduleVersionSchema = z.strictObject({
+  id: versionId,
+  label: z.string().min(1).optional(),
   version: z.string().min(1).optional(),
-  selectedByDefault: z.boolean().optional(),
-  requires: z.array(moduleId).optional(),
-  mutuallyExclusiveWith: z.array(moduleId).optional(),
+  latestVersion: latestVersionSchema.optional(),
+  requires: z.array(requirement).optional(),
   packages: z.array(z.string().min(1)).optional(),
   downloads: z.array(moduleDownloadSchema).optional(),
   environment: z.record(z.string(), z.string()).optional(),
   path: z.array(z.string().min(1)).optional(),
-  container: moduleContainerSchema.optional(),
-  latestVersion: latestVersionSchema.optional(),
-  check: z.string().min(1),
 })
+
+type VersionedFields = {
+  version?: string | undefined
+  latestVersion?: unknown
+  downloads?: { version?: string | undefined }[] | undefined
+  multipleVersions?: boolean | undefined
+  versions?:
+    | { id: string; version?: string | undefined; downloads?: unknown[] | undefined }[]
+    | undefined
+}
+
+function checkVersions(source: VersionedFields, context: z.RefinementCtx): void {
+  const issue = (message: string, path: (string | number)[]) =>
+    context.addIssue({ code: 'custom', message, path })
+  if (source.versions === undefined) {
+    if (source.multipleVersions) issue('multipleVersions needs a list of versions', ['versions'])
+    return
+  }
+  if (source.version !== undefined) {
+    issue('a module with versions gives each version its own version', ['version'])
+  }
+  if (source.latestVersion !== undefined) {
+    issue('a module with versions gives each version its own latestVersion', ['latestVersion'])
+  }
+  for (const [index, download] of (source.downloads ?? []).entries()) {
+    if (download.version === undefined) {
+      issue('a download shared by every version needs its own name and version', [
+        'downloads',
+        index,
+      ])
+    }
+  }
+  const seen = new Set<string>()
+  for (const [index, version] of source.versions.entries()) {
+    if (seen.has(version.id))
+      issue(`the version id '${version.id}' is used twice`, ['versions', index])
+    seen.add(version.id)
+    if (version.version === undefined && (version.downloads ?? []).length > 0) {
+      issue('a version with downloads needs a version', ['versions', index, 'version'])
+    }
+  }
+}
+
+export const moduleFileSourceSchema = z
+  .strictObject({
+    $schema: z.string().optional(),
+    label: z.string().min(1),
+    description: z.string().min(1),
+    version: z.string().min(1).optional(),
+    selectedByDefault: z.boolean().optional(),
+    requires: z.array(requirement).optional(),
+    mutuallyExclusiveWith: z.array(moduleId).optional(),
+    packages: z.array(z.string().min(1)).optional(),
+    downloads: z.array(moduleDownloadSchema).optional(),
+    environment: z.record(z.string(), z.string()).optional(),
+    path: z.array(z.string().min(1)).optional(),
+    container: moduleContainerSchema.optional(),
+    latestVersion: latestVersionSchema.optional(),
+    multipleVersions: z.boolean().optional(),
+    versions: z.array(moduleVersionSchema).min(1).optional(),
+    check: z.string().min(1),
+  })
+  .superRefine(checkVersions)
 
 export const moduleFileSchema = moduleFileSourceSchema.transform((source) => ({
   ...source,
   selectedByDefault: source.selectedByDefault ?? false,
+  multipleVersions: source.multipleVersions ?? false,
   requires: source.requires ?? [],
   packages: source.packages ?? [],
   downloads: source.downloads ?? [],
@@ -90,5 +158,11 @@ export type LatestVersionSource = z.infer<typeof latestVersionSchema>
 export type ModuleVolume = z.infer<typeof moduleVolumeSchema>
 export type ModuleDownload = z.infer<typeof moduleDownloadSchema>
 export type ModuleFileSource = z.infer<typeof moduleFileSourceSchema>
+export type ModuleVersionSource = z.infer<typeof moduleVersionSchema>
 export type ModuleFile = z.infer<typeof moduleFileSchema>
 export type ModuleCatalogFile = z.infer<typeof moduleCatalogFileSchema>
+
+export interface ModuleContainerSettings {
+  privileged: boolean
+  volumes: ModuleVolume[]
+}

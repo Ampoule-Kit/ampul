@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { z } from 'zod'
+import { withoutLegacyModules } from '../modules/legacyModules.ts'
 import { Problem } from '../problems/Problem.ts'
 import { ampulPaths, displayPath } from '../system/platform.ts'
 import { type ProjectSettings, projectSettingsSchema } from './ProjectSettings.ts'
@@ -55,7 +56,7 @@ function readStoredSettings(name: string): unknown {
 function loadCurrentSettings(name: string): ProjectSettings {
   const storedSettings = readStoredSettings(name)
   const current = projectSettingsSchema.safeParse(storedSettings)
-  if (current.success) return current.data
+  if (current.success) return withoutLegacyModules(current.data)
   throw unreadableSettings(name, z.prettifyError(current.error))
 }
 

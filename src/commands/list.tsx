@@ -89,7 +89,7 @@ function printJson(rows: ProjectRow[]): void {
     return {
       ...project,
       status: state ?? 'unknown',
-      tools: moduleLabels(project.modules, moduleCatalog()),
+      tools: moduleLabels(project, moduleCatalog()),
       forwardedPorts: report?.forwarded ?? [],
       portsInUseOnThisMachine: report?.unavailable ?? [],
     }

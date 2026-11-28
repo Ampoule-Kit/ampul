@@ -5,7 +5,7 @@ import { moduleCatalog } from '../../modules/moduleCatalog.ts'
 import { installationOrder, privilegedModuleLabels } from '../../modules/moduleSelection.ts'
 import { describeCodeSource } from '../../projects/codeSources.ts'
 import type { CodeSource, ProjectSettings } from '../../projects/ProjectSettings.ts'
-import { describeTools } from '../../projects/projectSummary.ts'
+import { describeTools, describeVersions } from '../../projects/projectSummary.ts'
 import { joinInProse, pluralize } from '../../text/prose.ts'
 import { Question } from '../components/Question.tsx'
 import { SelectList, type SelectOption } from '../components/SelectList.tsx'
@@ -48,7 +48,7 @@ function SummaryRow({
 }
 
 function setupStepDescription(project: ProjectSettings): string {
-  const toolsWithSetup = installationOrder(project.modules, moduleCatalog())
+  const toolsWithSetup = installationOrder(project, moduleCatalog())
     .filter((module) => module.hasSetup)
     .map((module) => module.label)
   const toolSetup = toolsWithSetup.length > 0 ? `, then set up ${joinInProse(toolsWithSetup)}` : ''
@@ -120,7 +120,7 @@ export function ReviewStep({
 }: StepControls<ProjectDraft> & { context: ReviewContext }) {
   const [choosingAnswer, setChoosingAnswer] = useState(false)
   const project = settingsFromDraft(draft)
-  const privilegedLabels = privilegedModuleLabels(project.modules, moduleCatalog())
+  const privilegedLabels = privilegedModuleLabels(project, moduleCatalog())
   const original = context.originalSettings
 
   if (choosingAnswer) {
@@ -154,6 +154,13 @@ export function ReviewStep({
           value={describeTools(project)}
           changed={hasChanged(original, describeTools, project)}
         />
+        {describeVersions(project) && (
+          <SummaryRow
+            label="Versions"
+            value={describeVersions(project)}
+            changed={hasChanged(original, describeVersions, project)}
+          />
+        )}
         <SummaryRow label="Runtime" value={context.runtimeDescription} />
       </Box>
       {context.mode === 'new' && (

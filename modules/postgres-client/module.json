@@ -1,24 +1,11 @@
 {
   "label": "PostgreSQL client",
   "description": "psql, pg_dump and the other PostgreSQL client tools, from the PostgreSQL project's own packages. They work with servers of their version and older.",
-  "version": "19.0-2.pgdg26.04+1",
   "selectedByDefault": false,
   "downloads": [
     {
-      "url": "https://apt-archive.postgresql.org/pub/repos/apt/pool/main/p/postgresql-{version:major}/postgresql-client-{version:major}_{version}_{arch}.deb",
-      "architectures": {
-        "arm64": "arm64",
-        "amd64": "amd64"
-      },
-      "sha256": {
-        "arm64": "18414ec7496a2de9b081fede732503c5a4a724e7ec5461b33ed2a8a9262357e1",
-        "amd64": "28c0904df0aaf92894e5913cd3b8ad5d27e79071fa9cc2a168f60dc77af8db5c"
-      },
-      "installTo": "/opt/postgres-client",
-      "sharedFolder": true,
-      "fileName": "postgresql-client.deb"
-    },
-    {
+      "name": "libpq",
+      "version": "19.0-2.pgdg26.04+1",
       "url": "https://apt-archive.postgresql.org/pub/repos/apt/pool/main/p/postgresql-{version:major}/libpq5_{version}_{arch}.deb",
       "architectures": {
         "arm64": "arm64",
@@ -30,7 +17,11 @@
       },
       "installTo": "/opt/postgres-client",
       "sharedFolder": true,
-      "fileName": "libpq5.deb"
+      "fileName": "libpq5.deb",
+      "latestVersion": {
+        "url": "https://apt.postgresql.org/pub/repos/apt/dists/resolute-pgdg/main/binary-amd64/Packages",
+        "match": "pool/main/p/postgresql-[0-9]+/libpq5_([^_]+)_amd64\\.deb"
+      }
     },
     {
       "name": "common",
@@ -53,9 +44,127 @@
       }
     }
   ],
-  "latestVersion": {
-    "url": "https://apt.postgresql.org/pub/repos/apt/dists/resolute-pgdg/main/binary-amd64/Packages",
-    "match": "pool/main/p/postgresql-[0-9]+/postgresql-client-[0-9]+_([^_]+)_amd64\\.deb"
-  },
+  "versions": [
+    {
+      "id": "19",
+      "version": "19.0-2.pgdg26.04+1",
+      "latestVersion": {
+        "url": "https://apt.postgresql.org/pub/repos/apt/dists/resolute-pgdg/main/binary-amd64/Packages",
+        "match": "pool/main/p/postgresql-19/postgresql-client-19_([^_]+)_amd64\\.deb"
+      },
+      "downloads": [
+        {
+          "url": "https://apt-archive.postgresql.org/pub/repos/apt/pool/main/p/postgresql-{version:major}/postgresql-client-{version:major}_{version}_{arch}.deb",
+          "architectures": {
+            "arm64": "arm64",
+            "amd64": "amd64"
+          },
+          "sha256": {
+            "arm64": "18414ec7496a2de9b081fede732503c5a4a724e7ec5461b33ed2a8a9262357e1",
+            "amd64": "28c0904df0aaf92894e5913cd3b8ad5d27e79071fa9cc2a168f60dc77af8db5c"
+          },
+          "installTo": "/opt/postgres-client",
+          "sharedFolder": true,
+          "fileName": "postgresql-client.deb"
+        }
+      ]
+    },
+    {
+      "id": "18",
+      "version": "18.7-1.pgdg26.04+5",
+      "latestVersion": {
+        "url": "https://apt.postgresql.org/pub/repos/apt/dists/resolute-pgdg/main/binary-amd64/Packages",
+        "match": "pool/main/p/postgresql-18/postgresql-client-18_([^_]+)_amd64\\.deb"
+      },
+      "downloads": [
+        {
+          "url": "https://apt-archive.postgresql.org/pub/repos/apt/pool/main/p/postgresql-{version:major}/postgresql-client-{version:major}_{version}_{arch}.deb",
+          "architectures": {
+            "arm64": "arm64",
+            "amd64": "amd64"
+          },
+          "sha256": {
+            "arm64": "2a901d5b4dc0c6f1c191704adef6d5577df59a678d5bd760db4c5b1631a78e64",
+            "amd64": "7f87faf871f9f0beb6035af03d0a3680d9eb2677370de8035012aa4b016f9877"
+          },
+          "installTo": "/opt/postgres-client",
+          "sharedFolder": true,
+          "fileName": "postgresql-client.deb"
+        }
+      ]
+    },
+    {
+      "id": "17",
+      "version": "17.12-1.pgdg26.04+1",
+      "latestVersion": {
+        "url": "https://apt.postgresql.org/pub/repos/apt/dists/resolute-pgdg/main/binary-amd64/Packages",
+        "match": "pool/main/p/postgresql-17/postgresql-client-17_([^_]+)_amd64\\.deb"
+      },
+      "downloads": [
+        {
+          "url": "https://apt-archive.postgresql.org/pub/repos/apt/pool/main/p/postgresql-{version:major}/postgresql-client-{version:major}_{version}_{arch}.deb",
+          "architectures": {
+            "arm64": "arm64",
+            "amd64": "amd64"
+          },
+          "sha256": {
+            "arm64": "3f2660330e4ca8093234b389ce89bbf4c697ca5aa7eda258be669def8eab1bc6",
+            "amd64": "e43f02d5ed8d1b7c717ae59e35ecc9350795ec3c000d0ef39f93cc5da6f6dc4c"
+          },
+          "installTo": "/opt/postgres-client",
+          "sharedFolder": true,
+          "fileName": "postgresql-client.deb"
+        }
+      ]
+    },
+    {
+      "id": "16",
+      "version": "16.16-1.pgdg26.04+1",
+      "latestVersion": {
+        "url": "https://apt.postgresql.org/pub/repos/apt/dists/resolute-pgdg/main/binary-amd64/Packages",
+        "match": "pool/main/p/postgresql-16/postgresql-client-16_([^_]+)_amd64\\.deb"
+      },
+      "downloads": [
+        {
+          "url": "https://apt-archive.postgresql.org/pub/repos/apt/pool/main/p/postgresql-{version:major}/postgresql-client-{version:major}_{version}_{arch}.deb",
+          "architectures": {
+            "arm64": "arm64",
+            "amd64": "amd64"
+          },
+          "sha256": {
+            "arm64": "f47cf15058abce2ea8da1606e09ffde9e1ccfa43b655f1cc87b657126039309e",
+            "amd64": "ddc8a023f135d8d984d9b11787d139e34b62ab93d4a8de5162f17b4eb13e7050"
+          },
+          "installTo": "/opt/postgres-client",
+          "sharedFolder": true,
+          "fileName": "postgresql-client.deb"
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "version": "15.20-1.pgdg26.04+1",
+      "latestVersion": {
+        "url": "https://apt.postgresql.org/pub/repos/apt/dists/resolute-pgdg/main/binary-amd64/Packages",
+        "match": "pool/main/p/postgresql-15/postgresql-client-15_([^_]+)_amd64\\.deb"
+      },
+      "downloads": [
+        {
+          "url": "https://apt-archive.postgresql.org/pub/repos/apt/pool/main/p/postgresql-{version:major}/postgresql-client-{version:major}_{version}_{arch}.deb",
+          "architectures": {
+            "arm64": "arm64",
+            "amd64": "amd64"
+          },
+          "sha256": {
+            "arm64": "e69c1ee4d91646daa91ffea2d74c6fce8c3eba1aac34731d575743c3037a9022",
+            "amd64": "74a7047022e9d01716da26dc920560038901df19436105fc4e8ae35da852f075"
+          },
+          "installTo": "/opt/postgres-client",
+          "sharedFolder": true,
+          "fileName": "postgresql-client.deb"
+        }
+      ]
+    }
+  ],
   "check": "psql --version && pg_dump --version"
 }

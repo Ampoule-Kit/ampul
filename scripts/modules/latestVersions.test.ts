@@ -10,6 +10,7 @@ describe('latest versions', () => {
     assert.ok(compareVersions('0.12.10', '0.12.9') > 0)
     assert.ok(compareVersions('25.0.5.1+2', '25.0.5+11') > 0)
     assert.equal(compareVersions('4.7.2-stable', '4.7.2-stable'), 0)
+    assert.ok(compareVersions('4.7.2-stable', '4.7-stable') > 0)
   })
 
   it('picks the highest version a page lists', () => {
@@ -56,5 +57,37 @@ describe('latest versions', () => {
     assert.equal(plugin?.name, 'tool:plugin')
     assert.equal(plugin?.lookup?.kind, 'page')
     assert.deepEqual(versionTargets('apt', { label: 'a', description: 'a', check: 'a' }), [])
+  })
+
+  it('pins each version of a module with versions on its own', () => {
+    const download = {
+      url: 'https://github.com/owner/runtime/releases/download/v{version}/runtime-{arch}.tar.gz',
+      architectures,
+      installTo: '/opt/runtime',
+    }
+    const module: ModuleFileSource = {
+      label: 'Runtime',
+      description: 'A runtime',
+      versions: [
+        {
+          id: '24',
+          version: '24.1.0',
+          latestVersion: { url: 'https://example.com/index.json', match: 'v(24\\.[0-9.]+)' },
+          downloads: [download],
+        },
+        { id: '22', version: '22.9.0', downloads: [download] },
+      ],
+      check: 'runtime --version',
+    }
+    const targets = versionTargets('runtime', module)
+    assert.deepEqual(
+      targets.map((target) => [target.name, target.versionId, target.currentVersion]),
+      [
+        ['runtime@24', '24', '24.1.0'],
+        ['runtime@22', '22', '22.9.0'],
+      ],
+    )
+    assert.equal(targets[0]?.lookup?.kind, 'page')
+    assert.equal(targets[1]?.lookup?.kind, 'github')
   })
 })
