@@ -26,11 +26,22 @@ export function Question({ title, explanation, children }: QuestionProps) {
   )
 }
 
-export function AnsweredQuestion({ title, answer }: { title: string; answer: string }) {
+interface AnsweredQuestionProps {
+  title: string
+  answer: string
+  titleWidth?: number | undefined
+}
+
+export function AnsweredQuestion({ title, answer, titleWidth = 0 }: AnsweredQuestionProps) {
   return (
-    <Text>
-      <Text color={colors.success}>{symbols.success}</Text>{' '}
-      <Text color={colors.muted}>{title}</Text> <Text>{answer}</Text>
-    </Text>
+    <Box>
+      <Box flexShrink={0}>
+        <Text>
+          <Text color={colors.success}>{symbols.success}</Text>{' '}
+          <Text color={colors.muted}>{title.padEnd(titleWidth)}</Text>{' '}
+        </Text>
+      </Box>
+      <Text>{answer}</Text>
+    </Box>
   )
 }
