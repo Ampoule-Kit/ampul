@@ -95,6 +95,12 @@
       ]
     },
     {
+      "title": "3D",
+      "modules": [
+        "blender"
+      ]
+    },
+    {
       "title": "Containers",
       "modules": [
         "container-engine"
