@@ -6,7 +6,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Podman](https://img.shields.io/badge/Podman-892CA0?logo=podman&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
-![Container: Ubuntu 24.04](https://img.shields.io/badge/container-Ubuntu%2024.04-E95420?logo=ubuntu&logoColor=white)
+![Container: Ubuntu 26.04](https://img.shields.io/badge/container-Ubuntu%2026.04-E95420?logo=ubuntu&logoColor=white)
 
 Portable, containerized developer environments, one command away.
 
@@ -98,7 +98,7 @@ Leave out the project name and ampul lets you pick from a list. Before deleting 
 
 ## What's in the container
 
-Every container runs Ubuntu 24.04 with git, curl, ssh, sudo, jq and bash completion, whatever system you run ampul on. You choose the rest:
+Every container runs Ubuntu 26.04 with git, curl, ssh, sudo, jq and bash completion, whatever system you run ampul on. You choose the rest:
 
 | Tool                 | Category                 | Version                       | Default | Notes                                                                                                                                                           |
 | -------------------- | ------------------------ | ----------------------------- | :-----: | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |

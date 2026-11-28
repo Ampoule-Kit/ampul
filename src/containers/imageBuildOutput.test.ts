@@ -21,7 +21,7 @@ describe('image build output', () => {
         instruction: 'COPY modules/runtime/ /opt/ampul/modules/runtime/',
       },
     )
-    assert.equal(parseBuildStep('Get:15 http://ports.ubuntu.com noble InRelease'), undefined)
+    assert.equal(parseBuildStep('Get:15 http://ports.ubuntu.com resolute InRelease'), undefined)
   })
 
   it('names the module a step installs', () => {

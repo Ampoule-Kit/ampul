@@ -5,14 +5,14 @@
   "selectedByDefault": false,
   "downloads": [
     {
-      "url": "https://packages.microsoft.com/repos/azure-cli/pool/main/a/azure-cli/azure-cli_{version}-1~noble_{arch}.deb",
+      "url": "https://packages.microsoft.com/repos/azure-cli/pool/main/a/azure-cli/azure-cli_{version}-1~resolute_{arch}.deb",
       "architectures": {
         "arm64": "arm64",
         "amd64": "amd64"
       },
       "sha256": {
-        "arm64": "b6c9cb1151ebcfe7d5f494cbc3ef4a05c2e960917a5bdfac39ad57e2ab9e2dea",
-        "amd64": "a6ed3e2d3eca33c6e3b40d0534d4607048a02d656192accefcb7881ce8679124"
+        "arm64": "53902ceee8201d5aaedc1faa1f12e215abf41f555df7405bda2e4eb9282914b4",
+        "amd64": "bd423c61517dbbda74bddebb8c1c1b1609f156ea13738349f6e95d0289f17bc4"
       },
       "installTo": "/opt/azure-cli",
       "fileName": "azure-cli.deb"
@@ -22,8 +22,8 @@
     "AZURE_CORE_COLLECT_TELEMETRY": "false"
   },
   "latestVersion": {
-    "url": "https://packages.microsoft.com/repos/azure-cli/dists/noble/main/binary-amd64/Packages",
-    "match": "azure-cli_([0-9]+\\.[0-9]+\\.[0-9]+)-1~noble_amd64\\.deb"
+    "url": "https://packages.microsoft.com/repos/azure-cli/dists/resolute/main/binary-amd64/Packages",
+    "match": "azure-cli_([0-9]+\\.[0-9]+\\.[0-9]+)-1~resolute_amd64\\.deb"
   },
   "check": "az version"
 }
